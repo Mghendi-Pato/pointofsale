@@ -23,7 +23,7 @@ const Navbar = ({ showSideBar, setShowSideBar }) => {
           <CiSearch size={20} />
         </button>
       </div>
-      <div className="flex flex-row md:flex-row-reverse w-full md:w-auto items-center justify-center">
+      <div className="flex flex-row md:flex-row-reverse w-full md:w-auto md:mr-10 items-center justify-center">
         <div className="flex flex-row items-center md:space-x-2">
           <div className="relative cursor-pointer h-16 flex flex-col justify-center items-center group">
             <div className="relative">

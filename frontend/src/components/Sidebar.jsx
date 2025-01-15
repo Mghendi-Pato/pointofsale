@@ -11,23 +11,26 @@ import { CiLogout } from "react-icons/ci";
 
 import { RiAdminLine } from "react-icons/ri";
 import { TbTruckDelivery } from "react-icons/tb";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutUser } from "../redux/reducers/user";
 
 const Sidebar = ({ showSideBar, setShowSideBar }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { pathname } = useLocation();
 
-  const user = { roles: ["super-admin"] };
+  const user = useSelector((state) => state.userSlice.user.user);
 
   let role = "";
 
   switch (true) {
-    case user.roles.includes("super-admin"):
-      role = "super-admin";
+    case user.role === "super admin":
+      role = "super admin";
       break;
-    case user.roles.includes("admin"):
+    case user.role === "admin":
       role = "admin";
       break;
-    case user.roles.includes("manager"):
+    case user.role === "manager":
       role = "manager";
       break;
     default:
@@ -38,44 +41,44 @@ const Sidebar = ({ showSideBar, setShowSideBar }) => {
     {
       area: "Dashboard",
       Icon: <AiOutlineDashboard size={20} className="mx-4" />,
-      privileges: ["super-admin", "admin", "manager"],
+      privileges: ["super admin", "admin", "manager"],
       route: "/",
     },
 
     {
       area: "Inventory",
       Icon: <LuClipboardList size={20} className="mx-4" />,
-      privileges: ["super-admin", "admin", "manager"],
+      privileges: ["super admin", "admin", "manager"],
       route: "/inventory",
     },
     {
       area: "Sales",
       Icon: <MdOutlineMonetizationOn size={20} className="mx-4" />,
-      privileges: ["super-admin", "admin", "manager"],
+      privileges: ["super admin", "admin", "manager"],
       route: "/sales",
     },
     {
       area: "Managers",
       Icon: <GrUserManager size={20} className="mx-4" />,
-      privileges: ["super-admin", "admin"],
+      privileges: ["super admin", "admin"],
       route: "/managers",
     },
     {
       area: "Suppliers",
       Icon: <TbTruckDelivery size={20} className="mx-4" />,
-      privileges: ["super-admin", "admin"],
+      privileges: ["super admin", "admin"],
       route: "/suppliers",
     },
     {
       area: "Reports",
       Icon: <IoAnalyticsSharp size={20} className="mx-4" />,
-      privileges: ["super-admin", "admin", "manager"],
+      privileges: ["super admin", "admin", "manager"],
       route: "/reports",
     },
     {
       area: "Admins",
       Icon: <RiAdminLine size={20} className="mx-4" />,
-      privileges: ["super-admin"],
+      privileges: ["super admin"],
       route: "/admins",
     },
   ];
@@ -208,7 +211,7 @@ const Sidebar = ({ showSideBar, setShowSideBar }) => {
           className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 mb-10    ${
             pathname === "/logout" ? " bg-primary-300" : ""
           }`}
-          onClick={() => navigate("/logout")}>
+          onClick={() => dispatch(logoutUser())}>
           <div className="hidden md:block">
             <CiLogout size={20} className="mx-4" />
           </div>
