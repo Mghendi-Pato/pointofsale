@@ -46,19 +46,17 @@ const Login = () => {
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       dispatch(loginUser(values));
-
-      console.log(values);
     },
   });
 
   return (
     <div className="bg-gradient-to-br from-slate-200 via-primary-300 to-green-400 flex flex-col justify-center items-center h-screen">
-      <img
-        src="watu-logo1.png"
-        alt="logo"
-        className="h-10 md:h-16 mb-10 transition-all duration-1000 ease-in-out"
-      />
       <div className=" bg-white md:rounded-lg p-5 py-10 flex flex-col justify-between items-center">
+        <img
+          src="shuhari-logo2.png"
+          alt="logo"
+          className="h-20 md:h-24 mb-10 transition-all duration-1000 ease-in-out"
+        />
         <p className="text-2xl lg:text-2xl font-roboto font-bold text-slate-700 transition-all duration-1000 ease-in-out">
           Welcome Back
         </p>
@@ -142,13 +140,13 @@ const Login = () => {
             {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
+        <p className="cursor-pointer mt-10 text-md text-slate-800 font-roboto font-bold">
+          Forgort password?
+          <span className="text-primary-500 font-roboto font-bold hover:text-primary-600 pl-2">
+            Reset password
+          </span>
+        </p>
       </div>
-      <p className="cursor-pointer mt-10 text-md text-slate-700 font-roboto font-bold">
-        Forgort password?
-        <span className="text-white font-roboto font-bold hover:text-slate-100 pl-2">
-          Reset password
-        </span>
-      </p>
     </div>
   );
 };

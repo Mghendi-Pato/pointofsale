@@ -6,6 +6,7 @@ require("dotenv").config();
 
 // Import routes
 const authRoutes = require("./routes/auth.js");
+const adminRoutes = require("./routes/admin.js");
 
 const app = express();
 
@@ -37,8 +38,8 @@ sequelize
   .catch((err) => console.error("Error connecting to the database:", err));
 
 // Routes
-//Routes
 app.use("/auth", authRoutes);
+app.use("/admin", adminRoutes);
 
 // Start Server
 app.listen(PORT, () =>

@@ -8,9 +8,13 @@ import Managers from "./pages/managers/Managers";
 import Reports from "./pages/reports";
 import Sales from "./pages/sales";
 import Suppliers from "./pages/suppliers/Suppliers";
+import Admins from "./pages/admins/Admins";
+
 //Toast notifications
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Profile from "./pages/profile/Profile";
+import Shops from "./pages/shops/Shops";
 
 const App = () => {
   return (
@@ -63,6 +67,29 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Suppliers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admins"
+          element={
+            <ProtectedRoute>
+              <Admins />
+            </ProtectedRoute>
+          }></Route>
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/shops"
+          element={
+            <ProtectedRoute>
+              <Shops />
             </ProtectedRoute>
           }
         />

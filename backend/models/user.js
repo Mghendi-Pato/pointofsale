@@ -16,8 +16,17 @@ module.exports = (sequelize, DataTypes) => {
       password: DataTypes.STRING,
       ID: { type: DataTypes.STRING, unique: true },
       phone: DataTypes.STRING,
+      status: {
+        type: DataTypes.ENUM("active", "suspended"),
+        allowNull: false,
+        defaultValue: "active",
+      },
       role: {
         type: DataTypes.ENUM("super admin", "admin", "manager"),
+        allowNull: true,
+      },
+      lastLogin: {
+        type: DataTypes.DATE,
         allowNull: true,
       },
     },

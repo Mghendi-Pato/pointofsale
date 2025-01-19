@@ -1,10 +1,16 @@
-import { CgProfile } from "react-icons/cg";
+import { RxAvatar } from "react-icons/rx";
 import { FaRegBell } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
-import { IoIosMore } from "react-icons/io";
+import { useLocation, useNavigate } from "react-router-dom";
 import { RiMenuFold4Line } from "react-icons/ri";
+import { useSelector } from "react-redux";
 
-const Navbar = ({ showSideBar, setShowSideBar }) => {
+const Navbar = () => {
+  const user = useSelector((state) => state.userSlice.user.user);
+  const showSideBar = useSelector((state) => state.sidebar.showSideBar);
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+
   return (
     <div
       className={`flex flex-row justify-between items-center md:p-2 md:px-20 transition-all duration-1000 ease-in-out ${
@@ -31,18 +37,26 @@ const Navbar = ({ showSideBar, setShowSideBar }) => {
               <div className="h-3 w-3 bg-green-500 absolute rounded-full -top-1 -right-2 shadow-xl shadow-black border-white border-2 flex items-center justify-center"></div>
             </div>
           </div>
-          <div className="hidden md:flex flex-row justify-between items-center">
+          <div
+            className="hidden md:flex flex-row justify-between items-center cursor-pointer"
+            onClick={() => navigate("/profile")}>
             <div>
-              <CgProfile size={30} className="mx-4" />
+              <RxAvatar
+                size={30}
+                className={`mx-4 ${
+                  showSideBar && pathname === "/profile"
+                    ? "text-primary-500"
+                    : ""
+                }`}
+              />
             </div>
             <div>
-              <p className="text-black font-bold">John Doe</p>
-              <p className="text-neutral-500 text-xs md:text-base">
-                Administrator
+              <p className="text-black font-bold">
+                {user?.firstName} {user.lastName}
               </p>
-            </div>
-            <div>
-              <IoIosMore size={20} />
+              <p className="text-neutral-500 text-xs md:text-base capitalize">
+                {user?.role}
+              </p>
             </div>
           </div>
         </div>
