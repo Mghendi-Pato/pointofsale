@@ -1,9 +1,10 @@
 const express = require("express");
 const { verifyToken } = require("../middleware/auth");
-const { getAllAdmins } = require("../controllers/admin");
+const { getActiveAdmins, getSuspendedAdmins } = require("../controllers/admin");
 
 const router = express.Router();
 
-router.get("/", verifyToken, getAllAdmins);
+router.get("/active", verifyToken, getActiveAdmins);
+router.get("/dormant", verifyToken, getSuspendedAdmins);
 
 module.exports = router;

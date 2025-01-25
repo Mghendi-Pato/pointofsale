@@ -6,10 +6,6 @@ import TablePagination from "@mui/material/TablePagination";
 import { MdDeleteOutline } from "react-icons/md";
 import { setSidebar } from "../../redux/reducers/ sidebar";
 import { toast } from "react-toastify";
-import {
-  initializeUserDeleteState,
-  initializeUserStatusUpdateState,
-} from "../../redux/reducers/user";
 import NewManager from "../../components/NewManager";
 import { useQuery } from "react-query";
 import {
@@ -24,25 +20,14 @@ import DeleteConfirmationModal from "../../components/DeleteModal";
 const Managers = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [updatingManager, setupdatingManager] = useState(null);
   const [show, setShow] = useState("active");
   const [managerToDelete, setManagerToDelete] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAddManager, setShowAddManager] = useState(false);
   const dispatch = useDispatch();
-  const successNotify = (message) => toast.success(message);
-  const errorNotify = (message) => toast.error(message || "Login failed");
 
   const token = useSelector((state) => state.userSlice.user.token);
-  const {
-    userStatusUpdateError,
-    userStatusUpdateLoading,
-    userStatusUpdateSuccess,
-    userDeleteError,
-    userDeleteLoading,
-    userDeleteSuccess,
-  } = useSelector((state) => state.userSlice);
 
   const { data: activeData, isLoading: activeLoading } = useQuery(
     ["managers", { status: "active", page: page + 1, limit: rowsPerPage }],
@@ -62,6 +47,8 @@ const Managers = () => {
       enabled: show === "inactive" && !!token,
     }
   );
+
+  console.log(suspendedData);
 
   // Handles page change
   const handleChangePage = (event, newPage) => setPage(newPage);
@@ -188,6 +175,8 @@ const Managers = () => {
     }
   }
 
+  console.log(suspendedData);
+
   useEffect(() => {
     if (showAddManager) {
       dispatch(setSidebar(false));
@@ -195,33 +184,10 @@ const Managers = () => {
   }, [showAddManager, dispatch]);
 
   useEffect(() => {
-    if (userStatusUpdateSuccess) {
-      successNotify("Manager status updated successfully");
-      dispatch(initializeUserStatusUpdateState());
-    }
-  }, [dispatch, userStatusUpdateSuccess]);
+    setPage(0);
+  }, [searchQuery, show]);
 
-  useEffect(() => {
-    if (userStatusUpdateError) {
-      errorNotify(userStatusUpdateError);
-      dispatch(initializeUserStatusUpdateState());
-    }
-  }, [dispatch, userStatusUpdateError]);
-
-  useEffect(() => {
-    if (userDeleteSuccess) {
-      successNotify("Manager deleted successfully");
-      dispatch(initializeUserDeleteState());
-    }
-  }, [dispatch, userDeleteSuccess]);
-
-  useEffect(() => {
-    if (userDeleteError) {
-      errorNotify(userDeleteError);
-      dispatch(initializeUserStatusUpdateState());
-      dispatch(initializeUserDeleteState());
-    }
-  }, [dispatch, userDeleteError]);
+  console.log(page + 1);
 
   return (
     <div className="p-5">
@@ -334,7 +300,8 @@ const Managers = () => {
                     </th>
                   </tr>
                 </thead>
-                {activeLoading || suspendedLoading ? (
+                {(activeLoading && !activeData && show === "active") ||
+                (suspendedLoading && !suspendedData && show !== "active") ? (
                   <p className="p-2">Fetching manager data...</p>
                 ) : paginatedManagers.length === 0 ||
                   paginatedManagers.filter((manager) =>
@@ -362,7 +329,7 @@ const Managers = () => {
                       )
                       .map((manager, index) => (
                         <tr
-                          key={index}
+                          key={manager.id}
                           className="bg-white border-b hover:bg-blue-50">
                           <td className="px-2 py-2 border-r font-medium text-gray-900">
                             {index + 1}
@@ -401,16 +368,9 @@ const Managers = () => {
                                 className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300"
                                 onClick={() =>
                                   handleStatusToggle(manager.id, manager.status)
-                                }
-                                disabled={
-                                  manager.id === updatingManager &&
-                                  userStatusUpdateLoading
                                 }>
+                                Suspend
                                 <PiUserCheck />
-                                {manager.id === updatingManager &&
-                                userStatusUpdateLoading
-                                  ? "Updating..."
-                                  : "Suspend"}
                               </button>
                             ) : (
                               <button
@@ -418,31 +378,17 @@ const Managers = () => {
                                 className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-green-500 hover:bg-green-300"
                                 onClick={() =>
                                   handleStatusToggle(manager.id, manager.status)
-                                }
-                                disabled={
-                                  manager.id === updatingManager &&
-                                  userStatusUpdateLoading
                                 }>
+                                Activate
                                 <PiUserCheck />
-                                {manager.id === updatingManager &&
-                                userStatusUpdateLoading
-                                  ? "Updating..."
-                                  : "Activate"}
                               </button>
                             )}
                             <button
-                              disabled={
-                                manager.id === updatingManager &&
-                                userDeleteLoading
-                              }
                               onClick={() => handleDeleteUser(manager.id)}
                               aria-label={`Analyze ${manager.name}`}
                               className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
                               <MdDeleteOutline />
-                              {manager.id === updatingManager &&
-                              userDeleteLoading
-                                ? "Updating..."
-                                : "Delete"}
+                              Delete
                             </button>
                           </td>
                         </tr>

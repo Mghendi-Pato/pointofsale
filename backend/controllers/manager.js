@@ -63,8 +63,15 @@ exports.getActiveManagers = async (req, res) => {
       parsedLimit
     );
 
+    // Handle case where no active managers are found
     if (managers.length === 0) {
-      return res.status(404).json({ message: "No active managers found." });
+      return res.status(200).json({
+        message: "No active managers found.",
+        managers: [],
+        page: parsedPage,
+        limit: parsedLimit,
+        total: 0,
+      });
     }
 
     res.status(200).json({
@@ -108,8 +115,15 @@ exports.getSuspendedManagers = async (req, res) => {
       parsedLimit
     );
 
+    // If no managers are found, return an empty array with a success message
     if (managers.length === 0) {
-      return res.status(404).json({ message: "No suspended managers found." });
+      return res.status(200).json({
+        message: "No suspended managers found.",
+        managers: [],
+        page: parsedPage,
+        limit: parsedLimit,
+        total: 0,
+      });
     }
 
     res.status(200).json({
