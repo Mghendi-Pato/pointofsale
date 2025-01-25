@@ -1,12 +1,14 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
+const { Location } = require("../models");
 const { Op } = require("sequelize");
 
 // Register a new user
 exports.register = async (req, res) => {
   try {
-    const { firstName, phone, lastName, email, password, role, ID } = req.body;
+    const { firstName, phone, lastName, email, password, role, ID, regionId } =
+      req.body;
     const loggedInUser = req.user;
 
     // Check if the logged-in user has the appropriate role to register users
@@ -36,7 +38,7 @@ exports.register = async (req, res) => {
       if (existingUser.email === email) {
         return res
           .status(400)
-          .json({ message: "User with this emil already exists." });
+          .json({ message: "User with this email already exists." });
       }
       if (existingUser.ID === ID) {
         return res
@@ -45,8 +47,19 @@ exports.register = async (req, res) => {
       }
     }
 
-    // Hash the password and create a new user
+    // Validate the regionId
+    let region;
+    if (regionId) {
+      region = await Location.findByPk(regionId);
+      if (!region) {
+        return res.status(400).json({ message: "Invalid region ID." });
+      }
+    }
+
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create the new user
     const newUser = await User.create({
       firstName,
       lastName,
@@ -55,7 +68,18 @@ exports.register = async (req, res) => {
       role,
       ID,
       phone,
+      regionId,
     });
+
+    // If the role is manager, append the user ID to the respective location
+    if (role === "manager" && region) {
+      const updatedManagerIds = region.managerIds
+        ? [...region.managerIds, newUser.id]
+        : [newUser.id];
+
+      // Update the location with the new manager ID
+      await region.update({ managerIds: updatedManagerIds });
+    }
 
     res.status(201).json({
       message: "User registered successfully",
@@ -66,10 +90,12 @@ exports.register = async (req, res) => {
         email: newUser.email,
         role: newUser.role,
         phone: newUser.phone,
+        regionId: newUser.regionId,
       },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+    console.log(error);
   }
 };
 

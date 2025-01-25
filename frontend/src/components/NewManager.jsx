@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MdOutlineCancel } from "react-icons/md";
 import { CiSaveDown2 } from "react-icons/ci";
 import { useFormik } from "formik";
@@ -15,14 +15,30 @@ import { fetchAdmin } from "../redux/reducers/admin";
 import { setSidebar } from "../redux/reducers/ sidebar";
 import { MdOutlineVisibility } from "react-icons/md";
 import { MdOutlineVisibilityOff } from "react-icons/md";
-import { IconButton, InputAdornment } from "@mui/material";
+import {
+  FormControl,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Select,
+} from "@mui/material";
+import { fetchRegions } from "../redux/reducers/region";
+import { useQueryClient } from "react-query";
 
-const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
+const NewManager = ({ showAddManager, setShowAddManager }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { registerUserError, registerUserLoading, registerUserSuccess } =
     useSelector((state) => state.userSlice);
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+  const { regions } = useSelector((state) => state.regionSlice.regions);
+
+  const regionsFetched = useMemo(
+    () => regions && regions.length > 0,
+    [regions]
+  );
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)"); // Tailwind's `md` breakpoint
@@ -80,6 +96,10 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
         "Enter a valid phone number with 10 digits"
       )
       .required("Phone number is required"),
+    region: yup
+      .number("Region must be a valid ID")
+      .nullable()
+      .required("Region is required"),
   });
 
   const formik = useFormik({
@@ -90,33 +110,42 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
       password: "",
       ID: "",
       phone: "",
+      region: "",
     },
     validationSchema,
     onSubmit: (values) => {
       const updatedValues = {
         ...values,
-        role: "admin",
+        role: "manager",
+        regionId: values.region,
       };
-      console.log(updatedValues);
       dispatch(registerUser(updatedValues));
     },
   });
 
   useEffect(() => {
     if (registerUserSuccess) {
-      succesNotify("Admin registerd successfully");
+      succesNotify("Manger registerd successfully");
       dispatch(fetchAdmin());
       dispatch(initializeRegisterUserState());
+      queryClient.invalidateQueries(["managers"]);
       formik.resetForm();
       if (isSmallScreen) {
-        setShowAdmin(false);
+        setShowAddManager(false);
       }
       if (!isSmallScreen) {
-        setShowAdmin(false);
+        setShowAddManager(false);
         dispatch(setSidebar(true));
       }
     }
-  }, [dispatch, formik, isSmallScreen, setShowAdmin, registerUserSuccess]);
+  }, [
+    dispatch,
+    formik,
+    isSmallScreen,
+    setShowAddManager,
+    queryClient,
+    registerUserSuccess,
+  ]);
 
   useEffect(() => {
     if (registerUserError) {
@@ -126,7 +155,7 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
   }, [dispatch, registerUserError]);
 
   const onCloseModal = () => {
-    setShowAdmin(false);
+    setShowAddManager(false);
 
     if (!isSmallScreen) {
       dispatch(setSidebar(true));
@@ -137,9 +166,15 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
     setShowPassword((prev) => !prev);
   };
 
+  useEffect(() => {
+    if (!regionsFetched) {
+      dispatch(fetchRegions());
+    }
+  }, [dispatch, regionsFetched]);
+
   return (
     <AnimatePresence>
-      {showAddAdmin && (
+      {showAddManager && (
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
@@ -163,7 +198,7 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
 
           <div className="w-full">
             <div className="w-full text-center text-lg py-2">
-              <p className="font-roboto font-bold">New Admin</p>
+              <p className="font-roboto font-bold">New Manager</p>
             </div>
             <form
               onSubmit={formik.handleSubmit}
@@ -335,7 +370,6 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
                   "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" }, // Focused label color
                 }}
               />
-
               <TextField
                 variant="outlined"
                 fullWidth
@@ -364,6 +398,39 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
                 }}
               />
 
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="region-label">Region</InputLabel>
+                <Select
+                  labelId="region-label"
+                  id="region"
+                  name="region"
+                  value={formik.values.region || ""}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.region && Boolean(formik.errors.region)}
+                  label="Region"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200,
+                        overflowY: "auto",
+                      },
+                    },
+                  }}>
+                  {[...regions]
+                    .sort((a, b) => a.location.localeCompare(b.location))
+                    .map((region) => (
+                      <MenuItem key={region.id} value={region.id}>
+                        {region.location}
+                      </MenuItem>
+                    ))}
+                </Select>
+                {formik.touched.region && formik.errors.region && (
+                  <div style={{ color: "red", fontSize: "0.875rem" }}>
+                    {formik.errors.region}
+                  </div>
+                )}
+              </FormControl>
               <div className="flex flex-row-reverse justify-between items-center">
                 <button
                   type="submit"
@@ -379,4 +446,4 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
   );
 };
 
-export default NewAdmin;
+export default NewManager;

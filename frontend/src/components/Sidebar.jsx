@@ -8,18 +8,19 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { MdOutlineMonetizationOn } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { CiLogout } from "react-icons/ci";
-import { AiOutlineShop } from "react-icons/ai";
 import { RiAdminLine } from "react-icons/ri";
 import { TbTruckDelivery } from "react-icons/tb";
 import { useDispatch, useSelector } from "react-redux";
-import { logoutUser } from "../redux/reducers/user";
 import { toggleSidebar } from "../redux/reducers/ sidebar";
+import { BsPinMap } from "react-icons/bs";
+import { useState } from "react";
+import LogoutUser from "./LogoutUser";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { pathname } = useLocation();
-
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const user = useSelector((state) => state.userSlice.user.user);
   const showSideBar = useSelector((state) => state.sidebar.showSideBar);
 
@@ -53,10 +54,10 @@ const Sidebar = () => {
       route: "/sales",
     },
     {
-      area: "Shops",
-      Icon: <AiOutlineShop size={20} className="mx-4" />,
+      area: "Regions",
+      Icon: <BsPinMap size={20} className="mx-4" />,
       privileges: ["super admin", "admin"],
-      route: "/shops",
+      route: "/regions",
     },
     {
       area: "Managers",
@@ -86,12 +87,12 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`bg-neutral-100 shadow-md transition-all duration-1000 ease-in-out flex flex-col justify-between flex-1 ${
+      className={`bg-slate-50 shadow-md transition-all duration-1000 ease-in-out flex flex-col justify-between flex-1 ${
         showSideBar ? "w-52 md:w-64" : "w-0 md:w-16"
       } h-full fixed left-0 top-0 z-10`}>
       <div className=" ">
         <div
-          className={`bg-neutral-100 border-b b-neutral-300 h-16 flex flex-col justify-center items-center relative transition-all duration-1000 ease-in-out ${
+          className={`bg-slate-50 border-b b-neutral-300 h-16 flex flex-col justify-center items-center relative transition-all duration-1000 ease-in-out ${
             showSideBar ? "w-40 md:w-64" : "w-0"
           }`}>
           <div
@@ -163,7 +164,6 @@ const Sidebar = () => {
             <p className="font-roboto text-white">Dashboard</p>
           </div>
         </div>
-
         {sideNavdAreas
           .filter((area) => area.privileges.includes(role))
           .map((area, index) => (
@@ -260,7 +260,7 @@ const Sidebar = () => {
           className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 mb-10    ${
             pathname === "/logout" ? " bg-primary-300" : ""
           }`}
-          onClick={() => dispatch(logoutUser())}>
+          onClick={() => setShowLogoutModal(true)}>
           <div className="hidden md:block">
             <CiLogout size={20} className="mx-4" />
           </div>
@@ -298,6 +298,10 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
+      <LogoutUser
+        showLogoutModal={showLogoutModal}
+        setShowLogoutModal={setShowLogoutModal}
+      />
     </div>
   );
 };

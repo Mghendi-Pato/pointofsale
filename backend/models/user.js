@@ -3,9 +3,9 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      User.belongsTo(models.Shop, { as: "shop", foreignKey: "shopId" });
+      User.belongsTo(models.Location, { as: "region", foreignKey: "regionId" });
       User.belongsTo(models.Stock, { as: "stock", foreignKey: "stockId" });
-      User.hasMany(models.Shop, { as: "manager", foreignKey: "managerId" });
+      User.hasMany(models.Location, { as: "manager", foreignKey: "managerId" });
     }
   }
   User.init(
@@ -28,6 +28,14 @@ module.exports = (sequelize, DataTypes) => {
       lastLogin: {
         type: DataTypes.DATE,
         allowNull: true,
+      },
+      regionId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: "Location",
+          key: "id",
+        },
       },
     },
     {

@@ -7,6 +7,8 @@ require("dotenv").config();
 // Import routes
 const authRoutes = require("./routes/auth.js");
 const adminRoutes = require("./routes/admin.js");
+const regionRoutes = require("./routes/region.js");
+const managerRoutes = require("./routes/manager.js");
 
 const app = express();
 
@@ -40,6 +42,8 @@ sequelize
 // Routes
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
+app.use("/region", regionRoutes);
+app.use("/manager", managerRoutes);
 
 // Start Server
 app.listen(PORT, () =>

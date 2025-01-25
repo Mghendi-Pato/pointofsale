@@ -4,7 +4,7 @@ exports.getAllAdmins = async (req, res) => {
   try {
     const loggedInUser = req.user;
     // Check if the logged-in user is authorized
-    if (!["admin", "super admin"].includes(loggedInUser.role)) {
+    if (!["super admin"].includes(loggedInUser.role)) {
       return res
         .status(403)
         .send("Access Denied: You must be an admin or super admin.");

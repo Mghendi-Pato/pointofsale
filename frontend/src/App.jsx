@@ -14,7 +14,7 @@ import Admins from "./pages/admins/Admins";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Profile from "./pages/profile/Profile";
-import Shops from "./pages/shops/Shops";
+import Regions from "./pages/regions/Regions";
 
 const App = () => {
   return (
@@ -86,10 +86,10 @@ const App = () => {
           }
         />
         <Route
-          path="/shops"
+          path="/regions"
           element={
             <ProtectedRoute>
-              <Shops />
+              <Regions />
             </ProtectedRoute>
           }
         />

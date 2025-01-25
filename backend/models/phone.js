@@ -17,12 +17,12 @@ module.exports = (sequelize, DataTypes) => {
   Phone.init(
     {
       imei: { type: DataTypes.STRING, unique: true },
-      name: DataTypes.STRING,
+      make: DataTypes.STRING,
       purchasePrice: DataTypes.FLOAT,
       sellingPrice: DataTypes.FLOAT,
       buyDate: DataTypes.DATE,
       saleDate: DataTypes.DATE,
-      details: DataTypes.TEXT,
+      model: DataTypes.TEXT,
     },
     {
       sequelize,

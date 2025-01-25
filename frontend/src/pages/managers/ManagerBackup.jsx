@@ -14,101 +14,21 @@ import NewManager from "../../components/NewManager";
 import { useQuery } from "react-query";
 import {
   deleteQueryUser,
-  fetchActiveManagers,
-  fetchSuspendedManagers,
+  fetchManagers,
   toggleQueryUserStatus,
 } from "../../services/services";
 import { useMutation, useQueryClient } from "react-query";
-import DeleteConfirmationModal from "../../components/DeleteModal";
 
 const Managers = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [updatingManager, setupdatingManager] = useState(null);
   const [show, setShow] = useState("active");
-  const [managerToDelete, setManagerToDelete] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAddManager, setShowAddManager] = useState(false);
   const dispatch = useDispatch();
   const successNotify = (message) => toast.success(message);
   const errorNotify = (message) => toast.error(message || "Login failed");
-
-  const token = useSelector((state) => state.userSlice.user.token);
-  const {
-    userStatusUpdateError,
-    userStatusUpdateLoading,
-    userStatusUpdateSuccess,
-    userDeleteError,
-    userDeleteLoading,
-    userDeleteSuccess,
-  } = useSelector((state) => state.userSlice);
-
-  const { data: activeData, isLoading: activeLoading } = useQuery(
-    ["managers", { status: "active", page: page + 1, limit: rowsPerPage }],
-    ({ queryKey, signal }) => fetchActiveManagers({ queryKey, signal, token }),
-    {
-      keepPreviousData: true,
-      enabled: show === "active" && !!token,
-    }
-  );
-
-  const { data: suspendedData, isLoading: suspendedLoading } = useQuery(
-    ["managers", { status: "suspended", page: page + 1, limit: rowsPerPage }],
-    ({ queryKey, signal }) =>
-      fetchSuspendedManagers({ queryKey, signal, token }),
-    {
-      keepPreviousData: true,
-      enabled: show === "inactive" && !!token,
-    }
-  );
-
-  // Handles page change
-  const handleChangePage = (event, newPage) => setPage(newPage);
-
-  // Handles rows per page change
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // Handles search query change
-  const handleSearchChange = (event) => setSearchQuery(event.target.value);
-
-  // Filtered, sorted, and paginated exams
-  const filteredManagers = useMemo(() => {
-    const dataToFilter =
-      show === "active" ? activeData?.managers : suspendedData?.managers;
-    return (
-      dataToFilter
-        ?.filter((manager) => {
-          return searchQuery
-            .toLowerCase()
-            .split(/\s+/)
-            .filter(Boolean)
-            .every((part) =>
-              [
-                manager?.name?.toLowerCase(),
-                manager?.status?.toLowerCase(),
-                manager?.region?.location.toLowerCase(),
-                manager?.ID?.toLowerCase(),
-                manager?.phone?.toLowerCase(),
-              ].some((field) => field.includes(part))
-            );
-        })
-        ?.sort((a, b) => {
-          const nameA = a?.name?.toLowerCase() || "";
-          const nameB = b?.name?.toLowerCase() || "";
-          return nameA.localeCompare(nameB);
-        }) || []
-    );
-  }, [activeData?.managers, suspendedData?.managers, searchQuery, show]);
-
-  const paginatedManagers = filteredManagers;
-
-  useEffect(() => {
-    setPage(0);
-  }, [searchQuery]);
 
   const useToggleStatus = () => {
     const queryClient = useQueryClient();
@@ -148,17 +68,71 @@ const Managers = () => {
 
   const deleteUserMutation = useDeleteUser();
 
-  const handleDeleteUser = (manager) => {
-    setManagerToDelete(manager);
-    setShowDeleteModal(true);
+  const handleDeleteUser = (userId) => {
+    deleteUserMutation.mutate({ userId, token });
   };
 
-  const handleDelete = () => {
-    if (managerToDelete) {
-      deleteUserMutation.mutate({ userId: managerToDelete, token });
+  const token = useSelector((state) => state.userSlice.user.token);
+  const {
+    userStatusUpdateError,
+    userStatusUpdateLoading,
+    userStatusUpdateSuccess,
+    userDeleteError,
+    userDeleteLoading,
+    userDeleteSuccess,
+  } = useSelector((state) => state.userSlice);
+
+  const { data, isLoading, error } = useQuery(
+    ["managers", page + 1, rowsPerPage],
+    ({ queryKey, signal }) => fetchManagers({ queryKey, signal, token }),
+    {
+      keepPreviousData: true,
+      enabled: !!token,
     }
-    setShowDeleteModal(false);
+  );
+
+  // Handles page change
+  const handleChangePage = (event, newPage) => setPage(newPage);
+
+  // Handles rows per page change
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
+
+  // Handles search query change
+  const handleSearchChange = (event) => setSearchQuery(event.target.value);
+
+  // Filtered, sorted, and paginated exams
+  const filterdManager = useMemo(() => {
+    return (
+      data?.managers
+        ?.filter((manager) => {
+          return searchQuery
+            .toLowerCase()
+            .split(/\s+/)
+            .filter(Boolean)
+            .every((part) =>
+              [
+                manager?.name?.toLowerCase(),
+                manager?.status?.toLowerCase(),
+              ].some((field) => field.includes(part))
+            );
+        })
+        ?.sort((a, b) => {
+          const nameA = a?.name?.toLowerCase() || "";
+          const nameB = b?.name?.toLowerCase() || "";
+          return nameA.localeCompare(nameB);
+        }) || []
+    );
+  }, [data?.managers, searchQuery]);
+
+  const paginatedManagers = filterdManager;
+  useEffect(() => {
+    setPage(0);
+  }, [searchQuery]);
+  console.log("Paginated managers..", data);
+  console.log("Managers data", paginatedManagers);
 
   function formatDate(date) {
     const options = { day: "numeric", month: "short", year: "numeric" };
@@ -223,6 +197,17 @@ const Managers = () => {
     }
   }, [dispatch, userDeleteError]);
 
+  const startIndex = page * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+
+  const visibleManagers = paginatedManagers
+    .filter((manager) =>
+      show === "active"
+        ? manager.status === "active"
+        : manager.status !== "active"
+    )
+    .slice(startIndex, endIndex);
+
   return (
     <div className="p-5">
       <div className="space-y-5">
@@ -284,6 +269,7 @@ const Managers = () => {
               </div>
             </div>
           </div>
+
           <div className="overflow-x-auto">
             <div className="max-h-[57vh] overflow-y-auto">
               <table className="w-full text-sm text-left text-gray-500 relative">
@@ -334,10 +320,10 @@ const Managers = () => {
                     </th>
                   </tr>
                 </thead>
-                {activeLoading || suspendedLoading ? (
+                {isLoading ? (
                   <p className="p-2">Fetching manager data...</p>
-                ) : paginatedManagers.length === 0 ||
-                  paginatedManagers.filter((manager) =>
+                ) : visibleManagers.length === 0 ||
+                  visibleManagers.filter((manager) =>
                     show === "active"
                       ? manager.status === "active"
                       : manager.status !== "active"
@@ -354,7 +340,7 @@ const Managers = () => {
                   </tbody>
                 ) : (
                   <tbody>
-                    {paginatedManagers
+                    {visibleManagers
                       ?.filter((manager) =>
                         show === "active"
                           ? manager.status === "active"
@@ -449,13 +435,18 @@ const Managers = () => {
                       ))}
                   </tbody>
                 )}
+                {error && error.message}
               </table>
             </div>
             <TablePagination
               rowsPerPageOptions={[5, 10]}
               component="div"
               count={
-                show === "active" ? activeData?.total : suspendedData?.total
+                paginatedManagers.filter((manager) =>
+                  show === "active"
+                    ? manager.status === "active"
+                    : manager.status !== "active"
+                ).length
               }
               rowsPerPage={rowsPerPage}
               page={page}
@@ -468,14 +459,6 @@ const Managers = () => {
       <NewManager
         showAddManager={showAddManager}
         setShowAddManager={setShowAddManager}
-      />
-      <DeleteConfirmationModal
-        showDeleteModal={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onDelete={handleDelete}
-        manager={managerToDelete}
-        title={`Confirm Deletion!`}
-        message="Deleted manager cannot be retrieved"
       />
     </div>
   );

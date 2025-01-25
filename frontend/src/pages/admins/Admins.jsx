@@ -1,5 +1,3 @@
-import { MdNavigateNext } from "react-icons/md";
-import { useLocation, useNavigate } from "react-router-dom";
 import { TextField } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,15 +16,13 @@ import {
 } from "../../redux/reducers/user";
 
 const Admins = () => {
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
-
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddAdmin, setShowAdmin] = useState(false);
   const [updatingAdmin, setUpdatingAdmin] = useState(null);
   const [unfilterdAdmins, setUnfilterdAdmins] = useState();
+  const [show, setShow] = useState("active");
   const dispatch = useDispatch();
   const successNotify = (message) => toast.success(message);
   const errorNotify = (message) => toast.error(message || "Login failed");
@@ -202,31 +198,21 @@ const Admins = () => {
     <div className="p-5">
       <div className="space-y-5">
         <p className="text-xl font-bold">Admins</p>
-        <div className="flex flex-row items-center space-x-2">
-          <p
-            className="text-lg cursor-pointer hover:text-primary-500"
-            onClick={() => navigate("/")}>
-            Home
-          </p>
-          <MdNavigateNext
-            size={20}
-            className={`${pathname === "/admins" && "text-primary-500"}`}
-          />
-          <p
-            className={`text-lg hover:text-primary-500 ${
-              pathname === "/admins" && "text-primary-500"
-            }  cursor-pointer`}
-            onClick={() => navigate("/admins")}>
-            Admins
-          </p>
-          {pathname === "/admins/new" && (
-            <>
-              <MdNavigateNext size={20} className="text-primary-500" />
-              <p className="text-lg text-primary-500 cursor-pointer">
-                Add admin
-              </p>
-            </>
-          )}
+        <div className="flex flex-row items-center space-x-5 w-[66%]">
+          <div
+            className={`p-2 py-3 text-sm font-roboto font-bold w-[50%] md:w-36 text-center cursor-pointer ${
+              show === "active" ? "bg-primary-400" : "text-gray-600"
+            }`}
+            onClick={() => setShow("active")}>
+            Active
+          </div>
+          <div
+            className={`p-2 py-3 text-sm font-roboto font-bold md:w-36 text-center cursor-pointer w-[50%] ${
+              show === "inactive" ? "bg-primary-400" : "text-gray-600"
+            }`}
+            onClick={() => setShow("inactive")}>
+            Suspended
+          </div>
         </div>
       </div>
       <div className="border border-gray-200">
@@ -235,7 +221,7 @@ const Admins = () => {
             <p className="text-xl font-bold">All admin data</p>
             <div className="flex flex-col md:flex-row-reverse justify-between space-y-5 md:space-y-0">
               <button
-                className="p-2 bg-primary-500 text-white hover:scale-105 flex flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-500 ease-in-out"
+                className="p-2 bg-primary-500 hover:scale-105 flex flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-500 ease-in-out"
                 onClick={() => setShowAdmin(!showAddAdmin)}>
                 New Admin
               </button>
@@ -274,47 +260,47 @@ const Admins = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200">
                   <tr>
-                    <th scope="col" className="px-2 border-r   py-2">
+                    <th scope="col" className="px-2 border-r py-2">
                       #
                     </th>
                     <th
                       scope="col"
-                      className="px-2 border-r text-[14px] normal-case  py-2">
+                      className="px-2 border-r text-[14px] normal-case py-2">
                       Name
                     </th>
                     <th
                       scope="col"
-                      className="px-6 border-r text-[14px] normal-case  py-2">
+                      className="px-6 border-r text-[14px] normal-case py-2">
                       Email
                     </th>
                     <th
                       scope="col"
-                      className="px-6 border-r text-[14px]  normal-case py-2">
+                      className="px-6 border-r text-[14px] normal-case py-2">
                       ID
                     </th>
                     <th
                       scope="col"
-                      className="px-6 border-r text-[14px]  normal-case py-2">
+                      className="px-6 border-r text-[14px] normal-case py-2">
                       Phone
                     </th>
                     <th
                       scope="col"
                       className="px-6 border-r text-[14px] normal-case py-2">
-                      Created
+                      Joined
                     </th>
                     <th
                       scope="col"
-                      className="px-6 border-r text-[14px] normal-case  py-2">
+                      className="px-6 border-r text-[14px] normal-case py-2">
                       Last login
                     </th>
                     <th
                       scope="col"
-                      className="px-6 border-r text-[14px]  normal-case py-2">
+                      className="px-6 border-r text-[14px] normal-case py-2">
                       Status
                     </th>
                     <th
                       scope="col"
-                      className="px-6 text-[14px]  normal-case py-2">
+                      className="px-6 text-[14px] normal-case py-2">
                       Actions
                     </th>
                   </tr>
@@ -323,96 +309,113 @@ const Admins = () => {
                   <p className="p-2">No admin records found</p>
                 )}
                 {loading ? (
-                  <p>Fetching admin data...</p>
+                  <p className="p-2">Fetching admin data...</p>
                 ) : (
                   <tbody>
-                    {paginatedAdmin?.map((admin, index) => (
-                      <tr
-                        key={index}
-                        className="bg-white border-b hover:bg-blue-50">
-                        <td className="px-2 py-2 border-r font-medium text-gray-900">
-                          {index + 1}
-                        </td>
-                        <td className="px-2 border-r py-2">{admin.name}</td>
-                        <td className="px-6 border-r py-2">{admin.email}</td>
-                        <td className="px-6 border-r py-2">{admin.ID}</td>
-                        <td className="px-6 border-r py-2">{admin.phone}</td>
-                        <td className="px-6 border-r py-2">
-                          {formatDate(new Date(admin.createdAt))}
-                        </td>
-                        <td className="px-6 border-r py-2">
-                          {formatDate(new Date(admin.lastLogin))}
-                        </td>
-                        <td className="px-6 border-r py-2">
-                          {admin.status === "active" ? (
-                            <p className="text-green-500 capitalize">
-                              {admin.status}
-                            </p>
-                          ) : (
-                            <p className="text-amber-500 capitalize">
-                              {admin.status}
-                            </p>
-                          )}
-                        </td>
-                        <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
-                          {admin.status === "active" ? (
-                            <button
-                              aria-label={`Manage ${admin.name}`}
-                              className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300"
-                              onClick={() =>
-                                handleStatusToggle(admin.id, admin.status)
-                              }
-                              disabled={
-                                admin.id === updatingAdmin &&
+                    {paginatedAdmin
+                      ?.filter((admin) =>
+                        show === "active"
+                          ? admin.status === "active"
+                          : admin.status !== "active"
+                      )
+                      .map((admin, index) => (
+                        <tr
+                          key={index}
+                          className="bg-white border-b hover:bg-blue-50">
+                          <td className="px-2 py-2 border-r font-medium text-gray-900">
+                            {index + 1}
+                          </td>
+                          <td className="px-2 border-r py-2">{admin.name}</td>
+                          <td className="px-6 border-r py-2">{admin.email}</td>
+                          <td className="px-6 border-r py-2">{admin.ID}</td>
+                          <td className="px-6 border-r py-2">{admin.phone}</td>
+                          <td className="px-6 border-r py-2">
+                            {formatDate(new Date(admin.createdAt))}
+                          </td>
+                          <td className="px-6 border-r py-2">
+                            {formatDate(new Date(admin.lastLogin))}
+                          </td>
+                          <td className="px-6 border-r py-2">
+                            {admin.status === "active" ? (
+                              <p className="text-green-500 capitalize">
+                                {admin.status}
+                              </p>
+                            ) : (
+                              <p className="text-amber-500 capitalize">
+                                {admin.status}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
+                            {admin.status === "active" ? (
+                              <button
+                                aria-label={`Manage ${admin.name}`}
+                                className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300"
+                                onClick={() =>
+                                  handleStatusToggle(admin.id, admin.status)
+                                }
+                                disabled={
+                                  admin.id === updatingAdmin &&
+                                  userStatusUpdateLoading
+                                }>
+                                <PiUserCheck />
+                                {admin.id === updatingAdmin &&
                                 userStatusUpdateLoading
-                              }>
-                              <PiUserCheck />
-                              {admin.id === updatingAdmin &&
-                              userStatusUpdateLoading
-                                ? "Updating..."
-                                : "Suspend"}
-                            </button>
-                          ) : (
-                            <button
-                              aria-label={`Manage ${admin.name}`}
-                              className={`flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-green-500 hover:bg-green-300`}
-                              onClick={() =>
-                                handleStatusToggle(admin.id, admin.status)
-                              }
-                              disabled={
-                                admin.id === updatingAdmin &&
+                                  ? "Updating..."
+                                  : "Suspend"}
+                              </button>
+                            ) : (
+                              <button
+                                aria-label={`Manage ${admin.name}`}
+                                className={`flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-green-500 hover:bg-green-300`}
+                                onClick={() =>
+                                  handleStatusToggle(admin.id, admin.status)
+                                }
+                                disabled={
+                                  admin.id === updatingAdmin &&
+                                  userStatusUpdateLoading
+                                }>
+                                <PiUserCheck />
+                                {admin.id === updatingAdmin &&
                                 userStatusUpdateLoading
-                              }>
-                              <PiUserCheck />
-                              {admin.id === updatingAdmin &&
-                              userStatusUpdateLoading
+                                  ? "Updating..."
+                                  : "Activate"}
+                              </button>
+                            )}
+                            <button
+                              disabled={
+                                admin.id === updatingAdmin && userDeleteLoading
+                              }
+                              onClick={() => handleDeleteUser(admin.id)}
+                              aria-label={`Analyze ${admin.name}`}
+                              className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
+                              <MdDeleteOutline />
+                              {admin.id === updatingAdmin && userDeleteLoading
                                 ? "Updating..."
-                                : "Activate"}
+                                : "Delete"}
                             </button>
-                          )}
-                          <button
-                            disabled={
-                              admin.id === updatingAdmin && userDeleteLoading
-                            }
-                            onClick={() => handleDeleteUser(admin.id)}
-                            aria-label={`Analyze ${admin.name}`}
-                            className="flex flex-row justify-center items-center gap-2  px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
-                            <MdDeleteOutline />
-                            {admin.id === updatingAdmin &&
-                            userStatusUpdateLoading
-                              ? "Updating..."
-                              : "Delete"}
-                          </button>
+                          </td>
+                        </tr>
+                      ))}
+                    {paginatedAdmin?.filter((admin) =>
+                      show === "active"
+                        ? admin.status === "active"
+                        : admin.status !== "active"
+                    ).length === 0 && (
+                      <tr>
+                        <td colSpan="9" className=" px-4 pt-2">
+                          No {show === "active" ? "active" : "suspended"} admins
+                          found.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 )}
                 {error && error.message}
               </table>
             </div>
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
+              rowsPerPageOptions={[5, 10]}
               component="div"
               count={filteredAdmin?.length}
               rowsPerPage={rowsPerPage}
