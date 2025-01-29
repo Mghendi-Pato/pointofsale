@@ -8,15 +8,15 @@ import TextField from "@mui/material/TextField";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../redux/reducers/ sidebar";
+import { registerNewSupplier } from "../services/services";
 import { useMutation, useQueryClient } from "react-query";
-import { registerNewRegion } from "../services/services";
 
-const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
+const NewSupplier = ({ showAddSupplier, setShowAddSupplier }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [registerRegionLoading, setRegisterRegionLoading] = useState(false);
-  const token = useSelector((state) => state.userSlice.user.token);
-  const queryClient = useQueryClient();
+  const [registerUserLoading, setRegisterUserLoading] = useState(false);
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+  const token = useSelector((state) => state.userSlice.user.token);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
@@ -45,53 +45,57 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
 
   const validationSchema = yup.object({
     name: yup.string("Enter your name").required("Name is required"),
-    location: yup
-      .string("Enter your location")
-      .required("Location is required"),
+    phone: yup
+      .string("Enter your phone number")
+      .matches(
+        /^(\+\d{1,3}[- ]?)?\d{10}$/,
+        "Enter a valid phone number with 10 digits"
+      )
+      .required("Phone number is required"),
   });
 
-  const useRegisterRegion = () => {
+  const useRegisterSupplier = () => {
     return useMutation(
-      ({ regionData, token }) => registerNewRegion(regionData, token),
+      ({ supplierData, token }) => registerNewSupplier(supplierData, token),
       {
         onMutate: () => {
-          setRegisterRegionLoading(true);
+          setRegisterUserLoading(true);
         },
         onSuccess: () => {
-          setRegisterRegionLoading(false);
-          queryClient.invalidateQueries(["regions"]);
-          toast.success("Region registered successfully");
+          setRegisterUserLoading(false);
+          queryClient.invalidateQueries(["suppliers"]);
+          toast.success("Supplier registered successfully");
           formik.resetForm();
           if (isSmallScreen) {
-            setShowAddRegion(false);
+            setShowAddSupplier(false);
           } else {
-            setShowAddRegion(false);
+            setShowAddSupplier(false);
             dispatch(setSidebar(true));
           }
         },
         onError: (error) => {
-          setRegisterRegionLoading(false);
-          toast.error(error.message || "Failed to register region");
+          setRegisterUserLoading(false);
+          toast.error(error.message || "Failed to register supplier");
         },
       }
     );
   };
 
-  const registerRegionMutation = useRegisterRegion();
+  const registerSupplierMutation = useRegisterSupplier();
 
   const formik = useFormik({
     initialValues: {
       name: "",
-      location: "",
+      phone: "",
     },
     validationSchema,
     onSubmit: (values) => {
-      registerRegionMutation.mutate({ regionData: values, token });
+      registerSupplierMutation.mutate({ supplierData: values, token });
     },
   });
 
   const onCloseModal = () => {
-    setShowAddRegion(false);
+    setShowAddSupplier(false);
     formik.resetForm();
     if (!isSmallScreen) {
       dispatch(setSidebar(true));
@@ -100,7 +104,7 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
 
   return (
     <AnimatePresence>
-      {showAddRegion && (
+      {showAddSupplier && (
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
@@ -124,7 +128,7 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
 
           <div className="w-full">
             <div className="w-full text-center text-lg py-2">
-              <p className="font-roboto font-bold">Add Region</p>
+              <p className="font-roboto font-bold">Register supplier</p>
             </div>
             <form
               onSubmit={formik.handleSubmit}
@@ -135,7 +139,7 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
                 fullWidth
                 id="name"
                 name="name"
-                label="Region"
+                label="Name"
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -161,16 +165,14 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
               <TextField
                 variant="outlined"
                 fullWidth
-                id="location"
-                name="location"
-                label="Location"
-                value={formik.values.location}
+                id="phone"
+                name="phone"
+                label="Phone"
+                value={formik.values.phone}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.location && Boolean(formik.errors.location)
-                }
-                helperText={formik.touched.location && formik.errors.location}
+                error={formik.touched.phone && Boolean(formik.errors.phone)}
+                helperText={formik.touched.phone && formik.errors.phone}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
@@ -192,7 +194,7 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
                 <button
                   type="submit"
                   className="p-2 bg-primary-500 transition-all duration-500 ease-in-out flex flex-row items-center justify-center h-12 w-full space-x-2">
-                  {registerRegionLoading ? "Adding ..." : "Add region"}
+                  {registerUserLoading ? "Adding ..." : "Register Supplier"}
                 </button>
               </div>
             </form>
@@ -203,4 +205,4 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
   );
 };
 
-export default NewRegion;
+export default NewSupplier;

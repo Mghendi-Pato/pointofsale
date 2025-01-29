@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
       lastName: DataTypes.STRING,
       nkPhone: DataTypes.STRING,
       nkEmail: DataTypes.STRING,
+      customerId: { type: DataTypes.INTEGER, allowNull: true, unique: true },
     },
     {
       sequelize,

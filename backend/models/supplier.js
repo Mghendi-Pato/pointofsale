@@ -3,6 +3,7 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Supplier extends Model {
     static associate(models) {
+      // Define association with Phone
       Supplier.hasMany(models.Phone, {
         as: "phones",
         foreignKey: "supplierId",
@@ -12,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
   Supplier.init(
     {
       name: DataTypes.STRING,
-      email: { type: DataTypes.STRING, unique: true },
+      phone: { type: DataTypes.STRING, unique: true },
     },
     {
       sequelize,

@@ -31,7 +31,7 @@ exports.getActiveAdmins = async (req, res) => {
     const loggedInUser = req.user;
 
     if (!["super admin"].includes(loggedInUser.role)) {
-      return res.status(403).send("Access Denied: You must be a super admin.");
+      return res.status(403).send("Access Denied");
     }
 
     const { page = 1, limit = 10 } = req.query;
@@ -82,7 +82,7 @@ exports.getSuspendedAdmins = async (req, res) => {
     const loggedInUser = req.user;
 
     if (!["super admin"].includes(loggedInUser.role)) {
-      return res.status(403).send("Access Denied: You must be a super admin.");
+      return res.status(403).send("Access Denied.");
     }
 
     const { page = 1, limit = 10 } = req.query;

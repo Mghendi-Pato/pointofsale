@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { MdOutlineCancel } from "react-icons/md";
 import { CiSaveDown2 } from "react-icons/ci";
 import { useFormik } from "formik";
@@ -7,11 +7,6 @@ import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  initializeRegisterUserState,
-  registerUser,
-} from "../redux/reducers/user";
-import { fetchAdmin } from "../redux/reducers/admin";
 import { setSidebar } from "../redux/reducers/ sidebar";
 import { MdOutlineVisibility } from "react-icons/md";
 import { MdOutlineVisibilityOff } from "react-icons/md";
@@ -23,21 +18,24 @@ import {
   MenuItem,
   Select,
 } from "@mui/material";
-import { fetchRegions } from "../redux/reducers/region";
-import { useQueryClient } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import { fetchAllRegions, registerNewUser } from "../services/services";
 
 const NewManager = ({ showAddManager, setShowAddManager }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { registerUserError, registerUserLoading, registerUserSuccess } =
-    useSelector((state) => state.userSlice);
+  const [registerUserLoading, setRegisterUserLoading] = useState(false);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
-  const { regions } = useSelector((state) => state.regionSlice.regions);
+  const token = useSelector((state) => state.userSlice.user.token);
 
-  const regionsFetched = useMemo(
-    () => regions && regions.length > 0,
-    [regions]
+  const { data: regions } = useQuery(
+    ["regions", { page: 1, limit: 100 }],
+    ({ queryKey, signal }) => fetchAllRegions({ queryKey, signal, token }),
+    {
+      keepPreviousData: true,
+      enabled: !!token,
+    }
   );
 
   useEffect(() => {
@@ -66,9 +64,6 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
   };
 
   const animation = isSmallScreen ? smallScreenAnimation : largeScreenAnimation;
-
-  const succesNotify = (message) => toast.success(message);
-  const errorNotify = (message) => toast.error(message);
 
   const validationSchema = yup.object({
     firstName: yup
@@ -102,6 +97,35 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
       .required("Region is required"),
   });
 
+  const useRegisterUser = () => {
+    return useMutation(
+      ({ userData, token }) => registerNewUser(userData, token),
+      {
+        onMutate: () => {
+          setRegisterUserLoading(true);
+        },
+        onSuccess: () => {
+          setRegisterUserLoading(false);
+          queryClient.invalidateQueries(["managers"]);
+          toast.success("Admin registered successfully");
+          formik.resetForm();
+          if (isSmallScreen) {
+            setShowAddManager(false);
+          } else {
+            setShowAddManager(false);
+            dispatch(setSidebar(true));
+          }
+        },
+        onError: (error) => {
+          setRegisterUserLoading(false);
+          toast.error(error.message || "Failed to register user");
+        },
+      }
+    );
+  };
+
+  const registerUserMutation = useRegisterUser();
+
   const formik = useFormik({
     initialValues: {
       firstName: "",
@@ -114,45 +138,10 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
     },
     validationSchema,
     onSubmit: (values) => {
-      const updatedValues = {
-        ...values,
-        role: "manager",
-        regionId: values.region,
-      };
-      dispatch(registerUser(updatedValues));
+      const userData = { ...values, regionId: values.region, role: "manager" };
+      registerUserMutation.mutate({ token, userData });
     },
   });
-
-  useEffect(() => {
-    if (registerUserSuccess) {
-      succesNotify("Manger registerd successfully");
-      dispatch(fetchAdmin());
-      dispatch(initializeRegisterUserState());
-      queryClient.invalidateQueries(["managers"]);
-      formik.resetForm();
-      if (isSmallScreen) {
-        setShowAddManager(false);
-      }
-      if (!isSmallScreen) {
-        setShowAddManager(false);
-        dispatch(setSidebar(true));
-      }
-    }
-  }, [
-    dispatch,
-    formik,
-    isSmallScreen,
-    setShowAddManager,
-    queryClient,
-    registerUserSuccess,
-  ]);
-
-  useEffect(() => {
-    if (registerUserError) {
-      errorNotify(registerUserError);
-      dispatch(initializeRegisterUserState());
-    }
-  }, [dispatch, registerUserError]);
 
   const onCloseModal = () => {
     setShowAddManager(false);
@@ -165,12 +154,6 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
   const handleTogglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
-
-  useEffect(() => {
-    if (!regionsFetched) {
-      dispatch(fetchRegions());
-    }
-  }, [dispatch, regionsFetched]);
 
   return (
     <AnimatePresence>
@@ -357,17 +340,17 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
-                      borderColor: "#ccc", // Default border color
+                      borderColor: "#ccc",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#2FC3D2", // Hover state color
+                      borderColor: "#2FC3D2",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#2FC3D2", // Focused state color
+                      borderColor: "#2FC3D2",
                     },
                   },
-                  "& .MuiInputBase-input": { color: "#000" }, // Input text color
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" }, // Focused label color
+                  "& .MuiInputBase-input": { color: "#000" },
+                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
                 }}
               />
               <TextField
@@ -384,17 +367,17 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
-                      borderColor: "#ccc", // Default border color
+                      borderColor: "#ccc",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#2FC3D2", // Hover state color
+                      borderColor: "#2FC3D2",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#2FC3D2", // Focused state color
+                      borderColor: "#2FC3D2",
                     },
                   },
-                  "& .MuiInputBase-input": { color: "#000" }, // Input text color
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" }, // Focused label color
+                  "& .MuiInputBase-input": { color: "#000" },
+                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
                 }}
               />
 
@@ -417,7 +400,7 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
                       },
                     },
                   }}>
-                  {[...regions]
+                  {[...regions.regions]
                     .sort((a, b) => a.location.localeCompare(b.location))
                     .map((region) => (
                       <MenuItem key={region.id} value={region.id}>

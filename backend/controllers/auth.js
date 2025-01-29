@@ -13,11 +13,7 @@ exports.register = async (req, res) => {
 
     // Check if the logged-in user has the appropriate role to register users
     if (!["admin", "super admin"].includes(loggedInUser.role)) {
-      return res
-        .status(403)
-        .send(
-          "Access Denied: You must be an admin or super admin to register users."
-        );
+      return res.status(403).send("Access Denied");
     }
 
     // Admin can only register managers
@@ -95,7 +91,6 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
-    console.log(error);
   }
 };
 
@@ -152,6 +147,15 @@ exports.login = async (req, res) => {
 //Toggle user status
 exports.toggleUserStatus = async (req, res) => {
   try {
+    const loggedInUser = req.user;
+
+    // Check if the user has admin or super admin privileges
+    if (!["admin", "super admin"].includes(loggedInUser.role)) {
+      return res.status(403).json({
+        message: "Access Denied",
+      });
+    }
+
     const { userId } = req.params;
 
     // Find the user by ID
@@ -178,7 +182,9 @@ exports.toggleUserStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in toggleUserStatus:", error); // Log the error
-    res.status(500).json({ error: error.message });
+    res
+      .status(500)
+      .json({ error: "An error occurred while toggling user status." });
   }
 };
 
@@ -189,8 +195,7 @@ exports.deleteUser = async (req, res) => {
     const loggedInUser = req.user;
     if (!["admin", "super admin"].includes(loggedInUser.role)) {
       return res.status(403).json({
-        message:
-          "Access Denied: You must be an admin or super admin to delete users.",
+        message: "Access Denied",
       });
     }
     const userToDelete = await User.findByPk(userId);

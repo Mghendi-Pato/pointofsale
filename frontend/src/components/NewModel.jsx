@@ -9,11 +9,11 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../redux/reducers/ sidebar";
 import { useMutation, useQueryClient } from "react-query";
-import { registerNewRegion } from "../services/services";
+import { registerNewModel } from "../services/services";
 
-const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
+const NewModel = ({ showAddModel, setShowAddModel }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [registerRegionLoading, setRegisterRegionLoading] = useState(false);
+  const [registerModelLoading, setRegisterModelLoading] = useState(false);
   const token = useSelector((state) => state.userSlice.user.token);
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
@@ -44,54 +44,52 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
   const animation = isSmallScreen ? smallScreenAnimation : largeScreenAnimation;
 
   const validationSchema = yup.object({
-    name: yup.string("Enter your name").required("Name is required"),
-    location: yup
-      .string("Enter your location")
-      .required("Location is required"),
+    make: yup.string("Enter the make").required("Make is required"),
+    model: yup.string("Enter the model").required("Model is required"),
   });
 
-  const useRegisterRegion = () => {
+  const useRegisterModel = () => {
     return useMutation(
-      ({ regionData, token }) => registerNewRegion(regionData, token),
+      ({ modelData, token }) => registerNewModel(modelData, token),
       {
         onMutate: () => {
-          setRegisterRegionLoading(true);
+          setRegisterModelLoading(true);
         },
         onSuccess: () => {
-          setRegisterRegionLoading(false);
-          queryClient.invalidateQueries(["regions"]);
-          toast.success("Region registered successfully");
+          setRegisterModelLoading(false);
+          queryClient.invalidateQueries(["models"]);
+          toast.success("Model registered successfully");
           formik.resetForm();
           if (isSmallScreen) {
-            setShowAddRegion(false);
+            setShowAddModel(false);
           } else {
-            setShowAddRegion(false);
+            setShowAddModel(false);
             dispatch(setSidebar(true));
           }
         },
         onError: (error) => {
-          setRegisterRegionLoading(false);
-          toast.error(error.message || "Failed to register region");
+          setRegisterModelLoading(false);
+          toast.error(error.message || "Failed to register model");
         },
       }
     );
   };
 
-  const registerRegionMutation = useRegisterRegion();
+  const registerModelMutation = useRegisterModel();
 
   const formik = useFormik({
     initialValues: {
-      name: "",
-      location: "",
+      make: "Samsung",
+      model: "",
     },
     validationSchema,
     onSubmit: (values) => {
-      registerRegionMutation.mutate({ regionData: values, token });
+      registerModelMutation.mutate({ modelData: values, token });
     },
   });
 
   const onCloseModal = () => {
-    setShowAddRegion(false);
+    setShowAddModel(false);
     formik.resetForm();
     if (!isSmallScreen) {
       dispatch(setSidebar(true));
@@ -100,7 +98,7 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
 
   return (
     <AnimatePresence>
-      {showAddRegion && (
+      {showAddModel && (
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
@@ -124,23 +122,24 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
 
           <div className="w-full">
             <div className="w-full text-center text-lg py-2">
-              <p className="font-roboto font-bold">Add Region</p>
+              <p className="font-roboto font-bold">Add Model</p>
             </div>
             <form
               onSubmit={formik.handleSubmit}
               className="space-y-5 px-2 pb-10 md:mt-5"
               autoComplete="off">
               <TextField
+                disabled
                 variant="outlined"
                 fullWidth
-                id="name"
-                name="name"
-                label="Region"
-                value={formik.values.name}
+                id="make"
+                name="make"
+                label="Make"
+                value={formik.values.make}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
+                error={formik.touched.make && Boolean(formik.errors.make)}
+                helperText={formik.touched.make && formik.errors.make}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
@@ -161,16 +160,14 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
               <TextField
                 variant="outlined"
                 fullWidth
-                id="location"
-                name="location"
-                label="Location"
-                value={formik.values.location}
+                id="model"
+                name="model"
+                label="Model"
+                value={formik.values.model}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.location && Boolean(formik.errors.location)
-                }
-                helperText={formik.touched.location && formik.errors.location}
+                error={formik.touched.model && Boolean(formik.errors.model)}
+                helperText={formik.touched.model && formik.errors.model}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
@@ -192,7 +189,7 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
                 <button
                   type="submit"
                   className="p-2 bg-primary-500 transition-all duration-500 ease-in-out flex flex-row items-center justify-center h-12 w-full space-x-2">
-                  {registerRegionLoading ? "Adding ..." : "Add region"}
+                  {registerModelLoading ? "Adding ..." : "Add Model"}
                 </button>
               </div>
             </form>
@@ -203,4 +200,4 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
   );
 };
 
-export default NewRegion;
+export default NewModel;

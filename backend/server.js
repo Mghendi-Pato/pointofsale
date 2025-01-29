@@ -9,6 +9,9 @@ const authRoutes = require("./routes/auth.js");
 const adminRoutes = require("./routes/admin.js");
 const regionRoutes = require("./routes/region.js");
 const managerRoutes = require("./routes/manager.js");
+const supplierRoutes = require("./routes/supplier.js");
+const phonesRoutes = require("./routes/phone.js");
+const modelRoutes = require("./routes/model");
 
 const app = express();
 
@@ -44,6 +47,9 @@ app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
 app.use("/region", regionRoutes);
 app.use("/manager", managerRoutes);
+app.use("/supplier", supplierRoutes);
+app.use("/phone", phonesRoutes);
+app.use("/model", modelRoutes);
 
 // Start Server
 app.listen(PORT, () =>

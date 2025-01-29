@@ -16,6 +16,7 @@ const fetchManagers = async (status, page, limit) => {
         model: Location,
         as: "region",
         attributes: ["name", "location"],
+        paranoid: false,
       },
     ],
     offset,
@@ -39,9 +40,7 @@ exports.getActiveManagers = async (req, res) => {
     const loggedInUser = req.user;
 
     if (!["admin", "super admin"].includes(loggedInUser.role)) {
-      return res
-        .status(403)
-        .send("Access Denied: You must be an admin or super admin.");
+      return res.status(403).send("Access Denied");
     }
 
     const { page = 1, limit = 10 } = req.query;
@@ -91,9 +90,7 @@ exports.getSuspendedManagers = async (req, res) => {
     const loggedInUser = req.user;
 
     if (!["admin", "super admin"].includes(loggedInUser.role)) {
-      return res
-        .status(403)
-        .send("Access Denied: You must be an admin or super admin.");
+      return res.status(403).send("Access Denied.");
     }
 
     const { page = 1, limit = 10 } = req.query;

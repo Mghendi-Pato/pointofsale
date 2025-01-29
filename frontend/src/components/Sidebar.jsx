@@ -5,7 +5,6 @@ import { LuClipboardList } from "react-icons/lu";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAnalyticsSharp } from "react-icons/io5";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MdOutlineMonetizationOn } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { CiLogout } from "react-icons/ci";
 import { RiAdminLine } from "react-icons/ri";
@@ -15,6 +14,8 @@ import { toggleSidebar } from "../redux/reducers/ sidebar";
 import { BsPinMap } from "react-icons/bs";
 import { useState } from "react";
 import LogoutUser from "./LogoutUser";
+import { MdAttachMoney } from "react-icons/md";
+import { GiReceiveMoney } from "react-icons/gi";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -42,16 +43,30 @@ const Sidebar = () => {
 
   const sideNavdAreas = [
     {
+      area: "Commissions",
+      Icon: <MdAttachMoney size={20} className="mx-4" />,
+      privileges: ["super admin", "admin"],
+      route: "/commissions",
+    },
+    {
       area: "Inventory",
       Icon: <LuClipboardList size={20} className="mx-4" />,
       privileges: ["super admin", "admin", "manager"],
       route: "/inventory",
     },
+
     {
       area: "Sales",
-      Icon: <MdOutlineMonetizationOn size={20} className="mx-4" />,
+      Icon: <GiReceiveMoney size={20} className="mx-4" />,
       privileges: ["super admin", "admin", "manager"],
       route: "/sales",
+    },
+
+    {
+      area: "Reports",
+      Icon: <IoAnalyticsSharp size={20} className="mx-4" />,
+      privileges: ["super admin", "admin", "manager"],
+      route: "/reports",
     },
     {
       area: "Regions",
@@ -72,12 +87,6 @@ const Sidebar = () => {
       route: "/suppliers",
     },
     {
-      area: "Reports",
-      Icon: <IoAnalyticsSharp size={20} className="mx-4" />,
-      privileges: ["super admin", "admin", "manager"],
-      route: "/reports",
-    },
-    {
       area: "Admins",
       Icon: <RiAdminLine size={20} className="mx-4" />,
       privileges: ["super admin"],
@@ -87,7 +96,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`bg-slate-50 shadow-md transition-all duration-1000 ease-in-out flex flex-col justify-between flex-1 ${
+      className={`bg-slate-50 shadow-md transition-all duration-1000 ease-in-out flex flex-col justify-between flex-1 z-20 ${
         showSideBar ? "w-52 md:w-64" : "w-0 md:w-16"
       } h-full fixed left-0 top-0 z-10`}>
       <div className=" ">

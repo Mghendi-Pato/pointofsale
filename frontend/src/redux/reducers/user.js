@@ -33,51 +33,6 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-export const toggleUserStatus = createAsyncThunk(
-  "auth/toggleUserStatus",
-  async (userId, { getState, rejectWithValue }) => {
-    try {
-      // Retrieve the token from the state
-      const state = getState();
-      const token = state.userSlice.user.token;
-      // Make the request to toggle the user's status
-      const response = await axios.put(
-        `${url}/auth/${userId}/toggle-status`,
-        {}, // Empty body
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      // Return the updated user data
-      return response.data;
-    } catch (error) {
-      // Handle errors and return a rejected value
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
-export const deleteUser = createAsyncThunk(
-  "auth/deleteUser",
-  async (userId, { getState, rejectWithValue }) => {
-    try {
-      const state = getState();
-      const token = state.userSlice.user.token;
-      const response = await axios.delete(`${url}/auth/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      // Handle errors and return a rejected value
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -87,12 +42,6 @@ const authSlice = createSlice({
     registerUserError: null,
     registerUserLoading: false,
     registerUserSuccess: false,
-    userStatusUpdateError: null,
-    userStatusUpdateLoading: false,
-    userStatusUpdateSuccess: false,
-    userDeleteSuccess: false,
-    userDeleteError: null,
-    userDeleteLoading: false,
   },
   reducers: {
     logoutUser: (state) => {
@@ -103,16 +52,6 @@ const authSlice = createSlice({
       state.registerUserError = null;
       state.registerUserLoading = false;
       state.registerUserSuccess = false;
-    },
-    initializeUserStatusUpdateState: (state) => {
-      state.userStatusUpdateError = null;
-      state.userStatusUpdateLoading = false;
-      state.userStatusUpdateSuccess = false;
-    },
-    initializeUserDeleteState: (state) => {
-      state.userDeleteError = null;
-      state.userDeleteSuccess = false;
-      state.userDeleteLoading = false;
     },
   },
   extraReducers: (builder) => {
@@ -144,43 +83,8 @@ const authSlice = createSlice({
         state.registerUserLoading = false;
         state.registerUserError = action.payload || "Registration failed";
       });
-    // Toggle user status
-    builder
-      .addCase(toggleUserStatus.pending, (state) => {
-        state.userStatusUpdateLoading = true;
-        state.userStatusUpdateError = null;
-        state.userStatusUpdateSuccess = false;
-      })
-      .addCase(toggleUserStatus.fulfilled, (state) => {
-        state.userStatusUpdateLoading = false;
-        state.userStatusUpdateSuccess = true;
-      })
-      .addCase(toggleUserStatus.rejected, (state, action) => {
-        state.userStatusUpdateLoading = false;
-        state.userStatusUpdateError = action.payload || "Status update failed";
-      });
-    // Delete user
-    builder
-      .addCase(deleteUser.pending, (state) => {
-        state.userDeleteLoading = true;
-        state.userDeleteError = null;
-        state.userDeleteSuccess = false;
-      })
-      .addCase(deleteUser.fulfilled, (state) => {
-        state.userDeleteLoading = false;
-        state.userDeleteSuccess = true;
-      })
-      .addCase(deleteUser.rejected, (state, action) => {
-        state.userDeleteLoading = false;
-        state.userDeleteError = action.payload || "User deletion failed";
-      });
   },
 });
 
-export const {
-  logoutUser,
-  initializeRegisterUserState,
-  initializeUserStatusUpdateState,
-  initializeUserDeleteState,
-} = authSlice.actions;
+export const { logoutUser, initializeRegisterUserState } = authSlice.actions;
 export default authSlice.reducer;

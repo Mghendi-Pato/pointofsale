@@ -21,7 +21,6 @@ const Login = () => {
       loginNotify();
       navigate("/");
     } else if (error) {
-      console.log(error);
       errorNotify(error || "Login failed");
       dispatch(logoutUser());
     }
@@ -137,7 +136,7 @@ const Login = () => {
             type="submit"
             disabled={isLoading}
             className="w-full rounded-sm md:rounded-md min-h-10 p-1 md:p-2 bg-primary-500 font-bold text-white hover:bg-primary-600 transition-colors">
-            {isLoading ? "Logging in..." : "Login"}
+            {isLoading ? "Authenticating..." : "Login"}
           </button>
         </form>
         <p className="cursor-pointer mt-10 text-md text-slate-800 font-roboto font-bold">

@@ -1,5 +1,4 @@
 import { useSelector } from "react-redux";
-import SuperAdminInventory from "./SuperAdminInventory";
 import AdminInventory from "./AdminInventory";
 import ManagerInventory from "./ManagerInventory";
 
@@ -24,7 +23,7 @@ const Index = () => {
 
   switch (userRole) {
     case "super admin":
-      return <SuperAdminInventory />;
+      return <AdminInventory />;
     case "admin":
       return <AdminInventory />;
     case "manager":

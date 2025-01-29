@@ -15,6 +15,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Profile from "./pages/profile/Profile";
 import Regions from "./pages/regions/Regions";
+import Commissions from "./pages/Commissions";
 
 const App = () => {
   return (
@@ -27,6 +28,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/commissions"
+          element={
+            <ProtectedRoute>
+              <Commissions />
             </ProtectedRoute>
           }
         />

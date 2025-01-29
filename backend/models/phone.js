@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+
 module.exports = (sequelize, DataTypes) => {
   class Phone extends Model {
     static associate(models) {
@@ -12,22 +13,53 @@ module.exports = (sequelize, DataTypes) => {
         as: "customer",
         foreignKey: "customerId",
       });
+      Phone.belongsTo(models.User, {
+        as: "manager",
+        foreignKey: "managerId",
+      });
+      Phone.belongsTo(models.PhoneModel, {
+        as: "phoneModel",
+        foreignKey: "modelId",
+      });
     }
   }
+
   Phone.init(
     {
       imei: { type: DataTypes.STRING, unique: true },
-      make: DataTypes.STRING,
       purchasePrice: DataTypes.FLOAT,
-      sellingPrice: DataTypes.FLOAT,
       buyDate: DataTypes.DATE,
-      saleDate: DataTypes.DATE,
-      model: DataTypes.TEXT,
+      sellingPrice: { type: DataTypes.FLOAT, allowNull: true },
+      saleDate: { type: DataTypes.DATE, allowNull: true },
+      supplierId: DataTypes.INTEGER,
+      modelId: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: "PhoneModels",
+          key: "id",
+        },
+        allowNull: true,
+      },
+      status: {
+        type: DataTypes.ENUM("active", "suspended", "sold", "lost"),
+        allowNull: false,
+        defaultValue: "active",
+      },
+      managerId: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+        allowNull: true,
+      },
+      capacity: { type: DataTypes.STRING, allowNull: true },
     },
     {
       sequelize,
       modelName: "Phone",
     }
   );
+
   return Phone;
 };

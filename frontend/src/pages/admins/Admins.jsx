@@ -205,7 +205,6 @@ const Admins = () => {
       <div className="border border-gray-200">
         <div className="">
           <div className="p-5 flex flex-col space-y-5">
-            <p className="text-xl font-bold">All admin data</p>
             <div className="flex flex-col md:flex-row-reverse justify-between space-y-5 md:space-y-0">
               <button
                 className="p-2 bg-primary-500 hover:scale-105 flex flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-500 ease-in-out"
@@ -336,10 +335,10 @@ const Admins = () => {
                             {manager.phone}
                           </td>
                           <td className="px-6 border-r py-2">
-                            {formatDate(new Date(manager.lastLogin))}
+                            {formatDate(new Date(manager.createdAt))}
                           </td>
                           <td className="px-6 border-r py-2">
-                            {formatDate(new Date(manager.createdAt))}
+                            {formatDate(new Date(manager.lastLogin))}
                           </td>
                           <td className="px-6 border-r py-2">
                             {manager.status === "active" ? (

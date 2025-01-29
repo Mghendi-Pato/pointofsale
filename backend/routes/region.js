@@ -1,6 +1,14 @@
 const express = require("express");
-const { createRegion, fetchRegions } = require("../controllers/region");
+const {
+  createRegion,
+  fetchRegions,
+  deleteRegion,
+} = require("../controllers/region");
+const { verifyToken } = require("../middleware/auth");
 const router = express.Router();
-router.post("/region", createRegion);
-router.get("/regions", fetchRegions);
+
+router.post("/register", verifyToken, createRegion);
+router.get("/regions", verifyToken, fetchRegions);
+router.delete("/:id", verifyToken, deleteRegion);
+
 module.exports = router;

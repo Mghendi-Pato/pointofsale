@@ -7,22 +7,20 @@ import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  initializeRegisterUserState,
-  registerUser,
-} from "../redux/reducers/user";
-import { fetchAdmin } from "../redux/reducers/admin";
 import { setSidebar } from "../redux/reducers/ sidebar";
 import { MdOutlineVisibility } from "react-icons/md";
 import { MdOutlineVisibilityOff } from "react-icons/md";
 import { IconButton, InputAdornment } from "@mui/material";
+import { useMutation, useQueryClient } from "react-query";
+import { registerNewUser } from "../services/services";
 
 const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { registerUserError, registerUserLoading, registerUserSuccess } =
-    useSelector((state) => state.userSlice);
+  const [registerUserLoading, setRegisterUserLoading] = useState(false);
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+  const token = useSelector((state) => state.userSlice.user.token);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)"); // Tailwind's `md` breakpoint
@@ -50,9 +48,6 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
   };
 
   const animation = isSmallScreen ? smallScreenAnimation : largeScreenAnimation;
-
-  const succesNotify = (message) => toast.success(message);
-  const errorNotify = (message) => toast.error(message);
 
   const validationSchema = yup.object({
     firstName: yup
@@ -82,6 +77,35 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
       .required("Phone number is required"),
   });
 
+  const useRegisterUser = () => {
+    return useMutation(
+      ({ userData, token }) => registerNewUser(userData, token),
+      {
+        onMutate: () => {
+          setRegisterUserLoading(true);
+        },
+        onSuccess: () => {
+          setRegisterUserLoading(false);
+          queryClient.invalidateQueries(["admins"]);
+          toast.success("Admin registered successfully");
+          formik.resetForm();
+          if (isSmallScreen) {
+            setShowAdmin(false);
+          } else {
+            setShowAdmin(false);
+            dispatch(setSidebar(true));
+          }
+        },
+        onError: (error) => {
+          setRegisterUserLoading(false);
+          toast.error(error.message || "Failed to register user");
+        },
+      }
+    );
+  };
+
+  const registerUserMutation = useRegisterUser();
+
   const formik = useFormik({
     initialValues: {
       firstName: "",
@@ -93,41 +117,13 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
     },
     validationSchema,
     onSubmit: (values) => {
-      const updatedValues = {
-        ...values,
-        role: "admin",
-      };
-      console.log(updatedValues);
-      dispatch(registerUser(updatedValues));
+      const userData = { ...values, role: "admin" };
+      registerUserMutation.mutate({ token, userData });
     },
   });
 
-  useEffect(() => {
-    if (registerUserSuccess) {
-      succesNotify("Admin registerd successfully");
-      dispatch(fetchAdmin());
-      dispatch(initializeRegisterUserState());
-      formik.resetForm();
-      if (isSmallScreen) {
-        setShowAdmin(false);
-      }
-      if (!isSmallScreen) {
-        setShowAdmin(false);
-        dispatch(setSidebar(true));
-      }
-    }
-  }, [dispatch, formik, isSmallScreen, setShowAdmin, registerUserSuccess]);
-
-  useEffect(() => {
-    if (registerUserError) {
-      errorNotify(registerUserError);
-      dispatch(initializeRegisterUserState());
-    }
-  }, [dispatch, registerUserError]);
-
   const onCloseModal = () => {
     setShowAdmin(false);
-
     if (!isSmallScreen) {
       dispatch(setSidebar(true));
     }
@@ -245,17 +241,17 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
-                      borderColor: "#ccc", // Default border color
+                      borderColor: "#ccc",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#2FC3D2", // Hover state color
+                      borderColor: "#2FC3D2",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#2FC3D2", // Focused state color
+                      borderColor: "#2FC3D2",
                     },
                   },
-                  "& .MuiInputBase-input": { color: "#000" }, // Input text color
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" }, // Focused label color
+                  "& .MuiInputBase-input": { color: "#000" },
+                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
                 }}
               />
 
@@ -265,7 +261,7 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
                 id="password"
                 name="password"
                 label="Password"
-                type={showPassword ? "text" : "password"} // Toggle type between "text" and "password"
+                type={showPassword ? "text" : "password"}
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
