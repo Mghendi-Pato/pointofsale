@@ -79,7 +79,7 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
         onSuccess: () => {
           setRegisterPhoneLoading(false);
           queryClient.invalidateQueries(["phones"]);
-          toast.success("Phone registered successfully");
+          toast.success("Phone registered");
           formik.resetForm();
           if (isSmallScreen) {
             setShowAddPhone(false);
@@ -219,6 +219,14 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   label="Model"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200,
+                        overflowY: "auto",
+                      },
+                    },
+                  }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       "& fieldset": {

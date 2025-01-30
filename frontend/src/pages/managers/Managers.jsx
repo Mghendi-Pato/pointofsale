@@ -1,21 +1,21 @@
 import { TextField } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { PiUserCheck } from "react-icons/pi";
 import TablePagination from "@mui/material/TablePagination";
 import { MdDeleteOutline } from "react-icons/md";
 import { setSidebar } from "../../redux/reducers/ sidebar";
 import { toast } from "react-toastify";
 import NewManager from "../../components/NewManager";
+import { BiEdit } from "react-icons/bi";
 import { useQuery } from "react-query";
 import {
   deleteQueryUser,
   fetchActiveManagers,
   fetchSuspendedManagers,
-  toggleQueryUserStatus,
 } from "../../services/services";
 import { useMutation, useQueryClient } from "react-query";
 import DeleteConfirmationModal from "../../components/DeleteModal";
+import EditUserModal from "../../components/EditUserModal";
 
 const Managers = () => {
   const [page, setPage] = useState(0);
@@ -25,6 +25,8 @@ const Managers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAddManager, setShowAddManager] = useState(false);
+  const [editUser, setEditUser] = useState([]);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
   const dispatch = useDispatch();
 
   const token = useSelector((state) => state.userSlice.user.token);
@@ -95,35 +97,13 @@ const Managers = () => {
     setPage(0);
   }, [searchQuery]);
 
-  const useToggleStatus = () => {
-    const queryClient = useQueryClient();
-    return useMutation(
-      ({ userId, token }) => toggleQueryUserStatus(userId, token),
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries(["managers"]);
-          toast.success("Manager status updated successfully");
-        },
-        onError: (error) => {
-          toast.error(error.message || "Failed to update manager status");
-        },
-      }
-    );
-  };
-
-  const toggleStatusMutation = useToggleStatus();
-
-  const handleStatusToggle = (userId) => {
-    toggleStatusMutation.mutate({ userId, token });
-  };
-
   const useDeleteUser = () => {
     const queryClient = useQueryClient();
 
     return useMutation(({ userId, token }) => deleteQueryUser(userId, token), {
       onSuccess: () => {
         queryClient.invalidateQueries(["managers"]);
-        toast.success("Manager deleted successfully");
+        toast.success("Manager deleted");
       },
       onError: (error) => {
         toast.error(error.message || "Failed to delete manager");
@@ -174,14 +154,19 @@ const Managers = () => {
   }
 
   useEffect(() => {
-    if (showAddManager) {
+    if (showAddManager || showEditUserModal) {
       dispatch(setSidebar(false));
     }
-  }, [showAddManager, dispatch]);
+  }, [showAddManager, showEditUserModal, dispatch]);
 
   useEffect(() => {
     setPage(0);
   }, [searchQuery, show]);
+
+  const onEditManger = (manager) => {
+    setEditUser(manager);
+    setShowEditUserModal(true);
+  };
 
   return (
     <div className="p-5">
@@ -355,27 +340,13 @@ const Managers = () => {
                             )}
                           </td>
                           <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
-                            {manager.status === "active" ? (
-                              <button
-                                aria-label={`Manage ${manager.name}`}
-                                className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300"
-                                onClick={() =>
-                                  handleStatusToggle(manager.id, manager.status)
-                                }>
-                                Suspend
-                                <PiUserCheck />
-                              </button>
-                            ) : (
-                              <button
-                                aria-label={`Manage ${manager.name}`}
-                                className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-green-500 hover:bg-green-300"
-                                onClick={() =>
-                                  handleStatusToggle(manager.id, manager.status)
-                                }>
-                                Activate
-                                <PiUserCheck />
-                              </button>
-                            )}
+                            <button
+                              onClick={() => onEditManger(manager)}
+                              aria-label={`Manage ${manager.name}`}
+                              className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
+                              Edit
+                              <BiEdit />
+                            </button>
                             <button
                               onClick={() => handleDeleteUser(manager.id)}
                               aria-label={`Analyze ${manager.name}`}
@@ -407,6 +378,12 @@ const Managers = () => {
       <NewManager
         showAddManager={showAddManager}
         setShowAddManager={setShowAddManager}
+      />
+      <EditUserModal
+        setEditUser={setEditUser}
+        user={editUser}
+        showEditUserModal={showEditUserModal}
+        setShowEditUserModal={setShowEditUserModal}
       />
       <DeleteConfirmationModal
         showDeleteModal={showDeleteModal}

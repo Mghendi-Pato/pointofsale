@@ -421,3 +421,74 @@ export const editCommission = async (commissionData, token) => {
     throw new Error(error.response?.data?.message || error.message);
   }
 };
+//Edit user
+export const editUser = async (userId, userData, token) => {
+  try {
+    const response = await axios.put(`${url}/auth/${userId}`, userData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};
+// Declare phone as lost
+export const declarePhoneLost = async (phoneId, token) => {
+  console.log(token);
+  try {
+    const response = await axios.put(
+      `${url}/phone/lost/${phoneId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};
+// Sell a phone
+export const sellPhone = async (customerDetails, token) => {
+  const {
+    ID,
+    company,
+    firstName,
+    lastName,
+    nkFirstName,
+    nkLastName,
+    nkPhone,
+    phone,
+    phoneId,
+    phoneNumber,
+  } = customerDetails;
+  try {
+    const response = await axios.post(
+      `${url}/phone/sell`,
+      {
+        ID,
+        company,
+        firstName,
+        lastName,
+        nkFirstName,
+        nkLastName,
+        nkPhone,
+        phone,
+        phoneId,
+        phoneNumber,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};

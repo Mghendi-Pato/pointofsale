@@ -60,7 +60,7 @@ const NewRegion = ({ showAddRegion, setShowAddRegion }) => {
         onSuccess: () => {
           setRegisterRegionLoading(false);
           queryClient.invalidateQueries(["regions"]);
-          toast.success("Region registered successfully");
+          toast.success("Region registered");
           formik.resetForm();
           if (isSmallScreen) {
             setShowAddRegion(false);

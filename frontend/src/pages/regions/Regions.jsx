@@ -88,7 +88,7 @@ const Regions = () => {
       {
         onSuccess: (response) => {
           queryClient.invalidateQueries(["regions"]);
-          toast.success("Region deleted successfully");
+          toast.success("Region deleted");
         },
         onError: (error) => {
           toast.error(error.message || "Failed to delete region");

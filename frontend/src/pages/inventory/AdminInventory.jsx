@@ -2,14 +2,20 @@ import { TextField } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../../redux/reducers/ sidebar";
-import { useInfiniteQuery } from "react-query";
-import { fetchActivePhones, fetchLostPhones } from "../../services/services";
+import { useInfiniteQuery, useMutation, useQueryClient } from "react-query";
+import {
+  declarePhoneLost,
+  fetchActivePhones,
+  fetchLostPhones,
+} from "../../services/services";
 import { BiCartAdd } from "react-icons/bi";
 import { BiEdit } from "react-icons/bi";
 import NewPhone from "../../components/NewPhone";
 import InfiniteScroll from "react-infinite-scroll-component";
 import EditPhone from "../../components/EditPhone";
-import PhoneCheckout from "../../components/PhoneCheclout";
+import PhoneCheckout from "../../components/PhoneCheckout";
+import { MdSettingsBackupRestore } from "react-icons/md";
+import { toast } from "react-toastify";
 
 const AdminInventory = () => {
   const dispatch = useDispatch();
@@ -21,6 +27,9 @@ const AdminInventory = () => {
   const [showEditPhoneModal, setShowEditPhoneModal] = useState(false);
   const [showPhoneCheckout, setShowPhoneCheckout] = useState(false);
   const [checkoutPhone, setCheckoutPhone] = useState(null);
+  const [declareLostLoading, setDeclareLostLoading] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const {
     data: activePhonesData,
@@ -42,7 +51,6 @@ const AdminInventory = () => {
       enabled: show === "active" && !!token,
     }
   );
-  console.log(activePhonesData);
 
   const {
     data: lostPhonesData,
@@ -64,6 +72,30 @@ const AdminInventory = () => {
       enabled: show === "lost" && !!token,
     }
   );
+
+  const useDeclarePhoneLost = () => {
+    return useMutation(
+      ({ phoneId, token }) => declarePhoneLost(phoneId, token),
+      {
+        onMutate: () => {
+          setDeclareLostLoading(true);
+        },
+        onSuccess: () => {
+          setDeclareLostLoading(false);
+
+          queryClient.invalidateQueries(["phones"]);
+
+          toast.success("Phone restored");
+        },
+        onError: (error) => {
+          setDeclareLostLoading(false);
+          toast.error(error.message || "Failed to restore phone");
+        },
+      }
+    );
+  };
+
+  const declareLostMutation = useDeclarePhoneLost();
 
   const activePhones = useMemo(() => {
     return activePhonesData?.pages?.flatMap((page) => page.phones) || [];
@@ -124,6 +156,10 @@ const AdminInventory = () => {
   const onCheckoutPhone = (phone) => {
     setCheckoutPhone(phone);
     setShowPhoneCheckout(true);
+  };
+
+  const declareLostPhone = (phoneId) => {
+    declareLostMutation.mutate({ phoneId, token });
   };
 
   return (
@@ -310,7 +346,8 @@ const AdminInventory = () => {
                           <tr
                             key={phone.id}
                             className={`bg-white border-b hover:bg-blue-50 border-l-4 ${
-                              calculateDaysFromDate(phone.createdAt) < 5
+                              calculateDaysFromDate(phone.createdAt) < 5 &&
+                              phone.status !== "lost"
                                 ? "border-l-green-500"
                                 : calculateDaysFromDate(phone.createdAt) >= 5 &&
                                   calculateDaysFromDate(phone.createdAt) < 7
@@ -350,21 +387,33 @@ const AdminInventory = () => {
                             </td>
 
                             <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
-                              <button
-                                onClick={() => onEditPhone(phone)}
-                                aria-label={`Analyze ${phone.name}`}
-                                className="flex flex-row justify-center w-20 items-center gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
-                                <BiEdit />
-                                Edit
-                              </button>
+                              {phone?.status === "lost" ? (
+                                <button
+                                  onClick={() => declareLostPhone(phone.id)}
+                                  aria-label={`Analyze ${phone.name}`}
+                                  className="flex flex-row justify-center w-32 items-center gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
+                                  <MdSettingsBackupRestore />
+                                  Activate
+                                </button>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => onEditPhone(phone)}
+                                    aria-label={`Analyze ${phone.name}`}
+                                    className="flex flex-row justify-center w-20 items-center gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
+                                    <BiEdit />
+                                    Edit
+                                  </button>
 
-                              <button
-                                onClick={() => onCheckoutPhone(phone)}
-                                aria-label={`Analyze ${phone.name}`}
-                                className="flex flex-row justify-center items-center w-20 gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
-                                <BiCartAdd />
-                                Sale
-                              </button>
+                                  <button
+                                    onClick={() => onCheckoutPhone(phone)}
+                                    aria-label={`Analyze ${phone.name}`}
+                                    className="flex flex-row justify-center items-center w-20 gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
+                                    <BiCartAdd />
+                                    Sale
+                                  </button>
+                                </>
+                              )}
                             </td>
                           </tr>
                         ))}

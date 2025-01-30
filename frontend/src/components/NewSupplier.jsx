@@ -64,7 +64,7 @@ const NewSupplier = ({ showAddSupplier, setShowAddSupplier }) => {
         onSuccess: () => {
           setRegisterUserLoading(false);
           queryClient.invalidateQueries(["suppliers"]);
-          toast.success("Supplier registered successfully");
+          toast.success("Supplier registered");
           formik.resetForm();
           if (isSmallScreen) {
             setShowAddSupplier(false);

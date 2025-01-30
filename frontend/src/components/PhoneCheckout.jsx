@@ -15,46 +15,41 @@ import StepLabel from "@mui/material/StepLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import FormLabel from "@mui/material/FormLabel";
 import { IoIosArrowBack } from "react-icons/io";
-import { BiCartAlt } from "react-icons/bi";
 import { MdOutlineNavigateNext } from "react-icons/md";
 import html2canvas from "html2canvas";
 
-import {
-  FormControl,
-  InputAdornment,
-  InputLabel,
-  MenuItem,
-  Select,
-} from "@mui/material";
-import { useMutation, useQuery, useQueryClient } from "react-query";
-import {
-  fetchActiveManagers,
-  fetchAllModels,
-  fetchAllSuppliers,
-  registerNewPhone,
-} from "../services/services";
+import { FormControl } from "@mui/material";
+import { useMutation, useQueryClient } from "react-query";
+import { sellPhone } from "../services/services";
 
-const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
+const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout, phone }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState({
     firstName: "",
     lastName: "",
     nkFirstName: "",
     nkLastName: "",
+    ID: "",
     nkPhone: "",
     phone: "",
   });
-  const [registerPhoneLoading, setRegisterPhoneLoading] = useState(false);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(0);
   const [sellingCompany, setSellingCompany] = useState("muchami");
-
   const steps = ["Customer details", "Chose company", "Confirm details"];
   const receiptRef = useRef(null);
+  const user = useSelector((state) => state.userSlice.user.user);
+  const [sellingPhoneLoading, setSellingPhoneLoading] = useState(false);
+  const formattedDate = new Date().toLocaleDateString("en-GB").slice(0, 8);
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const receiptNumber = Math.floor(100000 + Math.random() * 900000);
 
   const downloadReceipt = async () => {
     if (receiptRef.current) {
@@ -64,80 +59,74 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
       // Create a download link
       const link = document.createElement("a");
       link.href = image;
-      link.download = "receipt.png";
+      link.download = `${phone.imei}.png`;
       link.click();
     }
   };
 
-  const { data: activeData } = useQuery(
-    ["managers", { status: "active", limit: 1000 }],
-    ({ queryKey, signal }) => fetchActiveManagers({ queryKey, signal, token }),
-    {
-      keepPreviousData: true,
-      enabled: !!token,
-    }
-  );
-
-  const { data: suppliers } = useQuery(
-    ["suppliers", { limit: 100 }],
-    ({ queryKey, signal }) => fetchAllSuppliers({ queryKey, signal, token }),
-    {
-      keepPreviousData: true,
-      enabled: !!token,
-    }
-  );
-
-  const { data: models } = useQuery(
-    ["models", { page: 1, limit: 100 }],
-    ({ queryKey, signal }) => fetchAllModels({ queryKey, signal, token }),
-    {
-      keepPreviousData: true,
-      enabled: !!token,
-    }
-  );
-
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 768px)"); // Tailwind's `md` breakpoint
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
     const handleMediaChange = () => setIsSmallScreen(mediaQuery.matches);
 
-    handleMediaChange(); // Initialize state on component mount
-    mediaQuery.addEventListener("change", handleMediaChange); // Listen for screen size changes
+    handleMediaChange();
+    mediaQuery.addEventListener("change", handleMediaChange);
 
     return () => {
       mediaQuery.removeEventListener("change", handleMediaChange);
     };
   }, []);
 
-  const useRegisterPhone = () => {
+  const useSellPhone = () => {
     return useMutation(
-      ({ phoneData, token }) => registerNewPhone(phoneData, token),
+      ({ customerDetails, token }) => sellPhone(customerDetails, token),
       {
         onMutate: () => {
-          setRegisterPhoneLoading(true);
+          setSellingPhoneLoading(true);
         },
         onSuccess: () => {
-          setRegisterPhoneLoading(false);
+          setSellingPhoneLoading(false);
           queryClient.invalidateQueries(["phones"]);
-          toast.success("Phone registered successfully");
-          formik.resetForm();
           if (isSmallScreen) {
             setShowPhoneCheckout(false);
           } else {
             setShowPhoneCheckout(false);
             dispatch(setSidebar(true));
           }
+          toast.success("Phone checkout successful");
+          downloadReceipt();
         },
         onError: (error) => {
-          setRegisterPhoneLoading(false);
-          toast.error(error.message || "Failed to register phone");
+          setSellingPhoneLoading(false);
+          toast.error(error.message || "Failed to sell phone");
         },
       }
     );
   };
 
-  const registerPhoneMutation = useRegisterPhone();
+  const sellPhoneMutation = useSellPhone();
+
+  console.log(phone);
+
+  const onCheckout = () => {
+    const updatedCustomerDetails = {
+      ...customerDetails,
+      phoneNumber: customerDetails.phone,
+      phoneId: phone.id,
+      company: sellingCompany,
+    };
+    const { ...finalCustomerDetails } = updatedCustomerDetails;
+    sellPhoneMutation.mutate({
+      customerDetails: finalCustomerDetails,
+      token,
+    });
+  };
 
   const validationSchema = yup.object({
+    ID: yup
+      .number("ID must be a number")
+      .positive("ID must be a positive number")
+      .integer("ID must be an integer")
+      .required("ID is required"),
     firstName: yup
       .string("Enter the first name")
       .required("First name is required"),
@@ -157,7 +146,7 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
     phone: yup
       .string("Enter the secondary phone number")
       .matches(/^\d{10}$/, "Phone number must be exactly 10 digits")
-      .required(" Phone number is required"),
+      .required("Phone number is required"),
   });
 
   const formik = useFormik({
@@ -166,7 +155,6 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
     validationSchema,
     onSubmit: (values) => {
       setCustomerDetails(values);
-      console.log(values);
       setStep(1);
     },
   });
@@ -321,6 +309,29 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
                       "&.Mui-focused fieldset": {
                         borderColor: "#2FC3D2",
                       },
+                    },
+                    "& .MuiInputBase-input": { color: "#000" },
+                    "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
+                  }}
+                />
+
+                <TextField
+                  variant="outlined"
+                  fullWidth
+                  id="ID"
+                  name="ID"
+                  label="ID"
+                  type="number"
+                  value={formik.values.ID}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.ID && Boolean(formik.errors.ID)}
+                  helperText={formik.touched.ID && formik.errors.ID}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": { borderColor: "#ccc" },
+                      "&:hover fieldset": { borderColor: "#2FC3D2" },
+                      "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
                     },
                     "& .MuiInputBase-input": { color: "#000" },
                     "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
@@ -494,18 +505,36 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
                     ref={receiptRef}
                     className="p-5 border border-gray-500 h-full w-80  bg-white">
                     <div className="flex flex-col items-center">
-                      <img
-                        alt="lgo"
-                        src="/shuhari-logo1.png"
-                        className="w-40"
-                      />
-                      <p className="font-roboto font-bold uppercase pt-2 text-lg">
-                        Shuhari communication
-                      </p>
-                      <p className="font-roboto font-medium uppercase text-sm">
+                      {sellingCompany === "shuhari" ? (
+                        <img
+                          alt="lgo"
+                          src="/shuhari-logo1.png"
+                          className="w-28"
+                        />
+                      ) : (
+                        <img alt="lgo" src="/muchami.png" className="w-32" />
+                      )}
+
+                      {sellingCompany === "muchami" ? (
+                        <p className="font-roboto font-bold text-center uppercase text-sm pt-2">
+                          Muchami phones and accesories
+                        </p>
+                      ) : (
+                        <p className="font-roboto font-bold uppercase pt-2 text-lg">
+                          Shuhari communication
+                        </p>
+                      )}
+
+                      <p
+                        className={`font-roboto font-medium uppercase  ${
+                          sellingCompany === "muchami" ? "text-xs" : "text-sm"
+                        }`}>
                         Likoni Mall first floor -F21
                       </p>
-                      <p className="font-roboto font-medium uppercase text-xs">
+                      <p
+                        className={`font-roboto font-medium uppercase  ${
+                          sellingCompany === "muchami" ? "text-xs" : "text-sm"
+                        }`}>
                         Tel: +254 720 3900 41 /+254 780 3900 41
                       </p>
                     </div>
@@ -513,38 +542,40 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
                     <hr className="my-2 w-full bg-black h-1" />
                     <div className="flex flex-row justify-between items-center">
                       <p className="font-semibold text-sm text-neutral-700">
-                        Rcpt: 001
+                        Rcpt: {receiptNumber}
                       </p>
                       <p className="font-semibold text-sm text-neutral-700">
-                        Date: 02/01/2025
+                        Date: {formattedDate}
                       </p>
                     </div>
                     <div className="flex flex-row justify-between items-center">
                       <p className="font-semibold text-sm text-neutral-700">
-                        Served by: Amos
+                        Served by: {user?.firstName}
                       </p>
                       <p className="font-semibold text-sm text-neutral-700">
-                        Time: 05:22 pm
+                        Time: {formattedTime}
                       </p>
                     </div>
                     <p className="font-semibold text-sm text-neutral-700">
-                      Location: Mombasa
+                      Location: {phone?.managerLocation}
                     </p>
                     <hr className="my-2 w-full bg-black h-1" />
                     <p className="font-semibold text-sm text-neutral-700">
-                      Name: Emmanuel Joseph
+                      Name: {customerDetails?.firstName}{" "}
+                      {customerDetails?.lastName}
                     </p>
                     <p className="font-semibold text-sm text-neutral-700">
-                      Tel: +254798989489
+                      Tel: {customerDetails?.phone}
                     </p>
                     <p className="font-semibold text-sm text-neutral-700">
-                      ID No: 67746684
+                      ID No: {customerDetails?.ID}
                     </p>
                     <p className="font-semibold text-sm text-neutral-700">
-                      NOK Name: Mary Luke
+                      NOK Name: {customerDetails?.nkFirstName}{" "}
+                      {customerDetails?.nkLastName}
                     </p>
                     <p className="font-semibold text-sm text-neutral-700">
-                      NOK Tel: +254787894849
+                      NOK Tel: {customerDetails?.nkPhone}
                     </p>
                     <hr className="my-2 w-full bg-black h-1" />
                     <p className="font-bold uppercase text-center">
@@ -552,24 +583,28 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
                     </p>
                     <hr className="my-2 w-full bg-black h-1" />
                     <p className="font-semibold text-sm text-neutral-700">
-                      Phone model: A05
+                      Phone model: {phone?.modelName}
                     </p>
                     <p className="font-semibold text-sm text-neutral-700">
-                      Capacity: 64GB
+                      Capacity: {phone?.capacity} GB
                     </p>
                     <p className="font-semibold text-sm text-neutral-700">
-                      IMEI: 787884747
+                      IMEI: {phone?.imei}
                     </p>
                     <p className="font-semibold text-sm text-neutral-700">
                       Waranty: 2 years
                     </p>
                     <hr className="my-2 w-full bg-black h-1" />
                     <p className="font-roboto text-center uppercase font-semibold mb-2">
-                      Gross total: 15,000/=
+                      Gross total: {phone?.sellingPrice}/=
                     </p>
                     <div className="p-2 flex flex-row items-center border border-neutral-500 rounded-md">
                       <div className="w-[50%]">
-                        <img alt="buy now pay later" src="/buynow-logo.png" />
+                        <img
+                          alt="buy now pay later"
+                          src="/buynow-logo.png"
+                          className="w-32"
+                        />
                       </div>
                       <div className="flex flex-col w-[50%]">
                         <img
@@ -580,7 +615,7 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
                         <img
                           alt="watu logo"
                           src="/watu-logo1.png"
-                          className="w-20"
+                          className="w-16"
                         />
                       </div>
                     </div>
@@ -601,7 +636,7 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout }) => {
                     <span className="text-sm md:text-base">Back</span>
                   </button>
                   <button
-                    onClick={downloadReceipt}
+                    onClick={() => onCheckout()}
                     className="p-3 bg-primary-500 flex items-center justify-center text-white  hover:bg-primary-600 transition-all duration-300 ease-in-out w-full md:w-32 space-x-2">
                     <span className="text-sm md:text-base">Checkout</span>
                     <MdOutlineNavigateNext size={20} className="md:ml-2" />

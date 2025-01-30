@@ -1,4 +1,11 @@
-const { Phone, User, Supplier, Location, PhoneModel } = require("../models");
+const {
+  Phone,
+  User,
+  Supplier,
+  Location,
+  PhoneModel,
+  Customer,
+} = require("../models");
 
 exports.registerPhone = async (req, res) => {
   try {
@@ -449,5 +456,108 @@ exports.getLostPhones = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+//Declare lost
+exports.declareLost = async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+
+    // Check if the user has sufficient permissions
+    if (!["admin", "super admin"].includes(loggedInUser.role)) {
+      return res.status(403).json({ message: "Access Denied" });
+    }
+
+    const { id } = req.params;
+
+    // Check if the phone exists
+    const phone = await Phone.findByPk(id);
+    if (!phone) {
+      return res.status(404).json({ message: "Phone not found." });
+    }
+
+    // Toggle status: if "lost" → set to "active", else → set to "lost"
+    const newStatus = phone.status === "lost" ? "active" : "lost";
+
+    // Update the phone status
+    await phone.update({ status: newStatus });
+
+    return res.status(200).json({
+      message: `Phone status updated to ${newStatus} successfully.`,
+      phone,
+    });
+  } catch (error) {
+    console.error("Error toggling phone status:", error);
+    res.status(500).json({
+      message: "An error occurred while updating the phone status.",
+    });
+  }
+};
+// Sell phone
+exports.sellPhone = async (req, res) => {
+  try {
+    const {
+      phoneId,
+      company,
+      firstName,
+      lastName,
+      phoneNumber,
+      ID,
+      nkPhone,
+      nkFirstName,
+      nkLastName,
+    } = req.body;
+
+    console.log(phoneId);
+
+    // Step 1: Check if the phone exists and is active
+    const phone = await Phone.findByPk(phoneId);
+    if (!phone) {
+      return res.status(404).json({ message: "Phone not found." });
+    }
+    if (phone.status !== "active") {
+      return res
+        .status(400)
+        .json({ message: "Phone is not available for sale." });
+    }
+
+    let customer;
+
+    // Step 2: Check if customer exists based on unique customerId
+    if (ID) {
+      customer = await Customer.findOne({ where: { ID } });
+    }
+
+    // Step 3: If customer does not exist, create a new customer
+    if (!customer) {
+      customer = await Customer.create({
+        firstName,
+        lastName,
+        phoneNumber,
+        ID,
+        nkPhone,
+        nkFirstName,
+        nkLastName,
+      });
+    }
+
+    // Step 4: Link phone to the customer
+    await phone.update({
+      customerId: customer.id, // Assuming `customerId` is now a foreign key in the Phone model
+      company,
+      status: "sold",
+      saleDate: new Date(), // Automatically sets date & time
+    });
+
+    return res.status(200).json({
+      message: "Phone sold successfully.",
+      phone,
+      customer,
+    });
+  } catch (error) {
+    console.error("Error selling phone:", error);
+    res.status(500).json({
+      message: "An error occurred while selling the phone.",
+    });
   }
 };

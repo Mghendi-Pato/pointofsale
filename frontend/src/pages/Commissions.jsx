@@ -110,7 +110,7 @@ const Commissions = () => {
           setEditCommissionLoading(false);
           console.log(response);
           queryClient.invalidateQueries(["models", "phones"]);
-          toast.success("Commission details updated successfully");
+          toast.success("Commission details updated");
         },
         onError: (error) => {
           setEditCommissionLoading(false);
@@ -194,9 +194,7 @@ const Commissions = () => {
               }`}
               onClick={handleSubmit}
               disabled={!hasChanges}>
-              {editCommissionLoading
-                ? "Submiting Changes..."
-                : "Submit Changes"}
+              {editCommissionLoading ? "Submiting..." : "Submit Changes"}
             </button>
           </div>
         </div>

@@ -93,7 +93,7 @@ const Suppliers = () => {
       {
         onSuccess: (response) => {
           queryClient.invalidateQueries(["suppliers"]);
-          toast.success("Supplier deleted successfully");
+          toast.success("Supplier deleted");
         },
         onError: (error) => {
           toast.error(error.message || "Failed to delete supplier");

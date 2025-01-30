@@ -8,26 +8,21 @@ import TextField from "@mui/material/TextField";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../redux/reducers/ sidebar";
-import { MdOutlineVisibility } from "react-icons/md";
-import { MdOutlineVisibilityOff } from "react-icons/md";
-import {
-  FormControl,
-  IconButton,
-  InputAdornment,
-  InputLabel,
-  MenuItem,
-  Select,
-} from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { fetchAllRegions, registerNewUser } from "../services/services";
+import { editUser, fetchAllRegions } from "../services/services";
 
-const NewManager = ({ showAddManager, setShowAddManager }) => {
+const EditManagerModal = ({
+  showEditUserModal,
+  setShowEditUserModal,
+  user,
+  setEditUser,
+}) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [registerUserLoading, setRegisterUserLoading] = useState(false);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
+  const [editUserLoading, setEditUserLoading] = useState(false);
 
   const { data: regions } = useQuery(
     ["regions", { page: 1, limit: 100 }],
@@ -66,98 +61,102 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
   const animation = isSmallScreen ? smallScreenAnimation : largeScreenAnimation;
 
   const validationSchema = yup.object({
-    firstName: yup
-      .string("Enter your first name")
-      .required("First name is required"),
-    lastName: yup
-      .string("Enter your last name")
-      .required("Last name is required"),
-    email: yup
-      .string("Enter your email")
-      .email("Enter a valid email")
-      .required("Email is required"),
-    password: yup
-      .string("Enter your password")
-      .min(8, "Password should be at least 8 characters")
-      .required("Password is required"),
-    ID: yup
-      .string("Enter your ID")
-      .matches(/^\d+$/, "ID should be numeric")
-      .required("ID is required"),
+    firstName: yup.string("Enter your first name"),
+    lastName: yup.string("Enter your last name"),
+    email: yup.string("Enter your email").email("Enter a valid email"),
+    ID: yup.string("Enter your ID").matches(/^\d+$/, "ID should be numeric"),
     phone: yup
       .string("Enter your phone number")
       .matches(
         /^(\+\d{1,3}[- ]?)?\d{10}$/,
         "Enter a valid phone number with 10 digits"
-      )
-      .required("Phone number is required"),
-    region: yup
-      .number("Location must be a valid ID")
-      .nullable()
-      .required("Location is required"),
+      ),
+    region: yup.number("Location must be a valid ID").nullable(),
+    status: yup
+      .string()
+      .oneOf(["active", "suspended"], "Status must be 'active' or 'suspended'"),
   });
 
-  const useRegisterUser = () => {
+  const useEditUser = () => {
     return useMutation(
-      ({ userData, token }) => registerNewUser(userData, token),
+      ({ userId, userData, token }) => editUser(userId, userData, token),
       {
         onMutate: () => {
-          setRegisterUserLoading(true);
+          setEditUserLoading(true);
         },
         onSuccess: () => {
-          setRegisterUserLoading(false);
-          queryClient.invalidateQueries(["managers"]);
-          toast.success("Admin registered");
+          setEditUserLoading(false);
+          {
+            user?.role === "manager"
+              ? queryClient.invalidateQueries(["managers"])
+              : queryClient.invalidateQueries(["admins"]);
+          }
+
+          toast.success("User updated");
           formik.resetForm();
+          setEditUser([]);
           if (isSmallScreen) {
-            setShowAddManager(false);
+            setShowEditUserModal(false);
           } else {
-            setShowAddManager(false);
+            setShowEditUserModal(false);
             dispatch(setSidebar(true));
           }
         },
         onError: (error) => {
-          setRegisterUserLoading(false);
-          toast.error(error.message || "Failed to register user");
+          setEditUserLoading(false);
+          toast.error(error.message || "Failed to update user");
         },
       }
     );
   };
-
-  const registerUserMutation = useRegisterUser();
-
+  const editUserMutation = useEditUser();
   const formik = useFormik({
     initialValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      ID: "",
-      phone: "",
-      region: "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.email || "",
+      ID: user?.ID || "",
+      phone: user?.phone || "",
+      region: user?.regionId || "",
+      status: user?.status || "",
     },
     validationSchema,
+    enableReinitialize: true,
     onSubmit: (values) => {
-      const userData = { ...values, regionId: values.region, role: "manager" };
-      registerUserMutation.mutate({ token, userData });
+      const updatedFields = Object.keys(values).reduce((acc, key) => {
+        if (values[key] !== formik.initialValues[key]) {
+          acc[key] = values[key];
+        }
+        return acc;
+      }, {});
+      if ("region" in updatedFields) {
+        updatedFields.regionId = updatedFields.region;
+        delete updatedFields.region;
+      }
+
+      if (Object.keys(updatedFields).length > 0) {
+        editUserMutation.mutate({
+          token,
+          userData: updatedFields,
+          userId: user.id,
+        });
+      } else {
+        toast.info("No changes detected");
+      }
     },
   });
 
   const onCloseModal = () => {
-    setShowAddManager(false);
-
+    setShowEditUserModal(false);
+    setEditUser([]);
     if (!isSmallScreen) {
       dispatch(setSidebar(true));
     }
   };
 
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-
   return (
     <AnimatePresence>
-      {showAddManager && (
+      {showEditUserModal && (
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
@@ -203,17 +202,17 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
-                      borderColor: "#ccc", // Default border color
+                      borderColor: "#ccc",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#2FC3D2", // Hover state color
+                      borderColor: "#2FC3D2",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#2FC3D2", // Focused state color
+                      borderColor: "#2FC3D2",
                     },
                   },
-                  "& .MuiInputBase-input": { color: "#000" }, // Input text color
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" }, // Focused label color
+                  "& .MuiInputBase-input": { color: "#000" },
+                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
                 }}
               />
 
@@ -276,56 +275,6 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
                   "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" }, // Focused label color
                 }}
               />
-
-              <TextField
-                variant="outlined"
-                fullWidth
-                id="password"
-                name="password"
-                label="Password"
-                type={showPassword ? "text" : "password"} // Toggle type between "text" and "password"
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.password && Boolean(formik.errors.password)
-                }
-                helperText={formik.touched.password && formik.errors.password}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "#ccc", // Default border color
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#2FC3D2", // Hover state color
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#2FC3D2", // Focused state color
-                    },
-                  },
-                  "& .MuiInputBase-input": { color: "#000" }, // Input text color
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" }, // Focused label color
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleTogglePasswordVisibility}
-                        edge="end"
-                        aria-label={
-                          showPassword ? "Hide password" : "Show password"
-                        }>
-                        {showPassword ? (
-                          <MdOutlineVisibilityOff />
-                        ) : (
-                          <MdOutlineVisibility />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
               <TextField
                 variant="outlined"
                 fullWidth
@@ -380,18 +329,56 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
                   "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
                 }}
               />
-
+              {user?.role === "manager" ? (
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="region-label">Location</InputLabel>
+                  <Select
+                    labelId="region-label"
+                    id="region"
+                    name="region"
+                    value={formik.values.region || ""}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={
+                      formik.touched.region && Boolean(formik.errors.region)
+                    }
+                    label="Location"
+                    MenuProps={{
+                      PaperProps: {
+                        style: {
+                          maxHeight: 200,
+                          overflowY: "auto",
+                        },
+                      },
+                    }}>
+                    {[...regions.regions]
+                      .sort((a, b) => a.location.localeCompare(b.location))
+                      .map((region) => (
+                        <MenuItem key={region.id} value={region.id}>
+                          {region.location}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                  {formik.touched.region && formik.errors.region && (
+                    <div style={{ color: "red", fontSize: "0.875rem" }}>
+                      {formik.errors.region}
+                    </div>
+                  )}
+                </FormControl>
+              ) : (
+                ""
+              )}
               <FormControl fullWidth variant="outlined">
-                <InputLabel id="region-label">Location</InputLabel>
+                <InputLabel id="status-label">Status</InputLabel>
                 <Select
-                  labelId="region-label"
-                  id="region"
-                  name="region"
-                  value={formik.values.region || ""}
+                  labelId="status-label"
+                  id="status"
+                  name="status"
+                  value={formik.values.status || ""}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={formik.touched.region && Boolean(formik.errors.region)}
-                  label="Location"
+                  error={formik.touched.status && Boolean(formik.errors.status)}
+                  label="Status"
                   MenuProps={{
                     PaperProps: {
                       style: {
@@ -400,25 +387,24 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
                       },
                     },
                   }}>
-                  {[...regions.regions]
-                    .sort((a, b) => a.location.localeCompare(b.location))
-                    .map((region) => (
-                      <MenuItem key={region.id} value={region.id}>
-                        {region.location}
-                      </MenuItem>
-                    ))}
+                  {["active", "suspended"].map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </MenuItem>
+                  ))}
                 </Select>
-                {formik.touched.region && formik.errors.region && (
+                {formik.touched.status && formik.errors.status && (
                   <div style={{ color: "red", fontSize: "0.875rem" }}>
-                    {formik.errors.region}
+                    {formik.errors.status}
                   </div>
                 )}
               </FormControl>
+
               <div className="flex flex-row-reverse justify-between items-center">
                 <button
                   type="submit"
                   className="p-2 bg-primary-500 transition-all duration-500 ease-in-out flex flex-row items-center justify-center h-12 w-full space-x-2">
-                  {registerUserLoading ? "Registering admin ..." : "Register"}
+                  {editUserLoading ? "Updating..." : "Update"}
                 </button>
               </div>
             </form>
@@ -429,4 +415,4 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
   );
 };
 
-export default NewManager;
+export default EditManagerModal;

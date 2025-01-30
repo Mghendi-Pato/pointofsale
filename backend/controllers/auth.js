@@ -214,3 +214,76 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.editUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { firstName, lastName, email, ID, phone, regionId, status } =
+      req.body;
+
+    console.log(regionId);
+    const loggedInUser = req.user;
+
+    // Check if the logged-in user has the appropriate role
+    if (!["admin", "super admin"].includes(loggedInUser.role)) {
+      return res.status(403).json({ message: "Access Denied" });
+    }
+
+    // Find the user to be updated
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check for unique email and ID if updating them
+    if (email && email !== user.email) {
+      const existingEmail = await User.findOne({ where: { email } });
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+    }
+
+    if (ID && ID !== user.ID) {
+      const existingID = await User.findOne({ where: { ID } });
+      if (existingID) {
+        return res.status(400).json({ message: "ID already in use" });
+      }
+    }
+
+    // Validate the regionId
+    let region = null;
+    if (regionId) {
+      region = await Location.findByPk(regionId);
+      if (!region) {
+        return res.status(400).json({ message: "Invalid region ID" });
+      }
+    }
+
+    // Update user details
+    await user.update({
+      firstName: firstName || user.firstName,
+      lastName: lastName || user.lastName,
+      email: email || user.email,
+      ID: ID || user.ID,
+      phone: phone || user.phone,
+      regionId: regionId || user.regionId,
+      status: status || user.status,
+    });
+
+    res.status(200).json({
+      message: "User updated successfully",
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        ID: user.ID,
+        phone: user.phone,
+        regionId: user.regionId,
+        status: user.status,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

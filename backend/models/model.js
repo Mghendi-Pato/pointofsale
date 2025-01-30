@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       make: { type: DataTypes.STRING, allowNull: false },
       model: { type: DataTypes.STRING, allowNull: false },
+
       commissions: {
         type: DataTypes.JSONB,
         allowNull: true,

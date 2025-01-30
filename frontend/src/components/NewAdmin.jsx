@@ -87,7 +87,7 @@ const NewAdmin = ({ showAddAdmin, setShowAdmin }) => {
         onSuccess: () => {
           setRegisterUserLoading(false);
           queryClient.invalidateQueries(["admins"]);
-          toast.success("Admin registered successfully");
+          toast.success("Admin registered");
           formik.resetForm();
           if (isSmallScreen) {
             setShowAdmin(false);

@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import {
+  declarePhoneLost,
   editPhoneDetails,
   fetchActiveManagers,
   fetchAllModels,
@@ -32,6 +33,7 @@ const EditPhone = ({
 }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [editPhoneLoading, setEditPhoneLoading] = useState(false);
+  const [declareLostLoading, setDeclareLostLoading] = useState(false);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
@@ -86,7 +88,7 @@ const EditPhone = ({
         onSuccess: () => {
           setEditPhoneLoading(false);
           queryClient.invalidateQueries(["phones"]);
-          toast.success("Phone details updated successfully");
+          toast.success("Phone details updated");
           formik.resetForm();
           setEditPhone([]);
           if (isSmallScreen) {
@@ -105,6 +107,35 @@ const EditPhone = ({
   };
 
   const editPhoneMutation = useEditPhone();
+
+  const useDeclarePhoneLost = () => {
+    return useMutation(
+      ({ phoneId, token }) => declarePhoneLost(phoneId, token),
+      {
+        onMutate: () => {
+          setDeclareLostLoading(true);
+        },
+        onSuccess: () => {
+          setDeclareLostLoading(false);
+
+          queryClient.invalidateQueries(["phones"]);
+          if (isSmallScreen) {
+            setShowEditPhoneModal(false);
+          } else {
+            setShowEditPhoneModal(false);
+            dispatch(setSidebar(true));
+          }
+          toast.success("Phone declared lost");
+        },
+        onError: (error) => {
+          setDeclareLostLoading(false);
+          toast.error(error.message || "Failed to declare phone lost");
+        },
+      }
+    );
+  };
+
+  const declareLostMutation = useDeclarePhoneLost();
 
   const validationSchema = yup.object({
     model: yup.string("Enter the phone model").required("Model is required"),
@@ -145,26 +176,32 @@ const EditPhone = ({
       capacity: phone?.capacity || "",
     },
     validationSchema,
+    enableReinitialize: true,
     onSubmit: (values) => {
-      const changedValues = {};
       const fieldMapping = {
         supplier: "supplierId",
         manager: "managerId",
         buyingPrice: "purchasePrice",
       };
-      Object.keys(values).forEach((key) => {
+
+      const changedValues = Object.keys(values).reduce((acc, key) => {
         const mappedKey = fieldMapping[key] || key;
-        if (values[key] !== phone[mappedKey]) {
-          changedValues[key] = values[key];
+        if (values[key] !== formik.initialValues[key]) {
+          acc[mappedKey] = values[key];
         }
-      });
-      editPhoneMutation.mutate({
-        phoneId: phone.id,
-        phoneData: changedValues,
-        token,
-      });
+        return acc;
+      }, {});
+
+      if (Object.keys(changedValues).length > 0) {
+        editPhoneMutation.mutate({
+          phoneId: phone.id,
+          phoneData: changedValues,
+          token,
+        });
+      } else {
+        toast.info("No changes detected");
+      }
     },
-    enableReinitialize: true,
   });
 
   // Define animations based on screen size
@@ -190,6 +227,9 @@ const EditPhone = ({
     }
   };
 
+  const declareLostPhone = (phoneId) => {
+    declareLostMutation.mutate({ phoneId, token });
+  };
   return (
     <AnimatePresence>
       {showEditPhoneModal && (
@@ -234,10 +274,18 @@ const EditPhone = ({
                   labelId="model-label"
                   id="model"
                   name="modelId"
-                  value={formik.values.modelId}
+                  value={formik.values.model}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   label="Model"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200,
+                        overflowY: "auto",
+                      },
+                    },
+                  }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       "& fieldset": {
@@ -257,9 +305,9 @@ const EditPhone = ({
                     </MenuItem>
                   ))}
                 </Select>
-                {formik.touched.modelId && formik.errors.modelId && (
+                {formik.touched.model && formik.errors.model && (
                   <div style={{ color: "red", fontSize: "0.875rem" }}>
-                    {formik.errors.modelId}
+                    {formik.errors.model}
                   </div>
                 )}
               </FormControl>
@@ -465,6 +513,12 @@ const EditPhone = ({
                   type="submit"
                   className="p-2 bg-primary-500 transition-all duration-500 ease-in-out flex flex-row items-center justify-center h-12 w-full space-x-2">
                   {editPhoneLoading ? "Updating device ..." : "Update device"}
+                </button>
+                <button
+                  onClick={() => declareLostPhone(phone.id)}
+                  type="button"
+                  className="p-2 bg-amber-500 transition-all duration-500 ease-in-out flex flex-row items-center justify-center h-12 w-full space-x-2">
+                  {declareLostLoading ? "Updating device ..." : "Declare lost"}
                 </button>
               </div>
             </form>

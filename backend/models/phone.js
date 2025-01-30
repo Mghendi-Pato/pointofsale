@@ -54,6 +54,17 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
       capacity: { type: DataTypes.STRING, allowNull: true },
+      company: { type: DataTypes.STRING, allowNull: true },
+      customerId: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: "Customers",
+          key: "id",
+        },
+        allowNull: true,
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL",
+      },
     },
     {
       sequelize,

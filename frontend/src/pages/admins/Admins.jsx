@@ -1,21 +1,21 @@
 import { TextField } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { PiUserCheck } from "react-icons/pi";
 import TablePagination from "@mui/material/TablePagination";
 import { MdDeleteOutline } from "react-icons/md";
 import NewAdmin from "../../components/NewAdmin";
 import { setSidebar } from "../../redux/reducers/ sidebar";
 import { toast } from "react-toastify";
 import { useQuery } from "react-query";
+import { BiEdit } from "react-icons/bi";
 import {
   deleteQueryUser,
   fetchActiveAdmins,
   fetchDormantAdmins,
-  toggleQueryUserStatus,
 } from "../../services/services";
 import { useMutation, useQueryClient } from "react-query";
 import DeleteConfirmationModal from "../../components/DeleteModal";
+import EditUserModal from "../../components/EditUserModal";
 
 const Admins = () => {
   const [page, setPage] = useState(0);
@@ -25,6 +25,8 @@ const Admins = () => {
   const [deleteAdmin, setDeleteAdmin] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [show, setShow] = useState("active");
+  const [editUser, setEditUser] = useState(null);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
   const dispatch = useDispatch();
 
   const token = useSelector((state) => state.userSlice.user.token);
@@ -87,29 +89,7 @@ const Admins = () => {
     );
   }, [activeAdminsData?.admins, dormantAdminsData?.admins, searchQuery, show]);
 
-  const paginatedManagers = filteredAdmins;
-
-  const useToggleStatus = () => {
-    const queryClient = useQueryClient();
-    return useMutation(
-      ({ userId, token }) => toggleQueryUserStatus(userId, token),
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries(["admins"]);
-          toast.success("Admin status updated successfully");
-        },
-        onError: (error) => {
-          toast.error(error.message || "Failed to update admin status");
-        },
-      }
-    );
-  };
-
-  const toggleStatusMutation = useToggleStatus();
-
-  const handleStatusToggle = (userId) => {
-    toggleStatusMutation.mutate({ userId, token });
-  };
+  const paginatedAdmins = filteredAdmins;
 
   const useDeleteUser = () => {
     const queryClient = useQueryClient();
@@ -117,7 +97,7 @@ const Admins = () => {
     return useMutation(({ userId, token }) => deleteQueryUser(userId, token), {
       onSuccess: () => {
         queryClient.invalidateQueries(["admins"]);
-        toast.success("Admin deleted successfully");
+        toast.success("Admin deleted");
       },
       onError: (error) => {
         toast.error(error.message || "Failed to delete admin");
@@ -172,14 +152,19 @@ const Admins = () => {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (showAddAdmin) {
+    if (showAddAdmin || showEditUserModal) {
       dispatch(setSidebar(false));
     }
-  }, [showAddAdmin, dispatch]);
+  }, [showAddAdmin, showEditUserModal, dispatch]);
 
   useEffect(() => {
     setPage(0);
   }, [searchQuery, show]);
+
+  const onEditAdmin = (admin) => {
+    setEditUser(admin);
+    setShowEditUserModal(true);
+  };
 
   return (
     <div className="p-5">
@@ -292,32 +277,32 @@ const Admins = () => {
                   </tr>
                 </thead>
                 {activeAdminsLoading || dormantAdminsLoading ? (
-                  <p className="p-2">Fetching manager data...</p>
-                ) : paginatedManagers.length === 0 ||
-                  paginatedManagers.filter((manager) =>
+                  <p className="p-2">Fetching admin data...</p>
+                ) : paginatedAdmins.length === 0 ||
+                  paginatedAdmins.filter((admin) =>
                     show === "active"
-                      ? manager.status === "active"
-                      : manager.status !== "active"
+                      ? admin.status === "active"
+                      : admin.status !== "active"
                   ).length === 0 ? (
                   <tbody>
                     <tr>
                       <td colSpan="9" className="px-4 pt-2">
                         <p className="text-gray-500">
-                          No {show === "active" ? "active" : "suspended"}{" "}
-                          managers found.
+                          No {show === "active" ? "active" : "suspended"} admins
+                          found.
                         </p>
                       </td>
                     </tr>
                   </tbody>
                 ) : (
                   <tbody>
-                    {paginatedManagers
-                      ?.filter((manager) =>
+                    {paginatedAdmins
+                      ?.filter((admin) =>
                         show === "active"
-                          ? manager.status === "active"
-                          : manager.status !== "active"
+                          ? admin.status === "active"
+                          : admin.status !== "active"
                       )
-                      .map((manager, index) => (
+                      .map((admin, index) => (
                         <tr
                           key={index}
                           className="bg-white border-b hover:bg-blue-50">
@@ -325,57 +310,39 @@ const Admins = () => {
                             {index + 1}
                           </td>
                           <td className="px-2 border-r py-2 capitalize">
-                            {manager.name}
+                            {admin.name}
+                          </td>
+                          <td className="px-6 border-r py-2">{admin.email}</td>
+                          <td className="px-6 border-r py-2">{admin.ID}</td>
+                          <td className="px-6 border-r py-2">{admin.phone}</td>
+                          <td className="px-6 border-r py-2">
+                            {formatDate(new Date(admin.createdAt))}
                           </td>
                           <td className="px-6 border-r py-2">
-                            {manager.email}
-                          </td>
-                          <td className="px-6 border-r py-2">{manager.ID}</td>
-                          <td className="px-6 border-r py-2">
-                            {manager.phone}
+                            {formatDate(new Date(admin.lastLogin))}
                           </td>
                           <td className="px-6 border-r py-2">
-                            {formatDate(new Date(manager.createdAt))}
-                          </td>
-                          <td className="px-6 border-r py-2">
-                            {formatDate(new Date(manager.lastLogin))}
-                          </td>
-                          <td className="px-6 border-r py-2">
-                            {manager.status === "active" ? (
+                            {admin.status === "active" ? (
                               <p className="text-green-500 capitalize">
-                                {manager.status}
+                                {admin.status}
                               </p>
                             ) : (
                               <p className="text-amber-500 capitalize">
-                                {manager.status}
+                                {admin.status}
                               </p>
                             )}
                           </td>
                           <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
-                            {manager.status === "active" ? (
-                              <button
-                                aria-label={`Manage ${manager.name}`}
-                                className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300"
-                                onClick={() =>
-                                  handleStatusToggle(manager.id, manager.status)
-                                }>
-                                Suspend
-                                <PiUserCheck />
-                              </button>
-                            ) : (
-                              <button
-                                aria-label={`Manage ${manager.name}`}
-                                className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-green-500 hover:bg-green-300"
-                                onClick={() =>
-                                  handleStatusToggle(manager.id, manager.status)
-                                }>
-                                Activate
-                                <PiUserCheck />
-                              </button>
-                            )}
                             <button
-                              onClick={() => handleDeleteUser(manager.id)}
-                              aria-label={`Analyze ${manager.name}`}
+                              aria-label={`Manage ${admin.name}`}
+                              className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300"
+                              onClick={() => onEditAdmin(admin)}>
+                              Edit
+                              <BiEdit />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(admin.id)}
+                              aria-label={`Analyze ${admin.name}`}
                               className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
                               <MdDeleteOutline />
                               Delete
@@ -403,6 +370,12 @@ const Admins = () => {
           </div>
         </div>
       </div>
+      <EditUserModal
+        setEditUser={setEditUser}
+        user={editUser}
+        showEditUserModal={showEditUserModal}
+        setShowEditUserModal={setShowEditUserModal}
+      />
       <NewAdmin showAddAdmin={showAddAdmin} setShowAdmin={setShowAdmin} />
       <DeleteConfirmationModal
         showDeleteModal={showDeleteModal}

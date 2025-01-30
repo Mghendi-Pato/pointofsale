@@ -58,7 +58,7 @@ const NewModel = ({ showAddModel, setShowAddModel }) => {
         onSuccess: () => {
           setRegisterModelLoading(false);
           queryClient.invalidateQueries(["models"]);
-          toast.success("Model registered successfully");
+          toast.success("Model registered");
           formik.resetForm();
           if (isSmallScreen) {
             setShowAddModel(false);
