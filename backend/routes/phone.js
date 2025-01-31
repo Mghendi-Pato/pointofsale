@@ -2,12 +2,12 @@ const express = require("express");
 const {
   getActivePhones,
   getSuspendedPhones,
-  getSoldPhones,
   getLostPhones,
   registerPhone,
   editPhone,
   declareLost,
   sellPhone,
+  getSoldPhones,
 } = require("../controllers/phone");
 const { verifyToken } = require("../middleware/auth");
 
@@ -18,8 +18,8 @@ router.put("/edit/:id", verifyToken, editPhone);
 router.get("/active", getActivePhones);
 router.get("/suspended", getSuspendedPhones);
 router.put("/lost/:id", verifyToken, declareLost);
-router.get("/sold", getSoldPhones);
 router.get("/lost", getLostPhones);
 router.post("/sell", verifyToken, sellPhone);
+router.get("/sold", getSoldPhones);
 
 module.exports = router;

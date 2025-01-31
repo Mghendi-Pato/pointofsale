@@ -6,6 +6,7 @@ const {
   PhoneModel,
   Customer,
 } = require("../models");
+const { Op, fn, col, Sequelize } = require("sequelize");
 
 exports.registerPhone = async (req, res) => {
   try {
@@ -91,7 +92,6 @@ exports.registerPhone = async (req, res) => {
       .json({ message: "An error occurred while registering the phone." });
   }
 };
-
 //Edit phone
 exports.editPhone = async (req, res) => {
   try {
@@ -179,7 +179,6 @@ exports.editPhone = async (req, res) => {
     });
   }
 };
-
 //Fetch phones
 const fetchPhones = async (status, page, limit) => {
   const whereClause = {
@@ -285,7 +284,6 @@ const fetchPhones = async (status, page, limit) => {
 
   return { count, phones: phonesWithDetails };
 };
-
 // Fetch active phones
 exports.getActivePhones = async (req, res) => {
   try {
@@ -363,49 +361,6 @@ exports.getSuspendedPhones = async (req, res) => {
 
     res.status(200).json({
       message: "Suspended phones fetched successfully.",
-      phones,
-      page: parsedPage,
-      limit: parsedLimit,
-      total: count,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-// Fetch sold phones
-exports.getSoldPhones = async (req, res) => {
-  try {
-    const { page = 1, limit = 20 } = req.query;
-    const parsedPage = parseInt(page);
-    const parsedLimit = parseInt(limit);
-
-    if (
-      isNaN(parsedPage) ||
-      isNaN(parsedLimit) ||
-      parsedPage <= 0 ||
-      parsedLimit <= 0
-    ) {
-      return res.status(400).json({ message: "Invalid pagination parameters" });
-    }
-
-    const { count, phones } = await fetchPhones(
-      "sold",
-      parsedPage,
-      parsedLimit
-    );
-
-    if (phones.length === 0) {
-      return res.status(200).json({
-        message: "No sold phones found.",
-        phones: [],
-        page: parsedPage,
-        limit: parsedLimit,
-        total: 0,
-      });
-    }
-
-    res.status(200).json({
-      message: "Sold phones fetched successfully.",
       phones,
       page: parsedPage,
       limit: parsedLimit,
@@ -506,6 +461,7 @@ exports.sellPhone = async (req, res) => {
       nkPhone,
       nkFirstName,
       nkLastName,
+      agentCommission,
     } = req.body;
 
     // Step 1: Check if the phone exists and is active
@@ -536,15 +492,16 @@ exports.sellPhone = async (req, res) => {
         nkPhone,
         nkFirstName,
         nkLastName,
+        agentCommission,
       });
     }
 
     // Step 4: Link phone to the customer
     await phone.update({
-      customerId: customer.id, // Assuming `customerId` is now a foreign key in the Phone model
+      customerId: customer.id,
       company,
       status: "sold",
-      saleDate: new Date(), // Automatically sets date & time
+      saleDate: new Date(),
     });
 
     return res.status(200).json({
@@ -557,5 +514,144 @@ exports.sellPhone = async (req, res) => {
     res.status(500).json({
       message: "An error occurred while selling the phone.",
     });
+  }
+};
+
+const fetchSoldPhones = async (company, startDate, endDate) => {
+  const whereClause = { status: "sold" };
+
+  if (company) {
+    whereClause.company = company;
+  }
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    whereClause.saleDate = {
+      [Op.between]: [start, end],
+    };
+  }
+  const { count, rows: phones } = await Phone.findAndCountAll({
+    where: whereClause,
+    include: [
+      {
+        model: Supplier,
+        as: "supplier",
+        attributes: ["name", "id"],
+        paranoid: false,
+      },
+      {
+        model: User,
+        as: "manager",
+        attributes: ["firstName", "lastName", "regionId", "id"],
+        include: [
+          {
+            model: Location,
+            as: "region",
+            attributes: ["name", "location", "id"],
+          },
+        ],
+        paranoid: false,
+      },
+      {
+        model: PhoneModel,
+        as: "phoneModel",
+        attributes: ["model", "make", "id", "commissions"],
+        paranoid: false,
+      },
+    ],
+  });
+
+  const phonesWithDetails = phones.map((phone) => {
+    const {
+      id,
+      imei,
+      modelId,
+      purchasePrice,
+      buyDate,
+      status,
+      supplier,
+      manager,
+      phoneModel,
+      createdAt,
+      capacity,
+      sellingPrice,
+    } = phone.toJSON();
+
+    const supplierName = supplier ? supplier.name : "No supplier assigned";
+    const supplierId = supplier ? supplier.id : "No supplier assigned";
+    const managerId = manager ? manager.id : "No manager assigned";
+    const regionId = manager ? manager.regionId : "No region assigned";
+    const managerName = manager
+      ? `${manager.firstName} ${manager.lastName}`
+      : "No manager assigned";
+    const managerLocation = manager?.region
+      ? `${manager.region.location}`
+      : "No location assigned";
+
+    const modelName = phoneModel ? phoneModel.model : "No model assigned";
+    const modelMake = phoneModel ? phoneModel.make : "No make assigned";
+
+    let managerCommission = null;
+    if (phoneModel && phoneModel.commissions) {
+      const commission = phoneModel.commissions.find(
+        (comm) => String(comm.regionId) === String(regionId)
+      );
+      if (commission) {
+        managerCommission = commission.amount;
+      }
+    }
+
+    return {
+      id,
+      imei,
+      modelId,
+      modelName,
+      modelMake,
+      purchasePrice,
+      buyDate,
+      status,
+      supplierName,
+      managerName,
+      managerLocation,
+      createdAt,
+      managerId,
+      supplierId,
+      capacity,
+      regionId,
+      sellingPrice,
+      managerCommission,
+    };
+  });
+
+  return { count, phones: phonesWithDetails };
+};
+
+exports.getSoldPhones = async (req, res) => {
+  try {
+    const { company, startDate, endDate } = req.query;
+    const { count, phones } = await fetchSoldPhones(
+      company,
+      startDate,
+      endDate
+    );
+    if (phones.length === 0) {
+      return res.status(200).json({
+        message: "No sold phones found.",
+        phones: [],
+        total: 0,
+      });
+    }
+
+    res.status(200).json({
+      message: "Sold phones fetched successfully.",
+      phones,
+      total: count,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

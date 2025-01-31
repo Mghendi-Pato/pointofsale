@@ -54,6 +54,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
       capacity: { type: DataTypes.STRING, allowNull: true },
+      agentCommission: { type: DataTypes.FLOAT, allowNull: true },
       company: { type: DataTypes.STRING, allowNull: true },
       customerId: {
         type: DataTypes.INTEGER,

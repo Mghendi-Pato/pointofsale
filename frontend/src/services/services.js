@@ -491,3 +491,28 @@ export const sellPhone = async (customerDetails, token) => {
     throw new Error(error.response?.data?.message || error.message);
   }
 };
+//Fetch sold phones
+export const fetchSoldPhones = async ({
+  company,
+  startDate,
+  endDate,
+  token,
+}) => {
+  try {
+    const response = await axios.get(`${url}/phone/sold/`, {
+      params: { company, startDate, endDate },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.data || !response.data.phones) {
+      throw new Error("Invalid response structure from the server.");
+    }
+
+    return response.data.phones;
+  } catch (error) {
+    console.error("Error fetching sold phones:", error.message);
+    throw error;
+  }
+};

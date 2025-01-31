@@ -20,8 +20,8 @@ import { MdOutlineNavigateNext } from "react-icons/md";
 import html2canvas from "html2canvas";
 
 import { FormControl } from "@mui/material";
-import { useMutation, useQueryClient } from "react-query";
-import { sellPhone } from "../services/services";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import { fetchAllModels, sellPhone } from "../services/services";
 
 const PhoneCheckout = ({
   showPhoneCheckout,
@@ -118,6 +118,7 @@ const PhoneCheckout = ({
       phoneNumber: customerDetails.phone,
       phoneId: phone.id,
       company: sellingCompany,
+      agentCommission: phone.managerCommission,
     };
     const { ...finalCustomerDetails } = updatedCustomerDetails;
     sellPhoneMutation.mutate({
