@@ -508,8 +508,6 @@ exports.sellPhone = async (req, res) => {
       nkLastName,
     } = req.body;
 
-    console.log(phoneId);
-
     // Step 1: Check if the phone exists and is active
     const phone = await Phone.findByPk(phoneId);
     if (!phone) {

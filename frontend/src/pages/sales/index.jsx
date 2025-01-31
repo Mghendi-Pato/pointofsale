@@ -1,5 +1,4 @@
 import { useSelector } from "react-redux";
-import SuperAdminSales from "./SuperAdminSales";
 import AdminSales from "./AdminSales";
 import ManagerSales from "./ManagerSales";
 
@@ -24,7 +23,7 @@ const Index = () => {
 
   switch (userRole) {
     case "super admin":
-      return <SuperAdminSales />;
+      return <AdminSales />;
     case "admin":
       return <AdminSales />;
     case "manager":

@@ -434,6 +434,7 @@ const AdminInventory = () => {
       />
       <PhoneCheckout
         phone={checkoutPhone}
+        setPhone={setCheckoutPhone}
         showPhoneCheckout={showPhoneCheckout}
         setShowPhoneCheckout={setShowPhoneCheckout}
       />

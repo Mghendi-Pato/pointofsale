@@ -436,7 +436,6 @@ export const editUser = async (userId, userData, token) => {
 };
 // Declare phone as lost
 export const declarePhoneLost = async (phoneId, token) => {
-  console.log(token);
   try {
     const response = await axios.put(
       `${url}/phone/lost/${phoneId}`,

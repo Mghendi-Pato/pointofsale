@@ -108,7 +108,6 @@ const Commissions = () => {
         },
         onSuccess: (response) => {
           setEditCommissionLoading(false);
-          console.log(response);
           queryClient.invalidateQueries(["models", "phones"]);
           toast.success("Commission details updated");
         },

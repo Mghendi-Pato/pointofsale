@@ -23,7 +23,12 @@ import { FormControl } from "@mui/material";
 import { useMutation, useQueryClient } from "react-query";
 import { sellPhone } from "../services/services";
 
-const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout, phone }) => {
+const PhoneCheckout = ({
+  showPhoneCheckout,
+  setShowPhoneCheckout,
+  phone,
+  setPhone,
+}) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState({
     firstName: "",
@@ -93,6 +98,8 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout, phone }) => {
             dispatch(setSidebar(true));
           }
           toast.success("Phone checkout successful");
+          setPhone([]);
+          setStep(0);
           downloadReceipt();
         },
         onError: (error) => {
@@ -104,8 +111,6 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout, phone }) => {
   };
 
   const sellPhoneMutation = useSellPhone();
-
-  console.log(phone);
 
   const onCheckout = () => {
     const updatedCustomerDetails = {
@@ -524,19 +529,24 @@ const PhoneCheckout = ({ showPhoneCheckout, setShowPhoneCheckout, phone }) => {
                           Shuhari communication
                         </p>
                       )}
-
-                      <p
-                        className={`font-roboto font-medium uppercase  ${
-                          sellingCompany === "muchami" ? "text-xs" : "text-sm"
-                        }`}>
-                        Likoni Mall first floor -F21
-                      </p>
-                      <p
-                        className={`font-roboto font-medium uppercase  ${
-                          sellingCompany === "muchami" ? "text-xs" : "text-sm"
-                        }`}>
-                        Tel: +254 720 3900 41 /+254 780 3900 41
-                      </p>
+                      {sellingCompany === "muchami" ? (
+                        <p className="font-roboto font-bold text-center uppercase text-sm pt-2">
+                          Kiembeni Next to Start Gardens
+                        </p>
+                      ) : (
+                        <p className="font-roboto font-bold uppercase pt-2 text-lg">
+                          Likoni Mall first floor -F21
+                        </p>
+                      )}
+                      {sellingCompany === "muchami" ? (
+                        <p className="font-roboto font-bold text-center uppercase text-sm pt-2">
+                          Tel: +254 720 3900 41 /+254 780 3900 41
+                        </p>
+                      ) : (
+                        <p className="font-roboto font-bold uppercase pt-2 text-lg">
+                          Tel: +254 746 435869
+                        </p>
+                      )}
                     </div>
 
                     <hr className="my-2 w-full bg-black h-1" />

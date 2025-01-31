@@ -115,13 +115,11 @@ exports.editPhoneModel = async (req, res) => {
 
       if (!Array.isArray(commissions)) {
         try {
-          commissions = JSON.parse(commissions); // In case it's a JSON string
+          commissions = JSON.parse(commissions);
         } catch (error) {
-          commissions = []; // If parsing fails, default to an empty array
+          commissions = [];
         }
       }
-
-      console.log("Parsed Commissions:", commissions); // Debugging to verify commissions structure
 
       // Find existing commission index
       const existingCommissionIndex = commissions.findIndex(

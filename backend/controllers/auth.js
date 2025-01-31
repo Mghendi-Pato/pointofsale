@@ -220,8 +220,6 @@ exports.editUser = async (req, res) => {
     const { userId } = req.params;
     const { firstName, lastName, email, ID, phone, regionId, status } =
       req.body;
-
-    console.log(regionId);
     const loggedInUser = req.user;
 
     // Check if the logged-in user has the appropriate role
