@@ -18,10 +18,9 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import { IoIosArrowBack } from "react-icons/io";
 import { MdOutlineNavigateNext } from "react-icons/md";
 import html2canvas from "html2canvas";
-
 import { FormControl } from "@mui/material";
-import { useMutation, useQuery, useQueryClient } from "react-query";
-import { fetchAllModels, sellPhone } from "../services/services";
+import { useMutation, useQueryClient } from "react-query";
+import { sellPhone } from "../services/services";
 
 const PhoneCheckout = ({
   showPhoneCheckout,

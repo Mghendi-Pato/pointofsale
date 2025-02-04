@@ -12,6 +12,9 @@ import { fetchSoldPhones } from "../../services/services";
 import DateRangePicker from "../../components/DatePicker";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
+import { HiOutlineDownload } from "react-icons/hi";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const AdminSales = () => {
   const token = useSelector((state) => state.userSlice.user.token);
@@ -22,6 +25,93 @@ const AdminSales = () => {
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const navigate = useNavigate();
+
+  // Function to generate and download Excel file
+  const handleDownload = () => {
+    if (!filteredPhones?.length) return; // Exit if no data is available
+
+    // Calculate totals
+    const totalBuyingPrice = filteredPhones.reduce(
+      (total, phone) => total + (parseFloat(phone.purchasePrice) || 0),
+      0
+    );
+    const totalSellingPrice = filteredPhones.reduce(
+      (total, phone) => total + (parseFloat(phone.sellingPrice) || 0),
+      0
+    );
+    const totalGrossProfit = filteredPhones.reduce(
+      (total, phone) =>
+        total +
+          (parseFloat(phone.sellingPrice) - parseFloat(phone.purchasePrice)) ||
+        0,
+      0
+    );
+    const totalAgentCommission = filteredPhones.reduce(
+      (total, phone) => total + (parseFloat(phone.managerCommission) || 0),
+      0
+    );
+    const totalNetProfit = filteredPhones.reduce(
+      (total, phone) =>
+        total +
+        (parseFloat(phone.sellingPrice) -
+          parseFloat(phone.purchasePrice) -
+          (parseFloat(phone.managerCommission) || 0)),
+      0
+    );
+
+    // Add a totals row at the end of the data
+    const dataWithTotal = [
+      ...filteredPhones.map((phone, index) => ({
+        "#": index + 1,
+        Manager: phone.managerName,
+        Location: phone.managerLocation,
+        Model: phone.modelName,
+        IMEI: phone.imei,
+        Supplier: phone.supplierName,
+        "Buying Price (Ksh)": parseFloat(phone.purchasePrice) || 0,
+        "Selling Price (Ksh)": parseFloat(phone.sellingPrice) || 0,
+        "Gross Profit (Ksh)":
+          parseFloat(phone.sellingPrice) - parseFloat(phone.purchasePrice) || 0,
+        "Agent Commission (Ksh)": parseFloat(phone.managerCommission) || 0,
+        "Net Profit (Ksh)":
+          parseFloat(phone.sellingPrice) -
+            parseFloat(phone.purchasePrice) -
+            (parseFloat(phone.managerCommission) || 0) || 0,
+      })),
+      {
+        "#": "Total",
+        Manager: "",
+        Location: "",
+        Model: "",
+        IMEI: "",
+        Supplier: "",
+        "Buying Price (Ksh)": totalBuyingPrice,
+        "Selling Price (Ksh)": totalSellingPrice,
+        "Gross Profit (Ksh)": totalGrossProfit,
+        "Agent Commission (Ksh)": totalAgentCommission,
+        "Net Profit (Ksh)": totalNetProfit,
+      },
+    ];
+
+    // Convert JSON data to a worksheet for Excel
+    const worksheet = XLSX.utils.json_to_sheet(dataWithTotal);
+
+    // Create a new workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sales Data");
+
+    // Convert workbook to binary and create a downloadable Excel file
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const data = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    // Trigger download
+    saveAs(data, `Sales_Report_${dayjs().format("YYYY-MM-DD")}.xlsx`);
+  };
 
   const isQueryEnabled =
     company !== undefined && startDate !== undefined && endDate !== undefined;
@@ -126,25 +216,36 @@ const AdminSales = () => {
               value={searchQuery}
               onChange={handleSearchChange}
             />
-            <FormControl sx={{ px: { md: 5 } }}>
-              <RadioGroup
-                row
-                aria-labelledby="demo-row-radio-buttons-group-label"
-                name="row-radio-buttons-group"
-                value={company}
-                onChange={(e) => setcompany(e.target.value)}>
-                <FormControlLabel
-                  value="shuhari"
-                  control={<Radio />}
-                  label="Shuhari"
+            <div className="flex flex-row justify-between items-center">
+              <FormControl sx={{ px: { md: 5 } }}>
+                <RadioGroup
+                  row
+                  aria-labelledby="demo-row-radio-buttons-group-label"
+                  name="row-radio-buttons-group"
+                  value={company}
+                  onChange={(e) => setcompany(e.target.value)}>
+                  <FormControlLabel
+                    value="shuhari"
+                    control={<Radio />}
+                    label="Shuhari"
+                  />
+                  <FormControlLabel
+                    value="muchami"
+                    control={<Radio />}
+                    label="Muchami"
+                  />
+                </RadioGroup>
+              </FormControl>
+              {/* Download button */}
+              <div
+                className="p-2 hover:bg-neutral-200 rounded-full cursor-pointer transition-all duration-300 ease-in-out"
+                onClick={handleDownload}>
+                <HiOutlineDownload
+                  size={25}
+                  className="text-gray-500 hover:text-gray-700 transition-all duration-300 ease-in-out"
                 />
-                <FormControlLabel
-                  value="muchami"
-                  control={<Radio />}
-                  label="Muchami"
-                />
-              </RadioGroup>
-            </FormControl>
+              </div>
+            </div>
           </div>
         </div>
       </div>

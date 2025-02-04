@@ -1,6 +1,5 @@
 import { useSelector } from "react-redux";
 import AdminInventory from "./AdminInventory";
-import ManagerInventory from "./ManagerInventory";
 
 const Index = () => {
   const user = useSelector((state) => state.userSlice.user.user);

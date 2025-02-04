@@ -1,6 +1,5 @@
 import { useSelector } from "react-redux";
 import AdminDashboard from "./AdminDashboard";
-import ManagerDashboard from "./ManagerDashboard";
 import AdminInventory from "../inventory/AdminInventory";
 
 const Index = () => {

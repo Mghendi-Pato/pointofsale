@@ -1,6 +1,5 @@
 import { useSelector } from "react-redux";
 import AdminSales from "./AdminSales";
-import ManagerSales from "./ManagerSales";
 
 const Index = () => {
   const user = useSelector((state) => state.userSlice.user.user);

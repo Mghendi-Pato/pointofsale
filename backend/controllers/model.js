@@ -1,5 +1,4 @@
 const { PhoneModel } = require("../models");
-const { Op } = require("sequelize");
 
 // Create a new Phone Model
 exports.createPhoneModel = async (req, res) => {

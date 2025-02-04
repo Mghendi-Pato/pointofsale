@@ -155,19 +155,27 @@ const PhoneDetails = () => {
                   </p>
                 </div>
                 <div className="flex-1">
-                  <p className="text-neutral-400">Customer Phn</p>
+                  <p className="text-neutral-400">Customer Name</p>
                   <p className=" font-medium capitalize">
-                    {phone?.customer?.phoneNumber}
+                    {phone?.customer?.firstName} {phone?.customer?.lastName}
                   </p>
                 </div>
               </div>
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex-1">
-                  <p className="text-neutral-400">Next Of Kin Name</p>
+                  <p className="text-neutral-400">Customer Phn</p>
+                  <p className=" font-medium capitalize">
+                    {phone?.customer?.phoneNumber}
+                  </p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-neutral-400">Next of Kin Name</p>
                   <p className=" font-medium capitalize">
                     {phone?.customer?.nkLastName} {phone?.customer?.nkFirstName}
                   </p>
                 </div>
+              </div>
+              <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex-1">
                   <p className="text-neutral-400">Next of Kin Phn</p>
                   <p className=" font-medium capitalize">
