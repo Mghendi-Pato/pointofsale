@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "react-query";
 import { fetchSoldPhones } from "../../services/services";
 import DateRangePicker from "../../components/DatePicker";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 
 const AdminSales = () => {
   const token = useSelector((state) => state.userSlice.user.token);
@@ -20,6 +21,7 @@ const AdminSales = () => {
   const today = dayjs().endOf("day");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
+  const navigate = useNavigate();
 
   const isQueryEnabled =
     company !== undefined && startDate !== undefined && endDate !== undefined;
@@ -57,8 +59,6 @@ const AdminSales = () => {
       refetch();
     }
   }, [company, startDate, endDate, refetch, isQueryEnabled]);
-
-  console.log(soldPhonesData);
 
   const filteredPhones = useMemo(() => {
     const dataToFilter = soldPhonesData;
@@ -134,14 +134,14 @@ const AdminSales = () => {
                 value={company}
                 onChange={(e) => setcompany(e.target.value)}>
                 <FormControlLabel
-                  value="muchami"
-                  control={<Radio />}
-                  label="Muchami"
-                />
-                <FormControlLabel
                   value="shuhari"
                   control={<Radio />}
                   label="Shuhari"
+                />
+                <FormControlLabel
+                  value="muchami"
+                  control={<Radio />}
+                  label="Muchami"
                 />
               </RadioGroup>
             </FormControl>
@@ -233,7 +233,8 @@ const AdminSales = () => {
                       return (
                         <tr
                           key={phone.id}
-                          className={`bg-white border-b hover:bg-blue-50`}>
+                          onClick={() => navigate(`/phone/${phone.imei}`)}
+                          className={`bg-white border-b hover:bg-blue-50 cursor-pointer`}>
                           <td className="px-2 py-2 border-r font-medium text-gray-900">
                             {index + 1}
                           </td>

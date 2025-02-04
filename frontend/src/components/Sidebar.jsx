@@ -10,9 +10,9 @@ import { CiLogout } from "react-icons/ci";
 import { RiAdminLine } from "react-icons/ri";
 import { TbTruckDelivery } from "react-icons/tb";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleSidebar } from "../redux/reducers/ sidebar";
+import { setSidebar, toggleSidebar } from "../redux/reducers/ sidebar";
 import { BsPinMap } from "react-icons/bs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LogoutUser from "./LogoutUser";
 import { MdAttachMoney } from "react-icons/md";
 import { GiReceiveMoney } from "react-icons/gi";
@@ -24,6 +24,19 @@ const Sidebar = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const user = useSelector((state) => state.userSlice.user.user);
   const showSideBar = useSelector((state) => state.sidebar.showSideBar);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)"); // Tailwind's `md` breakpoint
+    const handleMediaChange = () => setIsSmallScreen(mediaQuery.matches);
+
+    handleMediaChange(); // Initialize state on component mount
+    mediaQuery.addEventListener("change", handleMediaChange); // Listen for screen size changes
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleMediaChange);
+    };
+  }, []);
 
   let role = "";
 
@@ -63,12 +76,6 @@ const Sidebar = () => {
     },
 
     {
-      area: "Reports",
-      Icon: <IoAnalyticsSharp size={20} className="mx-4" />,
-      privileges: ["super admin", "admin", "manager"],
-      route: "/reports",
-    },
-    {
       area: "Regions",
       Icon: <BsPinMap size={20} className="mx-4" />,
       privileges: ["super admin", "admin"],
@@ -94,14 +101,29 @@ const Sidebar = () => {
     },
   ];
 
+  const onHomeNavigate = () => {
+    user.role === "manager" ? navigate("/inventory") : navigate("/");
+    if (isSmallScreen) {
+      dispatch(setSidebar(false));
+    }
+  };
+  const onNavigate = (route) => {
+    navigate(route);
+    if (isSmallScreen) {
+      dispatch(setSidebar(false));
+    }
+  };
+
   return (
     <div
-      className={`bg-slate-50 shadow-md transition-all duration-1000 ease-in-out flex flex-col justify-between flex-1 z-20 ${
+      className={`${
+        pathname === "/" ? "bg-slate-50" : "bg-slate-50"
+      } shadow-md transition-all duration-300 ease-in-out flex flex-col justify-between flex-1 z-50 ${
         showSideBar ? "w-52 md:w-64" : "w-0 md:w-16"
-      } h-full fixed left-0 top-0 z-10`}>
+      } h-full fixed left-0 top-0 z-50`}>
       <div className=" ">
         <div
-          className={`bg-slate-50 border-b b-neutral-300 h-16 flex flex-col justify-center items-center relative transition-all duration-1000 ease-in-out ${
+          className={`bg-slate-50 border-b h-16 flex flex-col justify-center items-center relative transition-all duration-300 ease-in-out ${
             showSideBar ? "w-40 md:w-64" : "w-0"
           }`}>
           <div
@@ -131,12 +153,14 @@ const Sidebar = () => {
         </div>
 
         <div
-          className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${
+          className={`relative  ${
+            user.role === "manager" ? "hidden" : "flex"
+          } flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${
             pathname === "/"
               ? "border-primary-500 border-r-4 bg-primary-300"
               : ""
           }`}
-          onClick={() => navigate("/")}>
+          onClick={() => onHomeNavigate()}>
           <div className="hidden md:block">
             <AiOutlineDashboard size={20} className="mx-4" />
           </div>
@@ -159,7 +183,7 @@ const Sidebar = () => {
                   initial={{ x: -100, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -100, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.3 }}
                   className="whitespace-nowrap text-black ">
                   Dashbaord
                 </motion.p>
@@ -183,7 +207,7 @@ const Sidebar = () => {
                   : ""
               }`}
               key={index}
-              onClick={() => navigate(area.route)}>
+              onClick={() => onNavigate(area.route)}>
               <div className="hidden md:block">{area.Icon}</div>
               <AnimatePresence>
                 {showSideBar && (
@@ -226,7 +250,7 @@ const Sidebar = () => {
               ? "border-primary-500 border-r-4 bg-primary-300"
               : ""
           }`}
-          onClick={() => navigate("/profile")}>
+          onClick={() => onNavigate("/profile")}>
           <div className="hidden md:block">
             <CgProfile size={20} className="mx-4" />
           </div>

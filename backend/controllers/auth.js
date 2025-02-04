@@ -99,8 +99,17 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find the user by email
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+      where: { email },
+      include: [
+        {
+          model: Location,
+          as: "region",
+          attributes: ["id", "name", "location"],
+        },
+      ],
+    });
+
     if (!user) {
       return res.status(404).json({ message: "User does not exist" });
     }
@@ -126,20 +135,23 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "10d" }
     );
 
     // Exclude the password field from the response
     const { password: _, ...userWithoutPassword } = user.toJSON();
 
-    // Respond with the token and user details
+    // Respond with the token, user details, and location/region details
     res.status(200).json({
       message: "Login successful",
       token,
-      user: userWithoutPassword,
+      user: {
+        ...userWithoutPassword,
+        region: user.region,
+      },
     });
   } catch (error) {
-    console.error("Error in login function:", error); // Log error for debugging
+    console.error("Error in login function:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -220,12 +232,6 @@ exports.editUser = async (req, res) => {
     const { userId } = req.params;
     const { firstName, lastName, email, ID, phone, regionId, status } =
       req.body;
-    const loggedInUser = req.user;
-
-    // Check if the logged-in user has the appropriate role
-    if (!["admin", "super admin"].includes(loggedInUser.role)) {
-      return res.status(403).json({ message: "Access Denied" });
-    }
 
     // Find the user to be updated
     const user = await User.findByPk(userId);

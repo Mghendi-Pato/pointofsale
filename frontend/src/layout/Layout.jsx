@@ -11,7 +11,7 @@ const Layout = ({ children }) => {
       <div
         className={`${
           showSideBar ? "p-2 md:pl-64" : "p-0 md:pl-16"
-        } pt-16 transition-all duration-1000 ease-in-out`}>
+        } pt-16 transition-all duration-300 ease-in-out`}>
         {children}
       </div>
     </div>

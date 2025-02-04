@@ -28,6 +28,7 @@ const AdminInventory = () => {
   const [showPhoneCheckout, setShowPhoneCheckout] = useState(false);
   const [checkoutPhone, setCheckoutPhone] = useState(null);
   const [declareLostLoading, setDeclareLostLoading] = useState(false);
+  const user = useSelector((state) => state.userSlice.user.user);
 
   const queryClient = useQueryClient();
 
@@ -186,9 +187,14 @@ const AdminInventory = () => {
       <div className="border border-gray-200">
         <div className="">
           <div className="p-5 flex flex-col space-y-5">
-            <div className="flex flex-col md:flex-row-reverse justify-between space-y-5 md:space-y-0">
+            <div
+              className={`flex flex-col ${
+                user.role === "manager" ? "md:flex-row" : "md:flex-row-reverse"
+              } justify-between space-y-5 md:space-y-0`}>
               <button
-                className="p-2 bg-primary-500 hover:scale-105 flex flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-500 ease-in-out"
+                className={`p-2 bg-primary-500 hover:scale-105 ${
+                  user.role === "manager" ? "hidden" : "flex"
+                } flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-300 ease-in-out`}
                 onClick={() => setShowAddPhone(!showAddPhone)}>
                 Add inventory
               </button>
@@ -273,12 +279,13 @@ const AdminInventory = () => {
                         className="px-6 border-r text-[14px] normal-case py-2">
                         Capacity
                       </th>
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Supplier
-                      </th>
-
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Supplier
+                        </th>
+                      )}
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
@@ -294,16 +301,20 @@ const AdminInventory = () => {
                         className="px-6 border-r text-[14px] normal-case py-2">
                         Manger Commission
                       </th>
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Location
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Manager
-                      </th>
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Location
+                        </th>
+                      )}
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Manager
+                        </th>
+                      )}
                       <th
                         scope="col"
                         className="px-6 text-[14px] normal-case py-2">
@@ -339,18 +350,19 @@ const AdminInventory = () => {
                       {paginatedPhones
                         ?.filter((phone) =>
                           show === "active"
-                            ? phone.status === "active"
-                            : phone.status !== "active"
+                            ? phone?.status === "active"
+                            : phone?.status !== "active"
                         )
                         .map((phone, index) => (
                           <tr
-                            key={phone.id}
+                            key={phone?.id}
                             className={`bg-white border-b hover:bg-blue-50 border-l-4 ${
                               calculateDaysFromDate(phone.createdAt) < 5 &&
-                              phone.status !== "lost"
+                              phone?.status !== "lost"
                                 ? "border-l-green-500"
-                                : calculateDaysFromDate(phone.createdAt) >= 5 &&
-                                  calculateDaysFromDate(phone.createdAt) < 7
+                                : calculateDaysFromDate(phone?.createdAt) >=
+                                    5 &&
+                                  calculateDaysFromDate(phone?.createdAt) < 7
                                 ? "border-l-amber-500"
                                 : "border-l-red-500"
                             }`}>
@@ -358,40 +370,46 @@ const AdminInventory = () => {
                               {index + 1}
                             </td>
                             <td className="px-2 border-r py-2 capitalize">
-                              {phone.modelName}
+                              {phone?.modelName}
                             </td>
                             <td className="px-6 border-r py-2 capitalize">
-                              {phone.imei}
+                              {phone?.imei}
                             </td>
                             <td className="px-6 border-r py-2 capitalize">
-                              {phone.capacity}GB
+                              {phone?.capacity}GB
+                            </td>
+                            {user.role !== "manager" && (
+                              <td className="px-6 border-r py-2">
+                                {phone?.supplierName}
+                              </td>
+                            )}
+                            <td className="px-6 border-r py-2">
+                              Ksh {phone?.purchasePrice}
                             </td>
                             <td className="px-6 border-r py-2">
-                              {phone.supplierName}
-                            </td>
-
-                            <td className="px-6 border-r py-2">
-                              Ksh {phone.purchasePrice}
+                              Ksh {phone?.sellingPrice}
                             </td>
                             <td className="px-6 border-r py-2">
-                              Ksh {phone.sellingPrice}
+                              {phone?.managerCommission}
                             </td>
-                            <td className="px-6 border-r py-2">
-                              {phone.managerCommission}
-                            </td>
-                            <td className="px-6 border-r py-2 capitalize">
-                              {phone.managerLocation}
-                            </td>
-                            <td className="px-6 border-r py-2 capitalize">
-                              {phone.managerName}
-                            </td>
-
+                            {user.role !== "manager" && (
+                              <td className="px-6 border-r py-2 capitalize">
+                                {phone?.managerLocation}
+                              </td>
+                            )}
+                            {user.role !== "manager" && (
+                              <td className="px-6 border-r py-2 capitalize">
+                                {phone?.managerName}
+                              </td>
+                            )}
                             <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
                               {phone?.status === "lost" ? (
                                 <button
-                                  onClick={() => declareLostPhone(phone.id)}
-                                  aria-label={`Analyze ${phone.name}`}
-                                  className="flex flex-row justify-center w-32 items-center gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
+                                  onClick={() => declareLostPhone(phone?.id)}
+                                  aria-label={`Analyze ${phone?.name}`}
+                                  className={` ${
+                                    user.role === "manager" ? "hidden" : "flex"
+                                  } flex-row justify-center w-32 items-center gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300`}>
                                   <MdSettingsBackupRestore />
                                   Activate
                                 </button>
@@ -399,15 +417,19 @@ const AdminInventory = () => {
                                 <>
                                   <button
                                     onClick={() => onEditPhone(phone)}
-                                    aria-label={`Analyze ${phone.name}`}
-                                    className="flex flex-row justify-center w-20 items-center gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
+                                    aria-label={`Analyze ${phone?.name}`}
+                                    className={` ${
+                                      user.role === "manager"
+                                        ? "hidden"
+                                        : "flex"
+                                    } flex-row justify-center w-20 items-center gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300`}>
                                     <BiEdit />
                                     Edit
                                   </button>
 
                                   <button
                                     onClick={() => onCheckoutPhone(phone)}
-                                    aria-label={`Analyze ${phone.name}`}
+                                    aria-label={`Analyze ${phone?.name}`}
                                     className="flex flex-row justify-center items-center w-20 gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
                                     <BiCartAdd />
                                     Sale

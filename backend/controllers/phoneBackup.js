@@ -185,7 +185,9 @@ const fetchPhones = async (status, page, limit, user) => {
     ...(status && { status }),
     ...(user.role === "manager" && { managerId: user.id }),
   };
+
   const offset = (page - 1) * limit;
+
   const { count, rows: phones } = await Phone.findAndCountAll({
     where: whereClause,
     include: [
@@ -391,8 +393,7 @@ exports.getLostPhones = async (req, res) => {
     const { count, phones } = await fetchPhones(
       "lost",
       parsedPage,
-      parsedLimit,
-      req.user
+      parsedLimit
     );
 
     if (phones.length === 0) {
@@ -861,6 +862,7 @@ const fetchPhonesByPartialIMEI = async (imei) => {
         {
           model: User,
           as: "manager",
+          where: { role: "manager" },
           include: [
             {
               model: Location,

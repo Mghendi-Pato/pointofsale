@@ -27,7 +27,7 @@ const Index = () => {
     case "admin":
       return <AdminInventory />;
     case "manager":
-      return <ManagerInventory />;
+      return <AdminInventory />;
     default:
       return <div>Unauthorized</div>;
   }

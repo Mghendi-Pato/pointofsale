@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Profile from "./pages/profile/Profile";
 import Regions from "./pages/regions/Regions";
 import Commissions from "./pages/Commissions";
+import PhoneDetails from "./pages/PhoneDetails";
 
 const App = () => {
   return (
@@ -36,6 +37,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Commissions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/phone/:imei"
+          element={
+            <ProtectedRoute>
+              <PhoneDetails />
             </ProtectedRoute>
           }
         />

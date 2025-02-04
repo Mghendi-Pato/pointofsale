@@ -185,7 +185,7 @@ export const fetchAllSuppliers = async ({ queryKey, signal, token }) => {
     if (!response.data || !response.data.suppliers) {
       throw new Error("Invalid response structure from the server.");
     }
-
+    console.log(response);
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) {
@@ -237,7 +237,6 @@ export const fetchAllRegions = async ({ queryKey, signal, token }) => {
     if (!response.data || !response.data.regions) {
       throw new Error("Invalid response structure from the server.");
     }
-
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) {
@@ -464,6 +463,7 @@ export const sellPhone = async (customerDetails, token) => {
     phone,
     phoneId,
     phoneNumber,
+    agentCommission,
   } = customerDetails;
   try {
     const response = await axios.post(
@@ -479,6 +479,7 @@ export const sellPhone = async (customerDetails, token) => {
         phone,
         phoneId,
         phoneNumber,
+        agentCommission,
       },
       {
         headers: {
@@ -513,6 +514,45 @@ export const fetchSoldPhones = async ({
     return response.data.phones;
   } catch (error) {
     console.error("Error fetching sold phones:", error.message);
+    throw error;
+  }
+};
+//Fetch summaries
+export const fetchPhoneSummaries = async ({ token }) => {
+  try {
+    const response = await axios.get(`${url}/phone/dashboard`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.data || !response.data.soldThisMonth) {
+      throw new Error("Invalid response structure from the server.");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching phone summaries:", error.message);
+    throw error;
+  }
+};
+//Serch phone
+export const searchPhonesByIMEI = async ({ imei, token }) => {
+  try {
+    const response = await axios.get(`${url}/phone/search/${imei}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.data || !response.data.phones) {
+      throw new Error("Invalid response structure from the server.");
+    }
+    return response.data.phones;
+  } catch (error) {
+    console.error(
+      "Error searching phones by IMEI:",
+      error.response.data.message
+    );
     throw error;
   }
 };

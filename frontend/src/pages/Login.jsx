@@ -19,7 +19,7 @@ const Login = () => {
   useEffect(() => {
     if (user) {
       loginNotify();
-      navigate("/");
+      user.user.role === "manager" ? navigate("/inventory") : navigate("/");
     } else if (error) {
       errorNotify(error || "Login failed");
       dispatch(logoutUser());

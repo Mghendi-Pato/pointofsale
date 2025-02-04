@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import AdminDashboard from "./AdminDashboard";
-import SuperAdminDashbord from "./SuperAdminDashbord";
 import ManagerDashboard from "./ManagerDashboard";
+import AdminInventory from "../inventory/AdminInventory";
 
 const Index = () => {
   const user = useSelector((state) => state.userSlice.user.user);
@@ -24,11 +24,11 @@ const Index = () => {
 
   switch (userRole) {
     case "super admin":
-      return <SuperAdminDashbord />;
+      return <AdminDashboard />;
     case "admin":
       return <AdminDashboard />;
     case "manager":
-      return <ManagerDashboard />;
+      return <AdminInventory />;
     default:
       return <div>Unauthorized</div>;
   }
