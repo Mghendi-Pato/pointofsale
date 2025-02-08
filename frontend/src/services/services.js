@@ -185,7 +185,6 @@ export const fetchAllSuppliers = async ({ queryKey, signal, token }) => {
     if (!response.data || !response.data.suppliers) {
       throw new Error("Invalid response structure from the server.");
     }
-    console.log(response);
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) {
