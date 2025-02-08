@@ -488,6 +488,7 @@ export const sellPhone = async (customerDetails, token) => {
     );
     return response.data;
   } catch (error) {
+    console.log(error);
     throw new Error(error.response?.data?.message || error.message);
   }
 };
@@ -509,7 +510,7 @@ export const fetchSoldPhones = async ({
     if (!response.data || !response.data.phones) {
       throw new Error("Invalid response structure from the server.");
     }
-
+    console.log(response);
     return response.data.phones;
   } catch (error) {
     console.error("Error fetching sold phones:", error.message);

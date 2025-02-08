@@ -47,7 +47,7 @@ const AdminSales = () => {
       0
     );
     const totalAgentCommission = filteredPhones.reduce(
-      (total, phone) => total + (parseFloat(phone.managerCommission) || 0),
+      (total, phone) => total + (parseFloat(phone.agentCommission) || 0),
       0
     );
     const totalNetProfit = filteredPhones.reduce(
@@ -55,7 +55,7 @@ const AdminSales = () => {
         total +
         (parseFloat(phone.sellingPrice) -
           parseFloat(phone.purchasePrice) -
-          (parseFloat(phone.managerCommission) || 0)),
+          (parseFloat(phone.agentCommission) || 0)),
       0
     );
 
@@ -63,6 +63,7 @@ const AdminSales = () => {
     const dataWithTotal = [
       ...filteredPhones.map((phone, index) => ({
         "#": index + 1,
+        Company: phone.company,
         Manager: phone.managerName,
         Location: phone.managerLocation,
         Model: phone.modelName,
@@ -72,14 +73,15 @@ const AdminSales = () => {
         "Selling Price (Ksh)": parseFloat(phone.sellingPrice) || 0,
         "Gross Profit (Ksh)":
           parseFloat(phone.sellingPrice) - parseFloat(phone.purchasePrice) || 0,
-        "Agent Commission (Ksh)": parseFloat(phone.managerCommission) || 0,
+        "Agent Commission (Ksh)": parseFloat(phone.agentCommission) || 0,
         "Net Profit (Ksh)":
           parseFloat(phone.sellingPrice) -
             parseFloat(phone.purchasePrice) -
-            (parseFloat(phone.managerCommission) || 0) || 0,
+            (parseFloat(phone.agentCommission) || 0) || 0,
       })),
       {
         "#": "Total",
+        Company: "",
         Manager: "",
         Location: "",
         Model: "",
@@ -234,9 +236,13 @@ const AdminSales = () => {
                     control={<Radio />}
                     label="Muchami"
                   />
+                  <FormControlLabel
+                    value="combined"
+                    control={<Radio />}
+                    label="Combined"
+                  />
                 </RadioGroup>
               </FormControl>
-              {/* Download button */}
               <div
                 className="p-2 hover:bg-neutral-200 rounded-full cursor-pointer transition-all duration-300 ease-in-out"
                 onClick={handleDownload}>
@@ -259,6 +265,13 @@ const AdminSales = () => {
                     <th scope="col" className="px-2 border-r py-2">
                       #
                     </th>
+                    {company === "combined" && (
+                      <th
+                        scope="col"
+                        className="px-2 border-r text-[14px] normal-case py-2">
+                        Company
+                      </th>
+                    )}
                     <th
                       scope="col"
                       className="px-2 border-r text-[14px] normal-case py-2">
@@ -329,7 +342,7 @@ const AdminSales = () => {
                       const grossProfit =
                         phone.sellingPrice - phone.purchasePrice;
                       const netProfit =
-                        grossProfit - (phone.managerCommission || 0);
+                        grossProfit - (phone.agentCommission || 0);
 
                       return (
                         <tr
@@ -339,6 +352,11 @@ const AdminSales = () => {
                           <td className="px-2 py-2 border-r font-medium text-gray-900">
                             {index + 1}
                           </td>
+                          {company === "combined" && (
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone.company}
+                            </td>
+                          )}
                           <td className="px-2 border-r py-2 capitalize">
                             {phone.managerName}
                           </td>
@@ -362,7 +380,7 @@ const AdminSales = () => {
                             {grossProfit.toLocaleString()}
                           </td>
                           <td className="px-6 border-r py-2 capitalize">
-                            {phone.managerCommission}
+                            {phone.agentCommission}
                           </td>
                           <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
                             <td className="px-6 py-2">
@@ -375,7 +393,7 @@ const AdminSales = () => {
                     <tr className="bg-gray-100 font-bold text-gray-900 sticky bottom-0 z-10 border-t">
                       <td
                         className="px-2 py-2 border-r text-center"
-                        colSpan="6">
+                        colSpan={company === "combined" ? 7 : 6}>
                         Totals
                       </td>
                       <td className="px-6 border-r py-2">
@@ -401,7 +419,7 @@ const AdminSales = () => {
                         {paginatedPhones
                           .reduce(
                             (acc, phone) =>
-                              acc + (parseFloat(phone.managerCommission) || 0),
+                              acc + (parseFloat(phone.agentCommission) || 0),
                             0
                           )
                           .toLocaleString()}
@@ -413,7 +431,7 @@ const AdminSales = () => {
                               acc +
                               (phone.sellingPrice -
                                 phone.purchasePrice -
-                                (phone.managerCommission || 0)),
+                                (phone.agentCommission || 0)),
                             0
                           )
                           .toLocaleString()}

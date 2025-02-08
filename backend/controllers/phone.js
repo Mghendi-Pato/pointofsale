@@ -523,8 +523,8 @@ exports.sellPhone = async (req, res) => {
 const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
   const whereClause = {
     ...(status && { status: "sold" }),
-    ...(user.role === "manager" && { managerId: user.id }), // Restrict only managers to their assigned phones
-    ...(company && { company }), // Admins & normal users can query any company
+    ...(user.role === "manager" && { managerId: user.id }),
+    ...(company !== "combined" && { company }),
   };
 
   if (startDate && endDate) {
@@ -564,7 +564,7 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       {
         model: PhoneModel,
         as: "phoneModel",
-        attributes: ["model", "make", "id", "commissions"],
+        attributes: ["model", "make", "id"],
         paranoid: false,
       },
     ],
@@ -576,6 +576,7 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       imei,
       modelId,
       purchasePrice,
+      agentCommission,
       buyDate,
       status,
       supplier,
@@ -584,6 +585,7 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       createdAt,
       capacity,
       sellingPrice,
+      company,
     } = phone.toJSON();
 
     const supplierName = supplier ? supplier.name : "No supplier assigned";
@@ -599,16 +601,6 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
 
     const modelName = phoneModel ? phoneModel.model : "No model assigned";
     const modelMake = phoneModel ? phoneModel.make : "No make assigned";
-
-    let managerCommission = null;
-    if (phoneModel && phoneModel.commissions) {
-      const commission = phoneModel.commissions.find(
-        (comm) => String(comm.regionId) === String(regionId)
-      );
-      if (commission) {
-        managerCommission = commission.amount;
-      }
-    }
 
     return {
       id,
@@ -628,7 +620,8 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       capacity,
       regionId,
       sellingPrice,
-      managerCommission,
+      agentCommission,
+      company,
     };
   });
 
