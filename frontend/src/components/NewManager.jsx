@@ -400,14 +400,20 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
                       },
                     },
                   }}>
-                  {[...regions.regions]
-                    .sort((a, b) => a.location.localeCompare(b.location))
-                    .map((region) => (
-                      <MenuItem key={region.id} value={region.id}>
-                        {region.location}
-                      </MenuItem>
-                    ))}
+                  {Array.isArray(regions?.regions) &&
+                  regions.regions.length > 0 ? (
+                    [...regions.regions]
+                      .sort((a, b) => a.location.localeCompare(b.location))
+                      .map((region) => (
+                        <MenuItem key={region.id} value={region.id}>
+                          {region.location}
+                        </MenuItem>
+                      ))
+                  ) : (
+                    <MenuItem disabled>No regions available</MenuItem>
+                  )}
                 </Select>
+
                 {formik.touched.region && formik.errors.region && (
                   <div style={{ color: "red", fontSize: "0.875rem" }}>
                     {formik.errors.region}
