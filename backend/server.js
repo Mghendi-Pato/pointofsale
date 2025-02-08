@@ -41,6 +41,9 @@ sequelize
   .authenticate()
   .then(() => console.log("Database connected..."))
   .catch((err) => console.error("Error connecting to the database:", err));
+app.get('/', (req, res) => {
+  res.send('Hello, world!');
+});
 
 // Routes
 app.use("/auth", authRoutes);
