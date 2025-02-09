@@ -498,10 +498,11 @@ export const fetchSoldPhones = async ({
   startDate,
   endDate,
   token,
+  status,
 }) => {
   try {
     const response = await axios.get(`${url}/phone/sold/`, {
-      params: { company, startDate, endDate },
+      params: { company, startDate, endDate, status },
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -554,5 +555,22 @@ export const searchPhonesByIMEI = async ({ imei, token }) => {
       error.response.data.message
     );
     throw error;
+  }
+};
+//Declare phone reconciled
+export const declarePhoneReconciled = async (phoneId, token) => {
+  try {
+    const response = await axios.put(
+      `${url}/phone/reconcile/${phoneId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
   }
 };

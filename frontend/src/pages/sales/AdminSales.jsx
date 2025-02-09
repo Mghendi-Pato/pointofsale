@@ -7,14 +7,18 @@ import {
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { useQuery, useQueryClient } from "react-query";
-import { fetchSoldPhones } from "../../services/services";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import {
+  declarePhoneReconciled,
+  fetchSoldPhones,
+} from "../../services/services";
 import DateRangePicker from "../../components/DatePicker";
 import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
 import { HiOutlineDownload } from "react-icons/hi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { toast } from "react-toastify";
+import { IoCheckmarkDone } from "react-icons/io5";
 
 const AdminSales = () => {
   const token = useSelector((state) => state.userSlice.user.token);
@@ -24,7 +28,9 @@ const AdminSales = () => {
   const today = dayjs().endOf("day");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
-  const navigate = useNavigate();
+
+  const [declareLostLoading, setDeclareLostLoading] = useState(false);
+  const user = useSelector((state) => state.userSlice.user.user);
 
   // Function to generate and download Excel file
   const handleDownload = () => {
@@ -115,32 +121,39 @@ const AdminSales = () => {
     saveAs(data, `Sales_Report_${dayjs().format("YYYY-MM-DD")}.xlsx`);
   };
 
+  const [show, setShow] = useState("sold");
+
   const isQueryEnabled =
-    company !== undefined && startDate !== undefined && endDate !== undefined;
+    company !== undefined &&
+    startDate !== undefined &&
+    endDate !== undefined &&
+    !!token;
+
   const {
-    data: soldPhonesData,
-    isLoading: isLoadingSoldPhones,
-    isError: isErrorSoldPhones,
+    data: phonesData,
+    isLoading,
+    isError,
     refetch,
   } = useQuery(
-    ["phones", { company, startDate, endDate }],
+    ["phones", { company, startDate, endDate, show }],
     () =>
       fetchSoldPhones({
         company,
         startDate,
         endDate,
         token,
+        status: show,
       }),
     {
-      enabled: !!token,
+      enabled: isQueryEnabled,
       onSuccess: (data) => {
         queryClient.setQueryData(
-          ["phones", { company, startDate, endDate }],
+          ["phones", { company, startDate, endDate, show }],
           data
         );
       },
       onError: (error) => {
-        console.error("Error fetching sold phones:", error.message);
+        console.error(`Error fetching ${show} phones:`, error.message);
       },
       refetchOnWindowFocus: false,
     }
@@ -150,10 +163,10 @@ const AdminSales = () => {
     if (isQueryEnabled) {
       refetch();
     }
-  }, [company, startDate, endDate, refetch, isQueryEnabled]);
+  }, [company, startDate, endDate, refetch, isQueryEnabled, show]);
 
   const filteredPhones = useMemo(() => {
-    const dataToFilter = soldPhonesData;
+    const dataToFilter = phonesData;
     return dataToFilter?.filter((phone) =>
       searchQuery
         .toLowerCase()
@@ -169,7 +182,7 @@ const AdminSales = () => {
           ].some((field) => field.includes(part))
         )
     );
-  }, [searchQuery, soldPhonesData]);
+  }, [searchQuery, phonesData]);
 
   const handleSearchChange = (event) => setSearchQuery(event.target.value);
 
@@ -180,13 +193,57 @@ const AdminSales = () => {
     setEndDate(endDate);
   };
 
+  const useDeclarePhoneReconciled = () => {
+    return useMutation(
+      ({ phoneId, token }) => declarePhoneReconciled(phoneId, token),
+      {
+        onMutate: () => {
+          setDeclareLostLoading(true);
+        },
+        onSuccess: () => {
+          setDeclareLostLoading(false);
+
+          queryClient.invalidateQueries(["phones"]);
+
+          toast.success("Sale reconciled");
+        },
+        onError: (error) => {
+          setDeclareLostLoading(false);
+          toast.error(error.message || "Failed to reconcile sale");
+        },
+      }
+    );
+  };
+
+  const declareReconciledMutation = useDeclarePhoneReconciled();
+
+  const declareReconciledPhone = (phoneId) => {
+    declareReconciledMutation.mutate({ phoneId, token });
+  };
+
   return (
     <div className="p-5">
-      <div className="space-y-2">
-        <div>
+      <div className="">
+        <div className="space-y-2">
           <p className="text-xl font-bold">Sales</p>
+          <div className="flex flex-row items-center w-[66%]">
+            <div
+              className={`p-2 py-3 text-sm font-roboto font-bold w-[50%] md:w-36 text-center cursor-pointer ${
+                show === "sold" ? "bg-primary-400" : "text-gray-600"
+              }`}
+              onClick={() => setShow("sold")}>
+              Sold
+            </div>
+            <div
+              className={`p-2 py-3 text-sm font-roboto font-bold w-[50%] md:w-36 text-center cursor-pointer ${
+                show === "reconcile" ? "bg-primary-400" : "text-gray-600"
+              }`}
+              onClick={() => setShow("reconcile")}>
+              Reconciled
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col md:flex-row items-center justify-between py-2 ">
+        <div className="flex flex-col md:flex-row items-center justify-between py-2 border ">
           <DateRangePicker
             onDateChange={handleDateChange}
             setToDate={setStartDate}
@@ -319,14 +376,21 @@ const AdminSales = () => {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 text-[14px] normal-case py-2">
+                      className="px-6 border-r text-[14px] normal-case py-2">
                       Net Profit (Ksh)
                     </th>
+                    {user?.role !== "manager" && show === "sold" && (
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Reconcile
+                      </th>
+                    )}
                   </tr>
                 </thead>
-                {isLoadingSoldPhones ? (
+                {isLoading ? (
                   <p className="p-2">Fetching sales data...</p>
-                ) : isErrorSoldPhones || paginatedPhones?.length === 0 ? (
+                ) : isError || paginatedPhones?.length === 0 ? (
                   <tbody>
                     <tr>
                       <td colSpan="9" className="px-4 pt-2">
@@ -347,7 +411,6 @@ const AdminSales = () => {
                       return (
                         <tr
                           key={phone.id}
-                          onClick={() => navigate(`/phone/${phone.imei}`)}
                           className={`bg-white border-b hover:bg-blue-50 cursor-pointer`}>
                           <td className="px-2 py-2 border-r font-medium text-gray-900">
                             {index + 1}
@@ -382,11 +445,19 @@ const AdminSales = () => {
                           <td className="px-6 border-r py-2 capitalize">
                             {phone.agentCommission}
                           </td>
-                          <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
-                            <td className="px-6 py-2">
-                              {netProfit.toLocaleString()}
-                            </td>
+                          <td className="px-6 border-r py-2">
+                            {netProfit.toLocaleString()}
                           </td>
+                          {user.role !== "manager" && show === "sold" && (
+                            <td className="px-6 border-r py-2 capitalize">
+                              <button
+                                onClick={() => declareReconciledPhone(phone.id)}
+                                aria-label={`Analyze ${phone?.name}`}
+                                className="flex flex-row justify-center items-center text w-20 gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
+                                <IoCheckmarkDone className="text-green-500" />
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
@@ -424,7 +495,7 @@ const AdminSales = () => {
                           )
                           .toLocaleString()}
                       </td>
-                      <td className="px-6 py-2">
+                      <td className="px-6 py-2 border-r">
                         {paginatedPhones
                           .reduce(
                             (acc, phone) =>
@@ -436,6 +507,9 @@ const AdminSales = () => {
                           )
                           .toLocaleString()}
                       </td>
+                      {user.role !== "manager" && show === "sold" && (
+                        <td className="px-2 py-2 border-r text-center"></td>
+                      )}
                     </tr>
                   </tbody>
                 )}

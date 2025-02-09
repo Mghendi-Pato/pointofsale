@@ -10,6 +10,8 @@ const {
   getSoldPhones,
   getSalesComparison,
   searchPhonesByIMEI,
+  getReconciledPhones,
+  declareReconciled,
 } = require("../controllers/phone");
 const { verifyToken } = require("../middleware/auth");
 
@@ -25,5 +27,7 @@ router.post("/sell", verifyToken, sellPhone);
 router.get("/sold", verifyToken, getSoldPhones);
 router.get("/dashboard", verifyToken, getSalesComparison);
 router.get("/search/:imei", searchPhonesByIMEI);
+router.get("/reconciled", verifyToken, getReconciledPhones);
+router.put("/reconcile/:id", verifyToken, declareReconciled);
 
 module.exports = router;

@@ -522,7 +522,7 @@ exports.sellPhone = async (req, res) => {
 //Fetch sold phones
 const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
   const whereClause = {
-    ...(status && { status: "sold" }),
+    ...(status && { status }),
     ...(user.role === "manager" && { managerId: user.id }),
     ...(company !== "combined" && { company }),
   };
@@ -630,16 +630,20 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
 //Get sold phones
 exports.getSoldPhones = async (req, res) => {
   try {
-    const { company, startDate, endDate } = req.query;
+    const { status, company, startDate, endDate } = req.query;
 
     // Pass req.user for role-based filtering
     const { count, phones } = await fetchSoldPhones(
-      "sold",
+      status,
       company,
       startDate,
       endDate,
       req.user
     );
+
+    if (!status) {
+      return res.status(400).json({ error: "Status is required." });
+    }
 
     if (phones.length === 0) {
       return res.status(200).json({
@@ -900,5 +904,175 @@ exports.searchPhonesByIMEI = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+const fetchReconciledPhones = async (status, company, startDate, endDate) => {
+  const whereClause = {
+    ...(status && { status: "reconcile" }),
+    ...(company !== "combined" && { company }),
+  };
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    whereClause.saleDate = {
+      [Op.between]: [start, end],
+    };
+  }
+
+  const { count, rows: phones } = await Phone.findAndCountAll({
+    where: whereClause,
+    include: [
+      {
+        model: Supplier,
+        as: "supplier",
+        attributes: ["name", "id"],
+        paranoid: false,
+      },
+      {
+        model: User,
+        as: "manager",
+        attributes: ["firstName", "lastName", "regionId", "id"],
+        include: [
+          {
+            model: Location,
+            as: "region",
+            attributes: ["name", "location", "id"],
+          },
+        ],
+        paranoid: false,
+      },
+      {
+        model: PhoneModel,
+        as: "phoneModel",
+        attributes: ["model", "make", "id"],
+        paranoid: false,
+      },
+    ],
+  });
+
+  const phonesWithDetails = phones.map((phone) => {
+    const {
+      id,
+      imei,
+      modelId,
+      purchasePrice,
+      agentCommission,
+      buyDate,
+      status,
+      supplier,
+      manager,
+      phoneModel,
+      createdAt,
+      capacity,
+      sellingPrice,
+      company,
+    } = phone.toJSON();
+
+    const supplierName = supplier ? supplier.name : "No supplier assigned";
+    const supplierId = supplier ? supplier.id : "No supplier assigned";
+    const managerId = manager ? manager.id : "No manager assigned";
+    const regionId = manager ? manager.regionId : "No region assigned";
+    const managerName = manager
+      ? `${manager.firstName} ${manager.lastName}`
+      : "No manager assigned";
+    const managerLocation = manager?.region
+      ? `${manager.region.location}`
+      : "No location assigned";
+
+    const modelName = phoneModel ? phoneModel.model : "No model assigned";
+    const modelMake = phoneModel ? phoneModel.make : "No make assigned";
+
+    return {
+      id,
+      imei,
+      modelId,
+      modelName,
+      modelMake,
+      purchasePrice,
+      buyDate,
+      status,
+      supplierName,
+      managerName,
+      managerLocation,
+      createdAt,
+      managerId,
+      supplierId,
+      capacity,
+      regionId,
+      sellingPrice,
+      agentCommission,
+      company,
+    };
+  });
+
+  return { count, phones: phonesWithDetails };
+};
+//Get sold phones
+exports.getReconciledPhones = async (req, res) => {
+  try {
+    const { company, startDate, endDate } = req.query;
+
+    // Pass req.user for role-based filtering
+    const { count, phones } = await fetchReconciledPhones(
+      "reconcile",
+      company,
+      startDate,
+      endDate,
+      req.user
+    );
+
+    if (phones.length === 0) {
+      return res.status(200).json({
+        message: "No reconciled phones found.",
+        phones: [],
+        total: 0,
+      });
+    }
+
+    res.status(200).json({
+      message: "Reconciled phones fetched successfully.",
+      phones,
+      total: count,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.declareReconciled = async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+
+    // Check if the user has sufficient permissions
+    if (!["admin", "super admin"].includes(loggedInUser.role)) {
+      return res.status(403).json({ message: "Access Denied" });
+    }
+
+    const { id } = req.params;
+
+    // Check if the phone exists
+    const phone = await Phone.findByPk(id);
+    if (!phone) {
+      return res.status(404).json({ message: "Phone not found." });
+    }
+
+    // Toggle status: if "lost" → set to "active", else → set to "lost"
+    const newStatus = phone.status === "sold" ? "reconcile" : "sold";
+
+    // Update the phone status
+    await phone.update({ status: newStatus });
+
+    return res.status(200).json({
+      message: `Phone status updated to ${newStatus} successfully.`,
+      phone,
+    });
+  } catch (error) {
+    console.error("Error toggling phone status:", error);
+    res.status(500).json({
+      message: "An error occurred while updating the phone status.",
+    });
   }
 };
