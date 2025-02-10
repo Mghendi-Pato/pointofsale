@@ -511,7 +511,7 @@ export const fetchSoldPhones = async ({
     if (!response.data || !response.data.phones) {
       throw new Error("Invalid response structure from the server.");
     }
-    console.log(response);
+
     return response.data.phones;
   } catch (error) {
     console.error("Error fetching sold phones:", error.message);
@@ -572,5 +572,28 @@ export const declarePhoneReconciled = async (phoneId, token) => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || error.message);
+  }
+};
+// Fetch phones by region
+export const fetchPhonesByRegion = async ({ signal, token }) => {
+  try {
+    const response = await axios.get(`${url}/phone/by-region`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      signal,
+    });
+
+    if (!response.data || !response.data.data) {
+      throw new Error("Invalid response structure from the server.");
+    }
+    return response.data.data;
+  } catch (error) {
+    if (axios.isCancel(error)) {
+      console.warn("Request canceled", error.message);
+    } else {
+      console.error("Error fetching phones by region:", error.message);
+    }
+    throw error;
   }
 };

@@ -31,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       buyDate: DataTypes.DATE,
       sellingPrice: { type: DataTypes.FLOAT, allowNull: true },
       saleDate: { type: DataTypes.DATE, allowNull: true },
+      reconcileDate: { type: DataTypes.DATE, allowNull: true },
       supplierId: DataTypes.INTEGER,
       modelId: {
         type: DataTypes.INTEGER,

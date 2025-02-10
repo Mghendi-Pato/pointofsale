@@ -586,6 +586,8 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       capacity,
       sellingPrice,
       company,
+      saleDate,
+      reconcileDate,
     } = phone.toJSON();
 
     const supplierName = supplier ? supplier.name : "No supplier assigned";
@@ -622,6 +624,8 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       sellingPrice,
       agentCommission,
       company,
+      saleDate,
+      reconcileDate,
     };
   });
 
@@ -682,7 +686,10 @@ exports.getSalesComparison = async (req, res) => {
     );
 
     const soldPhones = await Phone.findAll({
-      where: { status: "sold", saleDate: { [Op.gte]: firstDayOfLastMonth } },
+      where: {
+        status: { [Op.in]: ["sold", "reconcile"] },
+        saleDate: { [Op.gte]: firstDayOfLastMonth },
+      },
       include: {
         model: User,
         as: "manager",
@@ -970,6 +977,8 @@ const fetchReconciledPhones = async (status, company, startDate, endDate) => {
       capacity,
       sellingPrice,
       company,
+      saleDate,
+      reconcileDate,
     } = phone.toJSON();
 
     const supplierName = supplier ? supplier.name : "No supplier assigned";
@@ -1006,6 +1015,8 @@ const fetchReconciledPhones = async (status, company, startDate, endDate) => {
       sellingPrice,
       agentCommission,
       company,
+      reconcileDate,
+      saleDate,
     };
   });
 
@@ -1059,20 +1070,67 @@ exports.declareReconciled = async (req, res) => {
       return res.status(404).json({ message: "Phone not found." });
     }
 
-    // Toggle status: if "lost" → set to "active", else → set to "lost"
-    const newStatus = phone.status === "sold" ? "reconcile" : "sold";
+    // Determine new status and reconcile date
+    const isReconcile = phone.status === "sold";
+    const newStatus = isReconcile ? "reconcile" : "sold";
+    const reconcileDate = isReconcile ? new Date() : null; // Set date only when reconciling
 
-    // Update the phone status
-    await phone.update({ status: newStatus });
+    // Update the phone status and reconcile date
+    await phone.update({
+      status: newStatus,
+      reconcileDate,
+    });
 
     return res.status(200).json({
       message: `Phone status updated to ${newStatus} successfully.`,
       phone,
     });
   } catch (error) {
-    console.error("Error toggling phone status:", error);
+    console.error("Error updating phone status:", error);
     res.status(500).json({
       message: "An error occurred while updating the phone status.",
     });
+  }
+};
+//Fecth active phones by regions
+exports.getActivePhonesByRegion = async (req, res) => {
+  try {
+    const activePhonesByRegion = await Location.findAll({
+      attributes: [
+        "name",
+        [Sequelize.fn("COUNT", Sequelize.col("users.phones.id")), "phoneCount"],
+      ],
+      include: [
+        {
+          model: User,
+          as: "users",
+          attributes: [],
+          include: [
+            {
+              model: Phone,
+              as: "phones",
+              attributes: [],
+              where: { status: "active" }, // Ensure only active phones are counted
+            },
+          ],
+        },
+      ],
+      group: ["Location.id"],
+      raw: true,
+    });
+
+    // Transform result into required format and ensure phone count is a number
+    const result = activePhonesByRegion.map((region) => ({
+      region: region.name,
+      phones: Number(region.phoneCount) || 0, // Convert to number
+    }));
+
+    return res.status(200).json({
+      message: "Active phones per region fetched successfully.",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error fetching active phones per region:", error);
+    res.status(500).json({ error: "An error occurred while fetching data." });
   }
 };

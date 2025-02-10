@@ -48,8 +48,7 @@ const AdminSales = () => {
     const totalGrossProfit = filteredPhones.reduce(
       (total, phone) =>
         total +
-          (parseFloat(phone.sellingPrice) - parseFloat(phone.purchasePrice)) ||
-        0,
+        (parseFloat(phone.sellingPrice) - parseFloat(phone.purchasePrice) || 0),
       0
     );
     const totalAgentCommission = filteredPhones.reduce(
@@ -65,26 +64,44 @@ const AdminSales = () => {
       0
     );
 
+    // Function to safely format dates
+    const safeFormatDate = (date) => {
+      if (!date) return ""; // Return empty string if date is missing
+      const parsedDate = new Date(date);
+      return isNaN(parsedDate) ? "" : formatDate(parsedDate);
+    };
+
     // Add a totals row at the end of the data
     const dataWithTotal = [
-      ...filteredPhones.map((phone, index) => ({
-        "#": index + 1,
-        Company: phone.company,
-        Manager: phone.managerName,
-        Location: phone.managerLocation,
-        Model: phone.modelName,
-        IMEI: phone.imei,
-        Supplier: phone.supplierName,
-        "Buying Price (Ksh)": parseFloat(phone.purchasePrice) || 0,
-        "Selling Price (Ksh)": parseFloat(phone.sellingPrice) || 0,
-        "Gross Profit (Ksh)":
-          parseFloat(phone.sellingPrice) - parseFloat(phone.purchasePrice) || 0,
-        "Agent Commission (Ksh)": parseFloat(phone.agentCommission) || 0,
-        "Net Profit (Ksh)":
-          parseFloat(phone.sellingPrice) -
-            parseFloat(phone.purchasePrice) -
-            (parseFloat(phone.agentCommission) || 0) || 0,
-      })),
+      ...filteredPhones.map((phone, index) => {
+        const row = {
+          "#": index + 1,
+          Company: phone.company,
+          Manager: phone.managerName,
+          Location: phone.managerLocation,
+          Model: phone.modelName,
+          IMEI: phone.imei,
+          Supplier: phone.supplierName,
+          "Buying Price (Ksh)": parseFloat(phone.purchasePrice) || 0,
+          "Selling Price (Ksh)": parseFloat(phone.sellingPrice) || 0,
+          "Gross Profit (Ksh)":
+            parseFloat(phone.sellingPrice) - parseFloat(phone.purchasePrice) ||
+            0,
+          "Agent Commission (Ksh)": parseFloat(phone.agentCommission) || 0,
+          "Net Profit (Ksh)":
+            parseFloat(phone.sellingPrice) -
+              parseFloat(phone.purchasePrice) -
+              (parseFloat(phone.agentCommission) || 0) || 0,
+        };
+
+        // If show === "reconcile", include formatted saleDate and reconcileDate
+        if (show === "reconcile") {
+          row["Sale Date"] = safeFormatDate(phone.saleDate);
+          row["Reconcile Date"] = safeFormatDate(phone.reconcileDate);
+        }
+
+        return row;
+      }),
       {
         "#": "Total",
         Company: "",
@@ -98,6 +115,7 @@ const AdminSales = () => {
         "Gross Profit (Ksh)": totalGrossProfit,
         "Agent Commission (Ksh)": totalAgentCommission,
         "Net Profit (Ksh)": totalNetProfit,
+        ...(show === "reconcile" && { "Sale Date": "", "Reconcile Date": "" }), // Empty totals for new columns
       },
     ];
 
@@ -220,6 +238,34 @@ const AdminSales = () => {
   const declareReconciledPhone = (phoneId) => {
     declareReconciledMutation.mutate({ phoneId, token });
   };
+
+  function getOrdinalSuffix(day) {
+    if (day > 3 && day < 21) return "th"; // Covers 4-20
+    switch (day % 10) {
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
+    }
+  }
+
+  function formatDate(date) {
+    const options = { day: "numeric", month: "short", year: "numeric" };
+    const formattedDate = new Intl.DateTimeFormat("en-GB", options).format(
+      date
+    );
+
+    // Extract the day and add the ordinal suffix
+    const day = date.getDate();
+    const ordinalSuffix = getOrdinalSuffix(day);
+
+    // Combine day with ordinal suffix and the rest of the date
+    return formattedDate.replace(day, `${day}${ordinalSuffix}`);
+  }
 
   return (
     <div className="p-5">
@@ -356,38 +402,53 @@ const AdminSales = () => {
                       className="px-6 border-r text-[14px] normal-case py-2">
                       Supplier
                     </th>
+                    {user?.role !== "manager" && show === "reconcile" && (
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Sale Date
+                      </th>
+                    )}
+                    {user?.role !== "manager" && show === "reconcile" && (
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Reconcile Date
+                      </th>
+                    )}
                     {user.role !== "manager" && (
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
-                        Buying Price (Ksh)
+                        Buying Price
                       </th>
                     )}
                     <th
                       scope="col"
                       className="px-6 border-r text-[14px] normal-case py-2">
-                      Selling Price (Ksh)
+                      Selling Price
                     </th>
                     {user.role !== "manager" && (
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
-                        Gross Profit (Ksh)
+                        Gross Profit
                       </th>
                     )}
 
                     <th
                       scope="col"
                       className="px-6 border-r text-[14px] normal-case py-2">
-                      Agent Commission (Ksh)
+                      Agent Commission
                     </th>
                     {user.role !== "manager" && (
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
-                        Net Profit (Ksh)
+                        Net Profit
                       </th>
                     )}
+
                     {user?.role !== "manager" && show === "sold" && (
                       <th
                         scope="col"
@@ -442,6 +503,16 @@ const AdminSales = () => {
                           <td className="px-6 border-r py-2">
                             {phone.supplierName}
                           </td>
+                          {user.role !== "manager" && show === "reconcile" && (
+                            <td className="px-6 border-r py-2">
+                              {formatDate(new Date(phone.saleDate))}
+                            </td>
+                          )}
+                          {user.role !== "manager" && show === "reconcile" && (
+                            <td className="px-6 border-r py-2">
+                              {formatDate(new Date(phone.reconcileDate))}
+                            </td>
+                          )}
                           {user.role !== "manager" && (
                             <td className="px-6 border-r py-2">
                               {phone.purchasePrice.toLocaleString()}
@@ -481,7 +552,15 @@ const AdminSales = () => {
                     <tr className="bg-gray-100 font-bold text-gray-900 sticky bottom-0 z-10 border-t">
                       <td
                         className="px-2 py-2 border-r text-center"
-                        colSpan={company === "combined" ? 7 : 6}>
+                        colSpan={
+                          company === "combined"
+                            ? show === "reconcile"
+                              ? 9
+                              : 7
+                            : show === "reconcile"
+                            ? 8
+                            : 6
+                        }>
                         Totals
                       </td>
                       {user.role !== "manager" && (
