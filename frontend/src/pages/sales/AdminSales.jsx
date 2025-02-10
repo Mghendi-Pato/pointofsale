@@ -499,15 +499,19 @@ const AdminSales = () => {
                           .reduce((acc, phone) => acc + phone.sellingPrice, 0)
                           .toLocaleString()}
                       </td>
-                      <td className="px-6 border-r py-2">
-                        {paginatedPhones
-                          .reduce(
-                            (acc, phone) =>
-                              acc + (phone.sellingPrice - phone.purchasePrice),
-                            0
-                          )
-                          .toLocaleString()}
-                      </td>
+                      {user.role !== "manager" && (
+                        <td className="px-6 border-r py-2">
+                          {paginatedPhones
+                            .reduce(
+                              (acc, phone) =>
+                                acc +
+                                (phone.sellingPrice - phone.purchasePrice),
+                              0
+                            )
+                            .toLocaleString()}
+                        </td>
+                      )}
+
                       <td className="px-6 border-r py-2">
                         {paginatedPhones
                           .reduce(
@@ -517,18 +521,21 @@ const AdminSales = () => {
                           )
                           .toLocaleString()}
                       </td>
-                      <td className="px-6 py-2 border-r">
-                        {paginatedPhones
-                          .reduce(
-                            (acc, phone) =>
-                              acc +
-                              (phone.sellingPrice -
-                                phone.purchasePrice -
-                                (phone.agentCommission || 0)),
-                            0
-                          )
-                          .toLocaleString()}
-                      </td>
+                      {user.role !== "manager" && (
+                        <td className="px-6 py-2 border-r">
+                          {paginatedPhones
+                            .reduce(
+                              (acc, phone) =>
+                                acc +
+                                (phone.sellingPrice -
+                                  phone.purchasePrice -
+                                  (phone.agentCommission || 0)),
+                              0
+                            )
+                            .toLocaleString()}
+                        </td>
+                      )}
+
                       {user.role !== "manager" && show === "sold" && (
                         <td className="px-2 py-2 border-r text-center"></td>
                       )}
