@@ -300,14 +300,16 @@ const AdminSales = () => {
                   />
                 </RadioGroup>
               </FormControl>
-              <div
-                className="p-2 hover:bg-neutral-200 rounded-full cursor-pointer transition-all duration-300 ease-in-out"
-                onClick={handleDownload}>
-                <HiOutlineDownload
-                  size={25}
-                  className="text-gray-500 hover:text-gray-700 transition-all duration-300 ease-in-out"
-                />
-              </div>
+              {user.role !== "manager" && (
+                <div
+                  className="p-2 hover:bg-neutral-200 rounded-full cursor-pointer transition-all duration-300 ease-in-out"
+                  onClick={handleDownload}>
+                  <HiOutlineDownload
+                    size={25}
+                    className="text-gray-500 hover:text-gray-700 transition-all duration-300 ease-in-out"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -354,11 +356,13 @@ const AdminSales = () => {
                       className="px-6 border-r text-[14px] normal-case py-2">
                       Supplier
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Buying Price (Ksh)
-                    </th>
+                    {user.role !== "manager" && (
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Buying Price (Ksh)
+                      </th>
+                    )}
                     <th
                       scope="col"
                       className="px-6 border-r text-[14px] normal-case py-2">
@@ -433,9 +437,11 @@ const AdminSales = () => {
                           <td className="px-6 border-r py-2">
                             {phone.supplierName}
                           </td>
-                          <td className="px-6 border-r py-2">
-                            {phone.purchasePrice.toLocaleString()}
-                          </td>
+                          {user.role !== "manager" && (
+                            <td className="px-6 border-r py-2">
+                              {phone.purchasePrice.toLocaleString()}
+                            </td>
+                          )}
                           <td className="px-6 border-r py-2">
                             {phone.sellingPrice.toLocaleString()}
                           </td>
@@ -467,11 +473,16 @@ const AdminSales = () => {
                         colSpan={company === "combined" ? 7 : 6}>
                         Totals
                       </td>
-                      <td className="px-6 border-r py-2">
-                        {paginatedPhones
-                          .reduce((acc, phone) => acc + phone.purchasePrice, 0)
-                          .toLocaleString()}
-                      </td>
+                      {user.role !== "manager" && (
+                        <td className="px-6 border-r py-2">
+                          {paginatedPhones
+                            .reduce(
+                              (acc, phone) => acc + phone.purchasePrice,
+                              0
+                            )
+                            .toLocaleString()}
+                        </td>
+                      )}
                       <td className="px-6 border-r py-2">
                         {paginatedPhones
                           .reduce((acc, phone) => acc + phone.sellingPrice, 0)

@@ -286,11 +286,14 @@ const AdminInventory = () => {
                           Supplier
                         </th>
                       )}
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Buying Price
-                      </th>
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Buying Price
+                        </th>
+                      )}
+
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
@@ -383,9 +386,12 @@ const AdminInventory = () => {
                                 {phone?.supplierName}
                               </td>
                             )}
-                            <td className="px-6 border-r py-2">
-                              Ksh {phone?.purchasePrice}
-                            </td>
+                            {user.role !== "manager" && (
+                              <td className="px-6 border-r py-2">
+                                Ksh {phone?.purchasePrice}
+                              </td>
+                            )}
+
                             <td className="px-6 border-r py-2">
                               Ksh {phone?.sellingPrice}
                             </td>
