@@ -368,21 +368,26 @@ const AdminSales = () => {
                       className="px-6 border-r text-[14px] normal-case py-2">
                       Selling Price (Ksh)
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Gross Profit (Ksh)
-                    </th>
+                    {user.role !== "manager" && (
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Gross Profit (Ksh)
+                      </th>
+                    )}
+
                     <th
                       scope="col"
                       className="px-6 border-r text-[14px] normal-case py-2">
                       Agent Commission (Ksh)
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Net Profit (Ksh)
-                    </th>
+                    {user.role !== "manager" && (
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Net Profit (Ksh)
+                      </th>
+                    )}
                     {user?.role !== "manager" && show === "sold" && (
                       <th
                         scope="col"
@@ -445,15 +450,21 @@ const AdminSales = () => {
                           <td className="px-6 border-r py-2">
                             {phone.sellingPrice.toLocaleString()}
                           </td>
-                          <td className="px-6 border-r py-2">
-                            {grossProfit.toLocaleString()}
-                          </td>
+                          {user.role !== "manager" && (
+                            <td className="px-6 border-r py-2">
+                              {grossProfit.toLocaleString()}
+                            </td>
+                          )}
+
                           <td className="px-6 border-r py-2 capitalize">
                             {phone.agentCommission}
                           </td>
-                          <td className="px-6 border-r py-2">
-                            {netProfit.toLocaleString()}
-                          </td>
+                          {user.role !== "manager" && (
+                            <td className="px-6 border-r py-2">
+                              {netProfit.toLocaleString()}
+                            </td>
+                          )}
+
                           {user.role !== "manager" && show === "sold" && (
                             <td className="px-6 border-r py-2 capitalize">
                               <button
