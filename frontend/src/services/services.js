@@ -597,3 +597,21 @@ export const fetchPhonesByRegion = async ({ signal, token }) => {
     throw error;
   }
 };
+// Revert a sold phone
+export const revertSale = async (phoneId, token) => {
+  try {
+    const response = await axios.put(
+      `${url}/phone/revert-sale`,
+      { phoneId },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};

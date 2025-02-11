@@ -13,6 +13,7 @@ const {
   getReconciledPhones,
   declareReconciled,
   getActivePhonesByRegion,
+  revertSale,
 } = require("../controllers/phone");
 const { verifyToken } = require("../middleware/auth");
 
@@ -25,6 +26,7 @@ router.get("/suspended", verifyToken, getSuspendedPhones);
 router.put("/lost/:id", verifyToken, declareLost);
 router.get("/lost", verifyToken, getLostPhones);
 router.post("/sell", verifyToken, sellPhone);
+router.put("/revert-sale", verifyToken, revertSale);
 router.get("/sold", verifyToken, getSoldPhones);
 router.get("/dashboard", verifyToken, getSalesComparison);
 router.get("/search/:imei", searchPhonesByIMEI);

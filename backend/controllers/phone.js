@@ -1134,3 +1134,37 @@ exports.getActivePhonesByRegion = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching data." });
   }
 };
+//Revert sale
+exports.revertSale = async (req, res) => {
+  try {
+    const { phoneId } = req.body;
+
+    // Step 1: Check if the phone exists and is sold
+    const phone = await Phone.findByPk(phoneId);
+    if (!phone) {
+      return res.status(404).json({ message: "Phone not found." });
+    }
+    if (phone.status !== "sold") {
+      return res.status(400).json({ message: "Phone is not marked as sold." });
+    }
+
+    // Step 2: Update the phone status back to active and remove customer linkage
+    await phone.update({
+      customerId: null, // Unlink the customer
+      company: null, // Reset company field if needed
+      status: "active",
+      saleDate: null, // Remove sale date
+      agentCommission: null, // Reset agent commission
+    });
+
+    return res.status(200).json({
+      message: "Phone sale successfully reverted.",
+      phone,
+    });
+  } catch (error) {
+    console.error("Error reverting phone sale:", error);
+    res.status(500).json({
+      message: "An error occurred while reverting the phone sale.",
+    });
+  }
+};

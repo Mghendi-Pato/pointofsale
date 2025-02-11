@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import {
   declarePhoneReconciled,
   fetchSoldPhones,
+  revertSale,
 } from "../../services/services";
 import DateRangePicker from "../../components/DatePicker";
 import dayjs from "dayjs";
@@ -19,6 +20,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { IoCheckmarkDone } from "react-icons/io5";
+import { FaUndoAlt } from "react-icons/fa";
 
 const AdminSales = () => {
   const token = useSelector((state) => state.userSlice.user.token);
@@ -28,6 +30,7 @@ const AdminSales = () => {
   const today = dayjs().endOf("day");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
+  const [revertSaleLoadin, setRevertSaleLoading] = useState(false);
 
   const [declareLostLoading, setDeclareLostLoading] = useState(false);
   const user = useSelector((state) => state.userSlice.user.user);
@@ -267,6 +270,29 @@ const AdminSales = () => {
     return formattedDate.replace(day, `${day}${ordinalSuffix}`);
   }
 
+  const useRevertSale = () => {
+    return useMutation(({ phoneId, token }) => revertSale(phoneId, token), {
+      onMutate: () => {
+        setRevertSaleLoading(true);
+      },
+      onSuccess: () => {
+        setRevertSaleLoading(false);
+        queryClient.invalidateQueries(["phones"]);
+        toast.success("Phone sale successfully reverted");
+      },
+      onError: (error) => {
+        setRevertSaleLoading(false);
+        toast.error(error.message || "Failed to revert phone sale");
+      },
+    });
+  };
+
+  const revertSaleMutation = useRevertSale();
+
+  const revertSoldPhone = (phoneId) => {
+    revertSaleMutation.mutate({ phoneId, token });
+  };
+
   return (
     <div className="p-5">
       <div className="">
@@ -453,7 +479,7 @@ const AdminSales = () => {
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
-                        Reconcile
+                        Actions
                       </th>
                     )}
                   </tr>
@@ -537,12 +563,25 @@ const AdminSales = () => {
                           )}
 
                           {user.role !== "manager" && show === "sold" && (
-                            <td className="px-6 border-r py-2 capitalize">
+                            <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0 ">
+                              {user.role === "super admin" && (
+                                <button
+                                  onClick={() => revertSoldPhone(phone.id)}
+                                  aria-label={`Analyze ${phone?.name}`}
+                                  className="flex flex-row justify-center items-center w-28  gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
+                                  <FaUndoAlt
+                                    className="text-amber-500"
+                                    size={10}
+                                  />
+                                  Revert
+                                </button>
+                              )}
                               <button
                                 onClick={() => declareReconciledPhone(phone.id)}
                                 aria-label={`Analyze ${phone?.name}`}
-                                className="flex flex-row justify-center items-center text w-20 gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
+                                className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
                                 <IoCheckmarkDone className="text-green-500" />
+                                Reconcile
                               </button>
                             </td>
                           )}
