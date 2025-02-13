@@ -5,6 +5,7 @@ import { setSidebar } from "../../redux/reducers/ sidebar";
 import { useInfiniteQuery, useMutation, useQueryClient } from "react-query";
 import {
   declarePhoneLost,
+  deletePhone,
   fetchActivePhones,
   fetchLostPhones,
 } from "../../services/services";
@@ -14,8 +15,9 @@ import NewPhone from "../../components/NewPhone";
 import InfiniteScroll from "react-infinite-scroll-component";
 import EditPhone from "../../components/EditPhone";
 import PhoneCheckout from "../../components/PhoneCheckout";
-import { MdSettingsBackupRestore } from "react-icons/md";
+import { MdDeleteOutline, MdSettingsBackupRestore } from "react-icons/md";
 import { toast } from "react-toastify";
+import DeleteConfirmationModal from "../../components/DeleteModal";
 
 const AdminInventory = () => {
   const dispatch = useDispatch();
@@ -28,6 +30,8 @@ const AdminInventory = () => {
   const [showPhoneCheckout, setShowPhoneCheckout] = useState(false);
   const [checkoutPhone, setCheckoutPhone] = useState(null);
   const [declareLostLoading, setDeclareLostLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePhoneImei, setDeletePhoneImei] = useState(null);
   const user = useSelector((state) => state.userSlice.user.user);
 
   const queryClient = useQueryClient();
@@ -161,6 +165,34 @@ const AdminInventory = () => {
 
   const declareLostPhone = (phoneId) => {
     declareLostMutation.mutate({ phoneId, token });
+  };
+
+  const useDeletePhone = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation(({ imei, token }) => deletePhone(imei, token), {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["phones"]);
+        toast.success("Phone deleted successfully");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to delete phone");
+      },
+    });
+  };
+
+  const deletePhoneMutation = useDeletePhone();
+
+  const handleDeletePhone = (phone) => {
+    setDeletePhoneImei(phone);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = () => {
+    if (deletePhoneImei) {
+      deletePhoneMutation.mutate({ imei: deletePhoneImei, token });
+    }
+    setShowDeleteModal(false);
   };
 
   return (
@@ -422,8 +454,15 @@ const AdminInventory = () => {
                               ) : (
                                 <>
                                   <button
+                                    onClick={() => onCheckoutPhone(phone)}
+                                    aria-label={`Sale ${phone?.name}`}
+                                    className="flex flex-row justify-center items-center w-20 gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
+                                    <BiCartAdd />
+                                    Sale
+                                  </button>
+                                  <button
                                     onClick={() => onEditPhone(phone)}
-                                    aria-label={`Analyze ${phone?.name}`}
+                                    aria-label={`Edit ${phone?.name}`}
                                     className={` ${
                                       user.role === "manager"
                                         ? "hidden"
@@ -432,14 +471,17 @@ const AdminInventory = () => {
                                     <BiEdit />
                                     Edit
                                   </button>
-
-                                  <button
-                                    onClick={() => onCheckoutPhone(phone)}
-                                    aria-label={`Analyze ${phone?.name}`}
-                                    className="flex flex-row justify-center items-center w-20 gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
-                                    <BiCartAdd />
-                                    Sale
-                                  </button>
+                                  {user.role === "super admin" && (
+                                    <button
+                                      onClick={() =>
+                                        handleDeletePhone(phone?.imei)
+                                      }
+                                      aria-label={`Analyze ${phone?.name}`}
+                                      className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
+                                      <MdDeleteOutline />
+                                      Delete
+                                    </button>
+                                  )}
                                 </>
                               )}
                             </td>
@@ -465,6 +507,14 @@ const AdminInventory = () => {
         setPhone={setCheckoutPhone}
         showPhoneCheckout={showPhoneCheckout}
         setShowPhoneCheckout={setShowPhoneCheckout}
+      />
+      <DeleteConfirmationModal
+        showDeleteModal={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onDelete={handleDelete}
+        admin={deletePhone}
+        title={`Confirm Deletion!`}
+        message="Deleted phone cannot be retrieved"
       />
     </div>
   );

@@ -42,7 +42,7 @@ const PhoneCheckout = ({
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
   const [step, setStep] = useState(0);
-  const [sellingCompany, setSellingCompany] = useState("muchami");
+  const [sellingCompany, setSellingCompany] = useState("shuhari");
   const steps = ["Customer details", "Chose company", "Confirm details"];
   const receiptRef = useRef(null);
   const user = useSelector((state) => state.userSlice.user.user);
@@ -459,14 +459,14 @@ const PhoneCheckout = ({
                     value={sellingCompany}
                     onChange={(e) => setSellingCompany(e.target.value)}>
                     <FormControlLabel
-                      value="muchami"
-                      control={<Radio />}
-                      label="Muchami"
-                    />
-                    <FormControlLabel
                       value="shuhari"
                       control={<Radio />}
                       label="Shuhari"
+                    />
+                    <FormControlLabel
+                      value="muchami"
+                      control={<Radio />}
+                      label="Muchami"
                     />
                   </RadioGroup>
                 </FormControl>

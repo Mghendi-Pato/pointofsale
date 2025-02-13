@@ -14,6 +14,7 @@ const {
   declareReconciled,
   getActivePhonesByRegion,
   revertSale,
+  deletePhone,
 } = require("../controllers/phone");
 const { verifyToken } = require("../middleware/auth");
 
@@ -33,5 +34,6 @@ router.get("/search/:imei", searchPhonesByIMEI);
 router.get("/reconciled", verifyToken, getReconciledPhones);
 router.put("/reconcile/:id", verifyToken, declareReconciled);
 router.get("/by-region", verifyToken, getActivePhonesByRegion);
+router.delete("/delete/:imei", verifyToken, deletePhone);
 
 module.exports = router;

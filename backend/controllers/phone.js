@@ -328,7 +328,6 @@ exports.getActivePhones = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 // Fetch suspended phones
 exports.getSuspendedPhones = async (req, res) => {
   try {
@@ -1166,5 +1165,43 @@ exports.revertSale = async (req, res) => {
     res.status(500).json({
       message: "An error occurred while reverting the phone sale.",
     });
+  }
+};
+//Delete phone
+exports.deletePhone = async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    if (!["admin", "super admin"].includes(loggedInUser.role)) {
+      return res.status(403).send("Access Denied");
+    }
+
+    const { imei } = req.params;
+
+    console.log(imei);
+
+    // Check if the phone exists
+    const phone = await Phone.findOne({ where: { imei } });
+    if (!phone) {
+      return res.status(404).json({ message: "Phone not found." });
+    }
+
+    // Remove associations (delink before deletion)
+    await phone.update({
+      supplierId: null,
+      managerId: null,
+      customerId: null,
+      stockId: null,
+      modelId: null,
+    });
+
+    // Hard delete the phone
+    await Phone.destroy({ where: { imei } });
+
+    return res.status(200).json({ message: "Phone deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting phone:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while deleting the phone." });
   }
 };

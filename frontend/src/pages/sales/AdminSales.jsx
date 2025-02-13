@@ -21,6 +21,7 @@ import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { FaUndoAlt } from "react-icons/fa";
+import DeleteConfirmationModal from "../../components/DeleteModal";
 
 const AdminSales = () => {
   const token = useSelector((state) => state.userSlice.user.token);
@@ -31,7 +32,10 @@ const AdminSales = () => {
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [revertSaleLoadin, setRevertSaleLoading] = useState(false);
-
+  const [showRevertModal, setShowRevertModal] = useState(false);
+  const [revertPhoneId, setRevertPhoneId] = useState(null);
+  const [showReconcileModal, setShowReconcileModal] = useState(false);
+  const [reconcilePhoneId, setReconcilePhoneId] = useState(null);
   const [declareLostLoading, setDeclareLostLoading] = useState(false);
   const user = useSelector((state) => state.userSlice.user.user);
 
@@ -238,10 +242,6 @@ const AdminSales = () => {
 
   const declareReconciledMutation = useDeclarePhoneReconciled();
 
-  const declareReconciledPhone = (phoneId) => {
-    declareReconciledMutation.mutate({ phoneId, token });
-  };
-
   function getOrdinalSuffix(day) {
     if (day > 3 && day < 21) return "th"; // Covers 4-20
     switch (day % 10) {
@@ -289,8 +289,31 @@ const AdminSales = () => {
 
   const revertSaleMutation = useRevertSale();
 
-  const revertSoldPhone = (phoneId) => {
-    revertSaleMutation.mutate({ phoneId, token });
+  const handleRevertPhone = (phone) => {
+    setRevertPhoneId(phone);
+    setShowRevertModal(true);
+  };
+
+  const handleRevert = () => {
+    if (revertPhoneId) {
+      revertSaleMutation.mutate({ phoneId: revertPhoneId, token });
+    }
+    setShowRevertModal(false);
+  };
+
+  const handleReconcilePhone = (phone) => {
+    setReconcilePhoneId(phone);
+    setShowReconcileModal(true);
+  };
+
+  const handleReconcile = () => {
+    if (reconcilePhoneId) {
+      declareReconciledMutation.mutate({
+        phoneId: reconcilePhoneId,
+        token,
+      });
+    }
+    setShowRevertModal(false);
   };
 
   return (
@@ -566,7 +589,7 @@ const AdminSales = () => {
                             <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0 ">
                               {user.role === "super admin" && (
                                 <button
-                                  onClick={() => revertSoldPhone(phone.id)}
+                                  onClick={() => handleRevertPhone(phone.id)}
                                   aria-label={`Analyze ${phone?.name}`}
                                   className="flex flex-row justify-center items-center w-28  gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
                                   <FaUndoAlt
@@ -577,7 +600,7 @@ const AdminSales = () => {
                                 </button>
                               )}
                               <button
-                                onClick={() => declareReconciledPhone(phone.id)}
+                                onClick={() => handleReconcilePhone(phone.id)}
                                 aria-label={`Analyze ${phone?.name}`}
                                 className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
                                 <IoCheckmarkDone className="text-green-500" />
@@ -665,6 +688,24 @@ const AdminSales = () => {
           </div>
         </div>
       </div>
+      <DeleteConfirmationModal
+        action="Revert"
+        showDeleteModal={showRevertModal}
+        onClose={() => setShowRevertModal(false)}
+        onDelete={handleRevert}
+        admin={revertPhoneId}
+        title={`Confirm Action!`}
+        message="All the sales data for this phone will be lost"
+      />
+      <DeleteConfirmationModal
+        action="Reconcile"
+        showDeleteModal={showReconcileModal}
+        onClose={() => setShowReconcileModal(false)}
+        onDelete={handleReconcile}
+        admin={reconcilePhoneId}
+        title={`Confirm Action!`}
+        message="Phone will be moved to reconciled"
+      />
     </div>
   );
 };

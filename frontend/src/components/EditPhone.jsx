@@ -37,6 +37,7 @@ const EditPhone = ({
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
+  const user = useSelector((state) => state.userSlice.user.user);
 
   const { data: activeData } = useQuery(
     ["managers", { status: "active", limit: 1000 }],
@@ -312,33 +313,35 @@ const EditPhone = ({
                 )}
               </FormControl>
 
-              <TextField
-                variant="outlined"
-                fullWidth
-                id="imei"
-                name="imei"
-                label="IMEI"
-                value={formik.values.imei}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.imei && Boolean(formik.errors.imei)}
-                helperText={formik.touched.imei && formik.errors.imei}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "#ccc",
+              {user.role === "super admin" && (
+                <TextField
+                  variant="outlined"
+                  fullWidth
+                  id="imei"
+                  name="imei"
+                  label="IMEI"
+                  value={formik.values.imei}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.imei && Boolean(formik.errors.imei)}
+                  helperText={formik.touched.imei && formik.errors.imei}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#ccc",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#2FC3D2",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#2FC3D2",
+                      },
                     },
-                    "&:hover fieldset": {
-                      borderColor: "#2FC3D2",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#2FC3D2",
-                    },
-                  },
-                  "& .MuiInputBase-input": { color: "#000" },
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
-                }}
-              />
+                    "& .MuiInputBase-input": { color: "#000" },
+                    "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
+                  }}
+                />
+              )}
 
               <FormControl fullWidth variant="outlined">
                 <InputLabel id="supplier-label">Supplier</InputLabel>

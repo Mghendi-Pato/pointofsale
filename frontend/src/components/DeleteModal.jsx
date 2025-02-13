@@ -7,6 +7,7 @@ export default function DeleteConfirmationModal({
   onDelete,
   title,
   message,
+  action,
 }) {
   return (
     <Modal
@@ -48,7 +49,7 @@ export default function DeleteConfirmationModal({
                 onClose();
               }}
               className="w-full bg-rose-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-rose-600 transition">
-              Delete
+              {action ? action : "Delete"}
             </button>
             <button
               onClick={onClose}

@@ -615,3 +615,16 @@ export const revertSale = async (phoneId, token) => {
     throw new Error(error.response?.data?.message || error.message);
   }
 };
+// Delete phone
+export const deletePhone = async (imei, token) => {
+  try {
+    const response = await axios.delete(`${url}/phone/delete/${imei}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};

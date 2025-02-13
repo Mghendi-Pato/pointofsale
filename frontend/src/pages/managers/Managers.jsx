@@ -342,14 +342,14 @@ const Managers = () => {
                           <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
                             <button
                               onClick={() => onEditManger(manager)}
-                              aria-label={`Manage ${manager.name}`}
+                              aria-label={`Edit ${manager.name}`}
                               className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
                               Edit
                               <BiEdit />
                             </button>
                             <button
                               onClick={() => handleDeleteUser(manager.id)}
-                              aria-label={`Analyze ${manager.name}`}
+                              aria-label={`Delete ${manager.name}`}
                               className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
                               <MdDeleteOutline />
                               Delete
