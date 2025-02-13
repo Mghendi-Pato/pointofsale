@@ -6,11 +6,15 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginUser, logoutUser } from "../redux/reducers/user";
 import { useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { LuEye } from "react-icons/lu";
+import { LuEyeOff } from "react-icons/lu";
+import { IconButton, InputAdornment } from "@mui/material";
 
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [showPassword, setShowPassword] = useState(false);
   const { isLoading, error, user } = useSelector((state) => state.userSlice);
   // Notifications
   const loginNotify = () => toast.success("Logged in successfully!");
@@ -47,6 +51,10 @@ const Login = () => {
       dispatch(loginUser(values));
     },
   });
+
+  const handleTogglePassword = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   return (
     <div className="bg-gradient-to-br from-slate-200 via-primary-300 to-green-400 flex flex-col justify-center items-center h-screen">
@@ -103,7 +111,7 @@ const Login = () => {
             id="password"
             name="password"
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={formik.values.password}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
@@ -113,6 +121,15 @@ const Login = () => {
             InputLabelProps={{
               shrink: Boolean(
                 formik.values.password || formik.touched.password
+              ),
+            }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleTogglePassword} edge="end">
+                    {showPassword ? <LuEyeOff /> : <LuEye />}
+                  </IconButton>
+                </InputAdornment>
               ),
             }}
             sx={{
@@ -142,7 +159,7 @@ const Login = () => {
         <p className="cursor-pointer mt-10 text-md text-slate-800 font-roboto font-bold">
           Forgort password?
           <span className="text-primary-500 font-roboto font-bold hover:text-primary-600 pl-2">
-            Reset password
+            Contact your administrator
           </span>
         </p>
       </div>

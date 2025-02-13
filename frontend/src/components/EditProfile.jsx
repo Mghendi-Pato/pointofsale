@@ -10,6 +10,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../redux/reducers/ sidebar";
 import { useMutation, useQueryClient } from "react-query";
 import { editUser } from "../services/services";
+import {
+  FormControl,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+} from "@mui/material";
+import { LuEye } from "react-icons/lu";
+import { LuEyeOff } from "react-icons/lu";
 
 const EditProfile = ({
   showEditProfileModal,
@@ -18,6 +27,7 @@ const EditProfile = ({
 }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [editUserLoading, setEditUserLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
@@ -92,6 +102,18 @@ const EditProfile = ({
         "Phone number should be 10-15 digits and may include a '+'"
       )
       .required("Phone number is required"),
+    password: yup
+      .string("Enter your password")
+      .nullable()
+      .notRequired()
+      .min(8, "Password must be at least 8 characters long")
+      .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+      .matches(/\d/, "Password must contain at least one number")
+      .matches(
+        /[@$!%*?&]/,
+        "Password must contain at least one special character (@$!%*?&)"
+      ),
   });
 
   const formik = useFormik({
@@ -100,6 +122,7 @@ const EditProfile = ({
       lastName: user?.lastName || "",
       email: user?.email || "",
       phone: user?.phone || "",
+      password: "",
     },
     validationSchema,
     enableReinitialize: true,
@@ -145,6 +168,11 @@ const EditProfile = ({
       dispatch(setSidebar(true));
     }
   };
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   return (
     <AnimatePresence>
       {showEditProfileModal && (
@@ -168,7 +196,6 @@ const EditProfile = ({
               />
             </div>
           </div>
-
           <div className="w-full">
             <div className="w-full text-center text-lg py-2">
               <p className="font-roboto font-bold">Edit phone</p>
@@ -269,6 +296,39 @@ const EditProfile = ({
                   "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
                 }}
               />
+
+              {user.role === "super admin" && (
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel htmlFor="password">Password</InputLabel>
+                  <OutlinedInput
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={
+                      formik.touched.password && Boolean(formik.errors.password)
+                    }
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleTogglePasswordVisibility}
+                          edge="end">
+                          {showPassword ? <LuEyeOff /> : <LuEye />}
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                    label="Password"
+                  />
+                  {formik.touched.password && formik.errors.password && (
+                    <div style={{ color: "red", fontSize: "0.875rem" }}>
+                      {formik.errors.password}
+                    </div>
+                  )}
+                </FormControl>
+              )}
+
               <div className="flex flex-row-reverse justify-between items-center">
                 <button
                   type="submit"

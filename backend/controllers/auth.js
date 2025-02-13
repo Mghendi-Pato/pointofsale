@@ -226,12 +226,20 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+//Edit user
 exports.editUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { firstName, lastName, email, ID, phone, regionId, status } =
-      req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      ID,
+      phone,
+      regionId,
+      status,
+      password,
+    } = req.body;
 
     // Find the user to be updated
     const user = await User.findByPk(userId);
@@ -263,6 +271,12 @@ exports.editUser = async (req, res) => {
       }
     }
 
+    // If the password is provided, hash it before updating
+    let hashedPassword = user.password;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
     // Update user details
     await user.update({
       firstName: firstName || user.firstName,
@@ -272,6 +286,7 @@ exports.editUser = async (req, res) => {
       phone: phone || user.phone,
       regionId: regionId || user.regionId,
       status: status || user.status,
+      password: hashedPassword, // Only update if a new password is provided
     });
 
     res.status(200).json({

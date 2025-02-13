@@ -103,16 +103,19 @@ exports.editPhone = async (req, res) => {
     }
 
     const { id } = req.params;
+
     const {
       imei,
       modelId,
-      buyingPrice: purchasePrice,
+      purchasePrice,
       supplyDate: buyDate,
       supplier: supplierId,
-      manager: managerId,
+      managerId: managerId,
       capacity: capacity,
       sellingPrice: sellingPrice,
     } = req.body;
+
+    console.log(req.body);
 
     // Check if the phone exists
     const phone = await Phone.findByPk(id);

@@ -179,6 +179,7 @@ const EditPhone = ({
     validationSchema,
     enableReinitialize: true,
     onSubmit: (values) => {
+      console.log(values);
       const fieldMapping = {
         supplier: "supplierId",
         manager: "managerId",

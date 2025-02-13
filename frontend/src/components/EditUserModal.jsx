@@ -8,9 +8,19 @@ import TextField from "@mui/material/TextField";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../redux/reducers/ sidebar";
-import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import {
+  FormControl,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  OutlinedInput,
+  Select,
+} from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { editUser, fetchAllRegions } from "../services/services";
+import { LuEye } from "react-icons/lu";
+import { LuEyeOff } from "react-icons/lu";
 
 const EditManagerModal = ({
   showEditUserModal,
@@ -23,6 +33,7 @@ const EditManagerModal = ({
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
   const [editUserLoading, setEditUserLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { data: regions } = useQuery(
     ["regions", { page: 1, limit: 100 }],
@@ -61,20 +72,44 @@ const EditManagerModal = ({
   const animation = isSmallScreen ? smallScreenAnimation : largeScreenAnimation;
 
   const validationSchema = yup.object({
-    firstName: yup.string("Enter your first name"),
-    lastName: yup.string("Enter your last name"),
-    email: yup.string("Enter your email").email("Enter a valid email"),
-    ID: yup.string("Enter your ID").matches(/^\d+$/, "ID should be numeric"),
+    firstName: yup
+      .string("Enter your first name")
+      .required("First name is required"),
+    lastName: yup
+      .string("Enter your last name")
+      .required("Last name is required"),
+    email: yup
+      .string("Enter your email")
+      .email("Enter a valid email")
+      .required("Email is required"),
+    ID: yup
+      .string("Enter your ID")
+      .matches(/^\d+$/, "ID should be numeric")
+      .required("ID is required"),
     phone: yup
       .string("Enter your phone number")
       .matches(
         /^(\+\d{1,3}[- ]?)?\d{10}$/,
         "Enter a valid phone number with 10 digits"
-      ),
+      )
+      .required("Phone number is required"),
     region: yup.number("Location must be a valid ID").nullable(),
     status: yup
       .string()
-      .oneOf(["active", "suspended"], "Status must be 'active' or 'suspended'"),
+      .oneOf(["active", "suspended"], "Status must be 'active' or 'suspended'")
+      .required("Status is required"),
+    password: yup
+      .string("Enter your password")
+      .nullable()
+      .notRequired()
+      .min(8, "Password must be at least 8 characters long")
+      .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+      .matches(/\d/, "Password must contain at least one number")
+      .matches(
+        /[@$!%*?&]/,
+        "Password must contain at least one special character (@$!%*?&)"
+      ),
   });
 
   const useEditUser = () => {
@@ -119,6 +154,7 @@ const EditManagerModal = ({
       phone: user?.phone || "",
       region: user?.regionId || "",
       status: user?.status || "",
+      password: "",
     },
     validationSchema,
     enableReinitialize: true,
@@ -154,6 +190,10 @@ const EditManagerModal = ({
     }
   };
 
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   return (
     <AnimatePresence>
       {showEditUserModal && (
@@ -180,7 +220,7 @@ const EditManagerModal = ({
 
           <div className="w-full">
             <div className="w-full text-center text-lg py-2">
-              <p className="font-roboto font-bold">New Manager</p>
+              <p className="font-roboto font-bold">Edit User</p>
             </div>
             <form
               onSubmit={formik.handleSubmit}
@@ -396,6 +436,36 @@ const EditManagerModal = ({
                 {formik.touched.status && formik.errors.status && (
                   <div style={{ color: "red", fontSize: "0.875rem" }}>
                     {formik.errors.status}
+                  </div>
+                )}
+              </FormControl>
+
+              <FormControl fullWidth variant="outlined">
+                <InputLabel htmlFor="password">Password</InputLabel>
+                <OutlinedInput
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={
+                    formik.touched.password && Boolean(formik.errors.password)
+                  }
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleTogglePasswordVisibility}
+                        edge="end">
+                        {showPassword ? <LuEyeOff /> : <LuEye />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  label="Password"
+                />
+                {formik.touched.password && formik.errors.password && (
+                  <div style={{ color: "red", fontSize: "0.875rem" }}>
+                    {formik.errors.password}
                   </div>
                 )}
               </FormControl>
