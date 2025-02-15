@@ -139,7 +139,7 @@ const AdminDashboard = () => {
       percentage: phoneSummaries?.soldThisMonth?.percentagePhonesSold,
     },
     {
-      name: "Total Sales",
+      name: "Gross Profit",
       value: phoneSummaries?.soldThisMonth?.totalIncome,
       percentage: phoneSummaries?.soldThisMonth?.percentageIncome,
     },
@@ -149,7 +149,7 @@ const AdminDashboard = () => {
       percentage: phoneSummaries?.soldThisMonth?.percentageCommission,
     },
     {
-      name: "Total Profits",
+      name: "Net Profit",
       value: phoneSummaries?.soldThisMonth?.totalProfit,
       percentage: phoneSummaries?.soldThisMonth?.percentageProfit,
     },
