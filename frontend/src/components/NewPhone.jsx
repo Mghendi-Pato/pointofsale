@@ -199,16 +199,9 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
-          className="absolute bottom-0 md:top-0 right-0 w-full h-[85%] md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center p-2 overflow-hidden">
-          <div className="relative w-full hidden md:flex">
-            <MdOutlineCancel
-              size={28}
-              className="cursor-pointer text-red-500 hover:text-red-400 absolute top-0 right-0"
-              onClick={() => onCloseModal()}
-            />
-          </div>
+          className="absolute bottom-0 md:top-0 right-0 w-full h-[85%] md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center p-2 max-h-screen">
           <div className=" w-full  md:hidden relative">
-            <div className="absolute  -top-10 right-0  p-1">
+            <div className="absolute -top-10 right-2 p-1">
               <CiSaveDown2
                 size={28}
                 className="cursor-pointer text-red-500  hover:text-red-400"
@@ -216,42 +209,88 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
               />
             </div>
           </div>
-
-          <div className="w-full">
-            <div className="w-full text-center text-lg py-2 font-roboto font-bold">
-              New phone
+          <div className="overflow-auto">
+            <div className="relative w-full hidden md:flex">
+              <MdOutlineCancel
+                size={28}
+                className="cursor-pointer text-red-500 hover:text-red-400 absolute top-0 right-0"
+                onClick={() => onCloseModal()}
+              />
             </div>
-            <div className="w-full h-full md:h-auto overflow-y-auto px-2 pb-10">
-              <form
-                onSubmit={formik.handleSubmit}
-                className="space-y-5 px-2 pb-10 md:mt-5"
-                autoComplete="off">
-                <FormControl
-                  fullWidth
-                  error={
-                    formik.touched.modelId && Boolean(formik.errors.modelId)
-                  }
-                  sx={{
-                    "& .MuiInputBase-input": { color: "#000" },
-                    "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
-                  }}>
-                  <InputLabel id="model-label">Model</InputLabel>
-                  <Select
-                    labelId="model-label"
-                    id="model"
-                    name="modelId"
-                    value={formik.values.modelId}
+
+            <div className="w-full">
+              <div className="w-full text-center text-lg py-2 font-roboto font-bold">
+                New phone
+              </div>
+              <div className="w-full h-full md:h-auto overflow-y-auto px-2 pb-10">
+                <form
+                  onSubmit={formik.handleSubmit}
+                  className="space-y-5 px-2 py-2 pb-10 md:mt-5"
+                  autoComplete="off">
+                  <FormControl
+                    fullWidth
+                    error={
+                      formik.touched.modelId && Boolean(formik.errors.modelId)
+                    }
+                    sx={{
+                      "& .MuiInputBase-input": { color: "#000" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
+                    }}>
+                    <InputLabel id="model-label">Model</InputLabel>
+                    <Select
+                      labelId="model-label"
+                      id="model"
+                      name="modelId"
+                      value={formik.values.modelId}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      label="Model"
+                      MenuProps={{
+                        PaperProps: {
+                          style: {
+                            maxHeight: 200,
+                            overflowY: "auto",
+                          },
+                        },
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": {
+                            borderColor: "#ccc",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "#2FC3D2",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#2FC3D2",
+                          },
+                        },
+                      }}>
+                      {models?.models?.length > 0 &&
+                        models?.models?.map((model) => (
+                          <MenuItem key={model.id} value={model.id}>
+                            {model.model}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                    {formik.touched.modelId && formik.errors.modelId && (
+                      <div style={{ color: "red", fontSize: "0.875rem" }}>
+                        {formik.errors.modelId}
+                      </div>
+                    )}
+                  </FormControl>
+
+                  <TextField
+                    variant="outlined"
+                    fullWidth
+                    id="imei"
+                    name="imei"
+                    label="IMEI"
+                    value={formik.values.imei}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    label="Model"
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: 200,
-                          overflowY: "auto",
-                        },
-                      },
-                    }}
+                    error={formik.touched.imei && Boolean(formik.errors.imei)}
+                    helperText={formik.touched.imei && formik.errors.imei}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": {
@@ -264,293 +303,262 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                           borderColor: "#2FC3D2",
                         },
                       },
-                    }}>
-                    {models?.models?.length > 0 &&
-                      models?.models?.map((model) => (
-                        <MenuItem key={model.id} value={model.id}>
-                          {model.model}
+                      "& .MuiInputBase-input": { color: "#000" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
+                    }}
+                  />
+
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id="supplier-label">Supplier</InputLabel>
+                    <Select
+                      labelId="supplier-label"
+                      id="supplier"
+                      name="supplier"
+                      value={formik.values.supplier || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={
+                        formik.touched.supplier &&
+                        Boolean(formik.errors.supplier)
+                      }
+                      label="Supplier"
+                      MenuProps={{
+                        PaperProps: {
+                          style: {
+                            maxHeight: 200,
+                            overflowY: "auto",
+                          },
+                        },
+                      }}>
+                      {suppliers?.suppliers?.map((supplier) => (
+                        <MenuItem key={supplier.id} value={supplier.id}>
+                          <p className="capitalize">{supplier.name}</p>
                         </MenuItem>
                       ))}
-                  </Select>
-                  {formik.touched.modelId && formik.errors.modelId && (
-                    <div style={{ color: "red", fontSize: "0.875rem" }}>
-                      {formik.errors.modelId}
-                    </div>
-                  )}
-                </FormControl>
+                    </Select>
+                    {formik.touched.supplier && formik.errors.supplier && (
+                      <div style={{ color: "red", fontSize: "0.875rem" }}>
+                        {formik.errors.supplier}
+                      </div>
+                    )}
+                  </FormControl>
 
-                <TextField
-                  variant="outlined"
-                  fullWidth
-                  id="imei"
-                  name="imei"
-                  label="IMEI"
-                  value={formik.values.imei}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.imei && Boolean(formik.errors.imei)}
-                  helperText={formik.touched.imei && formik.errors.imei}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": {
-                        borderColor: "#ccc",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#2FC3D2",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#2FC3D2",
-                      },
-                    },
-                    "& .MuiInputBase-input": { color: "#000" },
-                    "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
-                  }}
-                />
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id="region-label">Location</InputLabel>
+                    <Select
+                      labelId="region-label"
+                      id="region"
+                      value={selectedRegion}
+                      onChange={(event) => {
+                        setSelectedRegion(event.target.value);
+                        formik.setFieldValue("manager", ""); // Reset manager when region changes
+                      }}
+                      label="Location"
+                      MenuProps={{
+                        PaperProps: {
+                          style: { maxHeight: 200, overflowY: "auto" },
+                        },
+                      }}>
+                      {regions?.regions?.map((region) => (
+                        <MenuItem key={region.id} value={region.id}>
+                          {region.location}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
 
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel id="supplier-label">Supplier</InputLabel>
-                  <Select
-                    labelId="supplier-label"
-                    id="supplier"
-                    name="supplier"
-                    value={formik.values.supplier || ""}
+                  <Autocomplete
+                    fullWidth
+                    options={filteredManagers}
+                    getOptionLabel={(option) => option.name}
+                    value={
+                      filteredManagers.find(
+                        (m) => m.id === formik.values.manager
+                      ) || null
+                    }
+                    onChange={(event, newValue) => {
+                      formik.setFieldValue(
+                        "manager",
+                        newValue ? newValue.id : ""
+                      );
+                    }}
+                    onBlur={formik.handleBlur}
+                    disabled={!selectedRegion}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Manager"
+                        variant="outlined"
+                        error={
+                          formik.touched.manager &&
+                          Boolean(formik.errors.manager)
+                        }
+                        helperText={
+                          formik.touched.manager && formik.errors.manager
+                        }
+                      />
+                    )}
+                  />
+                  <TextField
+                    variant="outlined"
+                    fullWidth
+                    id="buyingPrice"
+                    name="buyingPrice"
+                    label="Buying Price"
+                    value={formik.values.buyingPrice}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={
-                      formik.touched.supplier && Boolean(formik.errors.supplier)
+                      formik.touched.buyingPrice &&
+                      Boolean(formik.errors.buyingPrice)
                     }
-                    label="Supplier"
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: 200,
-                          overflowY: "auto",
+                    helperText={
+                      formik.touched.buyingPrice && formik.errors.buyingPrice
+                    }
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": {
+                          borderColor: "#ccc",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#2FC3D2",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#2FC3D2",
                         },
                       },
-                    }}>
-                    {suppliers?.suppliers?.map((supplier) => (
-                      <MenuItem key={supplier.id} value={supplier.id}>
-                        <p className="capitalize">{supplier.name}</p>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {formik.touched.supplier && formik.errors.supplier && (
-                    <div style={{ color: "red", fontSize: "0.875rem" }}>
-                      {formik.errors.supplier}
-                    </div>
-                  )}
-                </FormControl>
-
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel id="region-label">Location</InputLabel>
-                  <Select
-                    labelId="region-label"
-                    id="region"
-                    value={selectedRegion}
-                    onChange={(event) => {
-                      setSelectedRegion(event.target.value);
-                      formik.setFieldValue("manager", ""); // Reset manager when region changes
+                      "& .MuiInputBase-input": { color: "#000" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
                     }}
-                    label="Location"
-                    MenuProps={{
-                      PaperProps: {
-                        style: { maxHeight: 200, overflowY: "auto" },
-                      },
-                    }}>
-                    {regions?.regions?.map((region) => (
-                      <MenuItem key={region.id} value={region.id}>
-                        {region.location}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">KSh</InputAdornment>
+                      ),
+                    }}
+                  />
 
-                <Autocomplete
-                  fullWidth
-                  options={filteredManagers}
-                  getOptionLabel={(option) => option.name}
-                  value={
-                    filteredManagers.find(
-                      (m) => m.id === formik.values.manager
-                    ) || null
-                  }
-                  onChange={(event, newValue) => {
-                    formik.setFieldValue(
-                      "manager",
-                      newValue ? newValue.id : ""
-                    );
-                  }}
-                  onBlur={formik.handleBlur}
-                  disabled={!selectedRegion}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Manager"
-                      variant="outlined"
-                      error={
-                        formik.touched.manager && Boolean(formik.errors.manager)
-                      }
-                      helperText={
-                        formik.touched.manager && formik.errors.manager
-                      }
-                    />
-                  )}
-                />
-                <TextField
-                  variant="outlined"
-                  fullWidth
-                  id="buyingPrice"
-                  name="buyingPrice"
-                  label="Buying Price"
-                  value={formik.values.buyingPrice}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.buyingPrice &&
-                    Boolean(formik.errors.buyingPrice)
-                  }
-                  helperText={
-                    formik.touched.buyingPrice && formik.errors.buyingPrice
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": {
-                        borderColor: "#ccc",
+                  <TextField
+                    variant="outlined"
+                    fullWidth
+                    id="sellingPrice"
+                    name="sellingPrice"
+                    label="Selling Price"
+                    value={formik.values.sellingPrice}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={
+                      formik.touched.sellingPrice &&
+                      Boolean(formik.errors.sellingPrice)
+                    }
+                    helperText={
+                      formik.touched.sellingPrice && formik.errors.sellingPrice
+                    }
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "#ccc" },
+                        "&:hover fieldset": { borderColor: "#2FC3D2" },
+                        "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
                       },
-                      "&:hover fieldset": {
-                        borderColor: "#2FC3D2",
+                      "& .MuiInputBase-input": { color: "#000" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">KSh</InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <TextField
+                    variant="outlined"
+                    type="number"
+                    fullWidth
+                    id="capacity"
+                    name="capacity"
+                    label="Capacity"
+                    value={formik.values.capacity}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={
+                      formik.touched.capacity && Boolean(formik.errors.capacity)
+                    }
+                    helperText={
+                      formik.touched.capacity && formik.errors.capacity
+                    }
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "#ccc" },
+                        "&:hover fieldset": { borderColor: "#2FC3D2" },
+                        "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
                       },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#2FC3D2",
-                      },
-                    },
-                    "& .MuiInputBase-input": { color: "#000" },
-                    "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">KSh</InputAdornment>
-                    ),
-                  }}
-                />
+                      "& .MuiInputBase-input": { color: "#000" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
+                    }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">GB</InputAdornment>
+                      ),
+                    }}
+                  />
 
-                <TextField
-                  variant="outlined"
-                  fullWidth
-                  id="sellingPrice"
-                  name="sellingPrice"
-                  label="Selling Price"
-                  value={formik.values.sellingPrice}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.sellingPrice &&
-                    Boolean(formik.errors.sellingPrice)
-                  }
-                  helperText={
-                    formik.touched.sellingPrice && formik.errors.sellingPrice
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": { borderColor: "#ccc" },
-                      "&:hover fieldset": { borderColor: "#2FC3D2" },
-                      "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
-                    },
-                    "& .MuiInputBase-input": { color: "#000" },
-                    "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">KSh</InputAdornment>
-                    ),
-                  }}
-                />
-
-                <TextField
-                  variant="outlined"
-                  type="number"
-                  fullWidth
-                  id="capacity"
-                  name="capacity"
-                  label="Capacity"
-                  value={formik.values.capacity}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.capacity && Boolean(formik.errors.capacity)
-                  }
-                  helperText={formik.touched.capacity && formik.errors.capacity}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": { borderColor: "#ccc" },
-                      "&:hover fieldset": { borderColor: "#2FC3D2" },
-                      "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
-                    },
-                    "& .MuiInputBase-input": { color: "#000" },
-                    "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
-                  }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">GB</InputAdornment>
-                    ),
-                  }}
-                />
-
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <div className="w-full">
-                    <DatePicker
-                      label="Date Supplied"
-                      value={
-                        formik.values.supplyDate
-                          ? dayjs(formik.values.supplyDate)
-                          : null
-                      }
-                      onChange={(newValue) => {
-                        formik.setFieldValue(
-                          "supplyDate",
-                          newValue ? newValue.format("YYYY-MM-DD") : ""
-                        );
-                      }}
-                      onBlur={formik.handleBlur}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          fullWidth // Ensures the input field takes full width
-                          error={
-                            formik.touched.supplyDate &&
-                            Boolean(formik.errors.supplyDate)
-                          }
-                          helperText={
-                            formik.touched.supplyDate &&
-                            formik.errors.supplyDate
-                          }
-                        />
-                      )}
-                      sx={{
-                        width: "100%", // Ensures DatePicker takes full width
-                        "& .MuiOutlinedInput-root": {
-                          "& fieldset": { borderColor: "#ccc" },
-                          "&:hover fieldset": { borderColor: "#2FC3D2" },
-                          "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
-                        },
-                        "& .MuiInputBase-input": { color: "#000" },
-                        "& .MuiInputLabel-root.Mui-focused": {
-                          color: "#2FC3D2",
-                        },
-                      }}
-                    />
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <div className="w-full">
+                      <DatePicker
+                        label="Date Supplied"
+                        value={
+                          formik.values.supplyDate
+                            ? dayjs(formik.values.supplyDate)
+                            : null
+                        }
+                        onChange={(newValue) => {
+                          formik.setFieldValue(
+                            "supplyDate",
+                            newValue ? newValue.format("YYYY-MM-DD") : ""
+                          );
+                        }}
+                        onBlur={formik.handleBlur}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            fullWidth // Ensures the input field takes full width
+                            error={
+                              formik.touched.supplyDate &&
+                              Boolean(formik.errors.supplyDate)
+                            }
+                            helperText={
+                              formik.touched.supplyDate &&
+                              formik.errors.supplyDate
+                            }
+                          />
+                        )}
+                        sx={{
+                          width: "100%", // Ensures DatePicker takes full width
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": { borderColor: "#ccc" },
+                            "&:hover fieldset": { borderColor: "#2FC3D2" },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#2FC3D2",
+                            },
+                          },
+                          "& .MuiInputBase-input": { color: "#000" },
+                          "& .MuiInputLabel-root.Mui-focused": {
+                            color: "#2FC3D2",
+                          },
+                        }}
+                      />
+                    </div>
+                  </LocalizationProvider>
+                  <div className="flex flex-row-reverse justify-between items-center">
+                    <button
+                      type="submit"
+                      className="p-2 bg-primary-500 transition-all duration-500 ease-in-out flex flex-row items-center justify-center h-12 w-full space-x-2">
+                      {registerPhoneLoading
+                        ? "Registering device ..."
+                        : "Register device"}
+                    </button>
                   </div>
-                </LocalizationProvider>
-                <div className="flex flex-row-reverse justify-between items-center">
-                  <button
-                    type="submit"
-                    className="p-2 bg-primary-500 transition-all duration-500 ease-in-out flex flex-row items-center justify-center h-12 w-full space-x-2">
-                    {registerPhoneLoading
-                      ? "Registering device ..."
-                      : "Register device"}
-                  </button>
-                </div>
-              </form>
+                </form>
+              </div>
             </div>
           </div>
         </motion.div>
