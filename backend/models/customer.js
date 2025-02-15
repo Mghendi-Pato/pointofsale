@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
   Customer.init(
     {
       firstName: { type: DataTypes.STRING, allowNull: false },
+      middleName: { type: DataTypes.STRING, allowNull: true }, // Optional Middle Name
       lastName: { type: DataTypes.STRING, allowNull: false },
       phoneNumber: { type: DataTypes.STRING, allowNull: false, unique: false },
       ID: {

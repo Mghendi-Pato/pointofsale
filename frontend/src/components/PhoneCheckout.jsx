@@ -31,6 +31,7 @@ const PhoneCheckout = ({
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState({
     firstName: "",
+    middleName: "",
     lastName: "",
     nkFirstName: "",
     nkLastName: "",
@@ -120,6 +121,8 @@ const PhoneCheckout = ({
       agentCommission: phone.managerCommission,
     };
     const { ...finalCustomerDetails } = updatedCustomerDetails;
+
+    console.log(finalCustomerDetails);
     sellPhoneMutation.mutate({
       customerDetails: finalCustomerDetails,
       token,
@@ -135,6 +138,7 @@ const PhoneCheckout = ({
     firstName: yup
       .string("Enter the first name")
       .required("First name is required"),
+    middleName: yup.string("Enter the middle name"),
     lastName: yup
       .string("Enter the last name")
       .required("Last name is required"),
@@ -256,6 +260,33 @@ const PhoneCheckout = ({
                       "&.Mui-focused fieldset": {
                         borderColor: "#2FC3D2",
                       },
+                    },
+                    "& .MuiInputBase-input": { color: "#000" },
+                    "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
+                  }}
+                />
+
+                <TextField
+                  variant="outlined"
+                  fullWidth
+                  id="middleName"
+                  name="middleName"
+                  label="Middle Name"
+                  value={formik.values.middleName}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={
+                    formik.touched.middleName &&
+                    Boolean(formik.errors.middleName)
+                  }
+                  helperText={
+                    formik.touched.middleName && formik.errors.middleName
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": { borderColor: "#ccc" },
+                      "&:hover fieldset": { borderColor: "#2FC3D2" },
+                      "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
                     },
                     "& .MuiInputBase-input": { color: "#000" },
                     "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
@@ -572,7 +603,7 @@ const PhoneCheckout = ({
                     <hr className="my-2 w-full bg-black h-1" />
                     <p className="font-semibold text-sm text-neutral-700">
                       Name: {customerDetails?.firstName}{" "}
-                      {customerDetails?.lastName}
+                      {customerDetails?.middleName} {customerDetails?.lastName}
                     </p>
                     <p className="font-semibold text-sm text-neutral-700">
                       Tel: {customerDetails?.phone}

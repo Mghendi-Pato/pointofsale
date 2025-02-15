@@ -52,6 +52,8 @@ const PhoneDetails = () => {
 
   const phone = phones?.find((phone) => phone.imei === imei);
 
+  console.log(phone);
+
   return (
     <div className=" p-5 w-full flex flex-col md:flex-row items-center gap-5">
       <div className="border border-neutral-100 p-5 rounded-2xl shadow-sm w-full flex flex-col">
@@ -155,7 +157,8 @@ const PhoneDetails = () => {
                 <div className="flex-1">
                   <p className="text-neutral-400">Customer Name</p>
                   <p className=" font-medium capitalize">
-                    {phone?.customer?.firstName} {phone?.customer?.lastName}
+                    {phone?.customer?.firstName} {phone?.customer?.middleName}{" "}
+                    {phone?.customer?.lastName}
                   </p>
                 </div>
               </div>

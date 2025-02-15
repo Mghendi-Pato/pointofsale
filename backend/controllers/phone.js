@@ -115,8 +115,6 @@ exports.editPhone = async (req, res) => {
       sellingPrice: sellingPrice,
     } = req.body;
 
-    console.log(req.body);
-
     // Check if the phone exists
     const phone = await Phone.findByPk(id);
     if (!phone) {
@@ -460,6 +458,7 @@ exports.sellPhone = async (req, res) => {
       phoneId,
       company,
       firstName,
+      middleName,
       lastName,
       phoneNumber,
       ID,
@@ -492,6 +491,7 @@ exports.sellPhone = async (req, res) => {
       customer = await Customer.create({
         firstName,
         lastName,
+        middleName,
         phoneNumber,
         ID,
         nkPhone,
@@ -882,6 +882,7 @@ const fetchPhonesByPartialIMEI = async (imei) => {
           attributes: [
             "firstName",
             "lastName",
+            "middleName",
             "phoneNumber",
             "ID",
             "nkFirstName",
