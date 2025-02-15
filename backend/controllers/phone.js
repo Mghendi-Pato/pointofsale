@@ -19,7 +19,7 @@ exports.registerPhone = async (req, res) => {
     const {
       imei,
       modelId,
-      buyingPrice: purchasePrice,
+      purchasePrice: purchasePrice,
       supplyDate: buyDate,
       supplier: supplierId,
       manager: managerId,
@@ -717,13 +717,13 @@ exports.getSalesComparison = async (req, res) => {
     const calculateTotalsAndPercentage = (thisMonthPhones, lastMonthPhones) => {
       const totalIncomeThisMonth = thisMonthPhones.reduce(
         (sum, phone) =>
-          sum + ((phone.sellingPrice || 0) - (phone.buyingPrice || 0)),
+          sum + ((phone.sellingPrice || 0) - (phone.purchasePrice || 0)),
         0
       );
 
       const totalIncomeLastMonth = lastMonthPhones.reduce(
         (sum, phone) =>
-          sum + ((phone.sellingPrice || 0) - (phone.buyingPrice || 0)),
+          sum + ((phone.sellingPrice || 0) - (phone.purchasePrice || 0)),
         0
       );
 

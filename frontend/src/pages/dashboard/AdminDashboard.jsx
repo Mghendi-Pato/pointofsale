@@ -139,19 +139,19 @@ const AdminDashboard = () => {
       percentage: phoneSummaries?.soldThisMonth?.percentagePhonesSold,
     },
     {
-      name: "Total Income",
+      name: "Total Sales",
       value: phoneSummaries?.soldThisMonth?.totalIncome,
       percentage: phoneSummaries?.soldThisMonth?.percentageIncome,
-    },
-    {
-      name: "Total Profits",
-      value: phoneSummaries?.soldThisMonth?.totalProfit,
-      percentage: phoneSummaries?.soldThisMonth?.percentageProfit,
     },
     {
       name: "Mangers' Commission",
       value: phoneSummaries?.soldThisMonth?.totalCommission,
       percentage: phoneSummaries?.soldThisMonth?.percentageCommission,
+    },
+    {
+      name: "Total Profits",
+      value: phoneSummaries?.soldThisMonth?.totalProfit,
+      percentage: phoneSummaries?.soldThisMonth?.percentageProfit,
     },
   ];
 
