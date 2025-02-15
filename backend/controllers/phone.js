@@ -106,7 +106,7 @@ exports.editPhone = async (req, res) => {
 
     const {
       imei,
-      modelId,
+      model,
       purchasePrice,
       supplyDate: buyDate,
       supplier: supplierId,
@@ -152,8 +152,8 @@ exports.editPhone = async (req, res) => {
     }
 
     // Check if the modelId exists
-    if (modelId) {
-      const phoneModel = await PhoneModel.findByPk(modelId); // Check if modelId exists
+    if (model) {
+      const phoneModel = await PhoneModel.findByPk(model); // Check if modelId exists
       if (!phoneModel) {
         return res.status(404).json({ message: "Phone model not found." });
       }
@@ -162,7 +162,7 @@ exports.editPhone = async (req, res) => {
     // Update the phone
     await phone.update({
       imei: imei || phone.imei,
-      modelId: modelId || phone.modelId,
+      modelId: model || phone.modelId,
       purchasePrice: purchasePrice || phone.purchasePrice,
       buyDate: buyDate || phone.buyDate,
       supplierId: supplierId || phone.supplierId,

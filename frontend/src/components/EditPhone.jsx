@@ -266,7 +266,7 @@ const EditPhone = ({
               autoComplete="off">
               <FormControl
                 fullWidth
-                error={formik.touched.modelId && Boolean(formik.errors.modelId)}
+                error={formik.touched.model && Boolean(formik.errors.model)}
                 sx={{
                   "& .MuiInputBase-input": { color: "#000" },
                   "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
@@ -275,7 +275,7 @@ const EditPhone = ({
                 <Select
                   labelId="model-label"
                   id="model"
-                  name="modelId"
+                  name="model"
                   value={formik.values.model}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
