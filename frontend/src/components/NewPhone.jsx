@@ -8,7 +8,12 @@ import TextField from "@mui/material/TextField";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../redux/reducers/ sidebar";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 import {
+  Autocomplete,
   FormControl,
   InputAdornment,
   InputLabel,
@@ -19,6 +24,7 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import {
   fetchActiveManagers,
   fetchAllModels,
+  fetchAllRegions,
   fetchAllSuppliers,
   registerNewPhone,
 } from "../services/services";
@@ -26,6 +32,7 @@ import {
 const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [registerPhoneLoading, setRegisterPhoneLoading] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState("");
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
@@ -38,6 +45,21 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
       enabled: !!token,
     }
   );
+
+  const { data: regions } = useQuery(
+    ["regions", { page: 1, limit: 100 }],
+    ({ queryKey, signal }) => fetchAllRegions({ queryKey, signal, token }),
+    {
+      keepPreviousData: true,
+      enabled: !!token,
+    }
+  );
+
+  const filteredManagers = selectedRegion
+    ? activeData?.managers?.filter(
+        (manager) => manager.regionId === selectedRegion
+      )
+    : [];
 
   const { data: suppliers } = useQuery(
     ["suppliers", { limit: 100 }],
@@ -139,7 +161,7 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
       buyingPrice: "",
       sellingPrice: "",
       capacity: "",
-      supplyDate: "",
+      supplyDate: dayjs().format("YYYY-MM-DD"),
     },
 
     validationSchema,
@@ -316,39 +338,55 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel id="manager-label">Manager</InputLabel>
+                <InputLabel id="region-label">Location</InputLabel>
                 <Select
-                  labelId="manager-label"
-                  id="manager"
-                  name="manager"
-                  value={formik.values.manager || ""}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.manager && Boolean(formik.errors.manager)
-                  }
-                  label="Manager"
+                  labelId="region-label"
+                  id="region"
+                  value={selectedRegion}
+                  onChange={(event) => {
+                    setSelectedRegion(event.target.value);
+                    formik.setFieldValue("manager", ""); // Reset manager when region changes
+                  }}
+                  label="Location"
                   MenuProps={{
                     PaperProps: {
-                      style: {
-                        maxHeight: 200,
-                        overflowY: "auto",
-                      },
+                      style: { maxHeight: 200, overflowY: "auto" },
                     },
                   }}>
-                  {activeData?.managers?.map((manager) => (
-                    <MenuItem key={manager.id} value={manager.id}>
-                      <p className="capitalize">{manager.name}</p>
+                  {regions?.regions?.map((region) => (
+                    <MenuItem key={region.id} value={region.id}>
+                      {region.location}
                     </MenuItem>
                   ))}
                 </Select>
-                {formik.touched.manager && formik.errors.manager && (
-                  <div style={{ color: "red", fontSize: "0.875rem" }}>
-                    {formik.errors.manager}
-                  </div>
-                )}
               </FormControl>
 
+              <Autocomplete
+                fullWidth
+                options={filteredManagers}
+                getOptionLabel={(option) => option.name}
+                value={
+                  filteredManagers.find(
+                    (m) => m.id === formik.values.manager
+                  ) || null
+                }
+                onChange={(event, newValue) => {
+                  formik.setFieldValue("manager", newValue ? newValue.id : "");
+                }}
+                onBlur={formik.handleBlur}
+                disabled={!selectedRegion}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Manager"
+                    variant="outlined"
+                    error={
+                      formik.touched.manager && Boolean(formik.errors.manager)
+                    }
+                    helperText={formik.touched.manager && formik.errors.manager}
+                  />
+                )}
+              />
               <TextField
                 variant="outlined"
                 fullWidth
@@ -449,42 +487,48 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                 }}
               />
 
-              <TextField
-                variant="outlined"
-                fullWidth
-                id="supplyDate"
-                name="supplyDate"
-                label="Date Supplied"
-                type="date"
-                value={formik.values.supplyDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.supplyDate && Boolean(formik.errors.supplyDate)
-                }
-                helperText={
-                  formik.touched.supplyDate && formik.errors.supplyDate
-                }
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "#ccc",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#2FC3D2",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#2FC3D2",
-                    },
-                  },
-                  "& .MuiInputBase-input": { color: "#000" },
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
-                }}
-              />
-
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <div className="w-full">
+                  <DatePicker
+                    label="Date Supplied"
+                    value={
+                      formik.values.supplyDate
+                        ? dayjs(formik.values.supplyDate)
+                        : null
+                    }
+                    onChange={(newValue) => {
+                      formik.setFieldValue(
+                        "supplyDate",
+                        newValue ? newValue.format("YYYY-MM-DD") : ""
+                      );
+                    }}
+                    onBlur={formik.handleBlur}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        fullWidth // Ensures the input field takes full width
+                        error={
+                          formik.touched.supplyDate &&
+                          Boolean(formik.errors.supplyDate)
+                        }
+                        helperText={
+                          formik.touched.supplyDate && formik.errors.supplyDate
+                        }
+                      />
+                    )}
+                    sx={{
+                      width: "100%", // Ensures DatePicker takes full width
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "#ccc" },
+                        "&:hover fieldset": { borderColor: "#2FC3D2" },
+                        "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
+                      },
+                      "& .MuiInputBase-input": { color: "#000" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
+                    }}
+                  />
+                </div>
+              </LocalizationProvider>
               <div className="flex flex-row-reverse justify-between items-center">
                 <button
                   type="submit"

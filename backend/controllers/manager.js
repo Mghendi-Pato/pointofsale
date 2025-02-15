@@ -43,7 +43,7 @@ exports.getActiveManagers = async (req, res) => {
       return res.status(403).send("Access Denied");
     }
 
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 20 } = req.query;
     const parsedPage = parseInt(page);
     const parsedLimit = parseInt(limit);
 
@@ -93,7 +93,7 @@ exports.getSuspendedManagers = async (req, res) => {
       return res.status(403).send("Access Denied.");
     }
 
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 20 } = req.query;
     const parsedPage = parseInt(page);
     const parsedLimit = parseInt(limit);
 

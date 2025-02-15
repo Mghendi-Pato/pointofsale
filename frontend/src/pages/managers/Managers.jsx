@@ -1,13 +1,12 @@
 import { TextField } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import TablePagination from "@mui/material/TablePagination";
 import { MdDeleteOutline } from "react-icons/md";
 import { setSidebar } from "../../redux/reducers/ sidebar";
 import { toast } from "react-toastify";
 import NewManager from "../../components/NewManager";
 import { BiEdit } from "react-icons/bi";
-import { useQuery } from "react-query";
+import { useInfiniteQuery } from "react-query";
 import {
   deleteQueryUser,
   fetchActiveManagers,
@@ -16,10 +15,9 @@ import {
 import { useMutation, useQueryClient } from "react-query";
 import DeleteConfirmationModal from "../../components/DeleteModal";
 import EditUserModal from "../../components/EditUserModal";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const Managers = () => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [show, setShow] = useState("active");
   const [managerToDelete, setManagerToDelete] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,71 +29,88 @@ const Managers = () => {
 
   const token = useSelector((state) => state.userSlice.user.token);
 
-  const { data: activeData, isLoading: activeLoading } = useQuery(
-    ["managers", { status: "active", page: page + 1, limit: rowsPerPage }],
-    ({ queryKey, signal }) => fetchActiveManagers({ queryKey, signal, token }),
+  const {
+    data: activeData,
+    fetchNextPage: fetchNextActiveManagers,
+    hasNextPage: hasMoreActiveManagers,
+    isFetchingNextPage: isLoadingMoreActiveManagers,
+  } = useInfiniteQuery(
+    ["managers", { status: "active" }],
+    ({ pageParam = 1, signal }) =>
+      fetchActiveManagers({ pageParam, signal, token }),
     {
-      keepPreviousData: true,
+      getNextPageParam: (lastPage) => {
+        const { page, total, limit } = lastPage;
+        return page * limit < total ? page + 1 : undefined;
+      },
       enabled: show === "active" && !!token,
     }
   );
 
-  const { data: suspendedData, isLoading: suspendedLoading } = useQuery(
-    ["managers", { status: "suspended", page: page + 1, limit: rowsPerPage }],
-    ({ queryKey, signal }) =>
-      fetchSuspendedManagers({ queryKey, signal, token }),
+  console.log(activeData);
+
+  const {
+    data: suspendedData,
+    fetchNextPage: fetchNextSuspendedManagers,
+    hasNextPage: hasMoreSuspendedManagers,
+    isFetchingNextPage: isLoadingMoreSuspendedManagers,
+  } = useInfiniteQuery(
+    ["managers", { status: "suspended" }],
+    ({ pageParam = 1, signal }) =>
+      fetchSuspendedManagers({ pageParam, signal, token }),
     {
-      keepPreviousData: true,
+      getNextPageParam: (lastPage) => {
+        const { page, total, limit } = lastPage;
+        return page * limit < total ? page + 1 : undefined;
+      },
       enabled: show === "inactive" && !!token,
     }
   );
-
-  // Handles page change
-  const handleChangePage = (event, newPage) => setPage(newPage);
-
-  // Handles rows per page change
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
 
   // Handles search query change
   const handleSearchChange = (event) => setSearchQuery(event.target.value);
 
   // Filtered, sorted, and paginated exams
+  const activeManagers = useMemo(() => {
+    return activeData?.pages?.flatMap((page) => page.managers) || [];
+  }, [activeData?.pages]);
+
+  const suspendedManagers = useMemo(() => {
+    return suspendedData?.pages?.flatMap((page) => page.managers) || [];
+  }, [suspendedData?.pages]);
+
   const filteredManagers = useMemo(() => {
     const dataToFilter =
-      show === "active" ? activeData?.managers : suspendedData?.managers;
-    return (
-      dataToFilter
-        ?.filter((manager) => {
-          return searchQuery
-            .toLowerCase()
-            .split(/\s+/)
-            .filter(Boolean)
-            .every((part) =>
-              [
-                manager?.name?.toLowerCase(),
-                manager?.status?.toLowerCase(),
-                manager?.region?.location.toLowerCase(),
-                manager?.ID?.toLowerCase(),
-                manager?.phone?.toLowerCase(),
-              ].some((field) => field.includes(part))
-            );
-        })
-        ?.sort((a, b) => {
-          const nameA = a?.name?.toLowerCase() || "";
-          const nameB = b?.name?.toLowerCase() || "";
-          return nameA.localeCompare(nameB);
-        }) || []
-    );
-  }, [activeData?.managers, suspendedData?.managers, searchQuery, show]);
+      show === "active"
+        ? activeManagers
+        : show === "suspended"
+        ? suspendedManagers
+        : [];
+
+    return dataToFilter
+      .filter((manager) =>
+        searchQuery
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(Boolean)
+          .every((part) =>
+            [
+              manager?.name?.toLowerCase(),
+              manager?.status?.toLowerCase(),
+              manager?.region?.location?.toLowerCase(),
+              manager?.ID?.toLowerCase(),
+              manager?.phone?.toLowerCase(),
+            ].some((field) => field?.includes(part))
+          )
+      )
+      .sort((a, b) =>
+        (a?.name?.toLowerCase() || "").localeCompare(
+          b?.name?.toLowerCase() || ""
+        )
+      );
+  }, [activeManagers, suspendedManagers, searchQuery, show]);
 
   const paginatedManagers = filteredManagers;
-
-  useEffect(() => {
-    setPage(0);
-  }, [searchQuery]);
 
   const useDeleteUser = () => {
     const queryClient = useQueryClient();
@@ -158,10 +173,6 @@ const Managers = () => {
       dispatch(setSidebar(false));
     }
   }, [showAddManager, showEditUserModal, dispatch]);
-
-  useEffect(() => {
-    setPage(0);
-  }, [searchQuery, show]);
 
   const onEditManger = (manager) => {
     setEditUser(manager);
@@ -229,149 +240,171 @@ const Managers = () => {
             </div>
           </div>
           <div className="overflow-x-auto">
-            <div className="max-h-[57vh] overflow-y-auto">
-              <table className="w-full text-sm text-left text-gray-500 relative">
-                <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200">
-                  <tr>
-                    <th scope="col" className="px-2 border-r py-2">
-                      #
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-2 border-r text-[14px] normal-case py-2">
-                      Name
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Email
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      ID
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Phone
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Location
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Last login
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Status
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 text-[14px] normal-case py-2">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                {(activeLoading && !activeData && show === "active") ||
-                (suspendedLoading && !suspendedData && show !== "active") ? (
-                  <p className="p-2">Fetching manager data...</p>
-                ) : paginatedManagers.length === 0 ||
-                  paginatedManagers.filter((manager) =>
-                    show === "active"
-                      ? manager.status === "active"
-                      : manager.status !== "active"
-                  ).length === 0 ? (
-                  <tbody>
-                    <tr>
-                      <td colSpan="9" className="px-4 pt-2">
-                        <p className="text-gray-500">
-                          No {show === "active" ? "active" : "suspended"}{" "}
-                          managers found.
-                        </p>
-                      </td>
-                    </tr>
-                  </tbody>
-                ) : (
-                  <tbody>
-                    {paginatedManagers
-                      ?.filter((manager) =>
-                        show === "active"
-                          ? manager.status === "active"
-                          : manager.status !== "active"
-                      )
-                      .map((manager, index) => (
-                        <tr
-                          key={manager.id}
-                          className="bg-white border-b hover:bg-blue-50">
-                          <td className="px-2 py-2 border-r font-medium text-gray-900">
-                            {index + 1}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {manager.name}
-                          </td>
-                          <td className="px-6 border-r py-2">
-                            {manager.email}
-                          </td>
-                          <td className="px-6 border-r py-2">{manager.ID}</td>
-                          <td className="px-6 border-r py-2">
-                            {manager.phone}
-                          </td>
-                          <td className="px-6 border-r py-2">
-                            {manager?.region?.location}
-                          </td>
-                          <td className="px-6 border-r py-2">
-                            {formatDate(new Date(manager.lastLogin))}
-                          </td>
-                          <td className="px-6 border-r py-2">
-                            {manager.status === "active" ? (
-                              <p className="text-green-500 capitalize">
-                                {manager.status}
-                              </p>
-                            ) : (
-                              <p className="text-amber-500 capitalize">
-                                {manager.status}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
-                            <button
-                              onClick={() => onEditManger(manager)}
-                              aria-label={`Edit ${manager.name}`}
-                              className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
-                              Edit
-                              <BiEdit />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(manager.id)}
-                              aria-label={`Delete ${manager.name}`}
-                              className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
-                              <MdDeleteOutline />
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                )}
-              </table>
-            </div>
-            <TablePagination
-              rowsPerPageOptions={[5, 10]}
-              component="div"
-              count={
-                show === "active" ? activeData?.total : suspendedData?.total
+            <InfiniteScroll
+              dataLength={filteredManagers.length}
+              next={() => {
+                if (
+                  show === "active" &&
+                  hasMoreActiveManagers &&
+                  !isLoadingMoreActiveManagers
+                ) {
+                  fetchNextActiveManagers();
+                } else if (
+                  show === "suspended" &&
+                  hasMoreSuspendedManagers &&
+                  !isLoadingMoreSuspendedManagers
+                ) {
+                  fetchNextSuspendedManagers();
+                }
+              }}
+              hasMore={
+                show === "active"
+                  ? hasMoreActiveManagers
+                  : hasMoreSuspendedManagers
               }
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
+              loader={
+                <div className="flex justify-center py-4">
+                  <p>Loading more users...</p>
+                </div>
+              }
+              scrollableTarget="scrollableDiv">
+              <div className="max-h-[57vh] overflow-y-auto" id="scrollableDiv">
+                <table className="w-full text-sm text-left text-gray-500 relative">
+                  <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200">
+                    <tr>
+                      <th scope="col" className="px-2 border-r py-2">
+                        #
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-2 border-r text-[14px] normal-case py-2">
+                        Name
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Email
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        ID
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Phone
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Location
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Last login
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Status
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 text-[14px] normal-case py-2">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  {(isLoadingMoreActiveManagers &&
+                    !activeData &&
+                    show === "active") ||
+                  (isLoadingMoreSuspendedManagers &&
+                    !suspendedData &&
+                    show !== "active") ? (
+                    <p className="p-2">Fetching manager data...</p>
+                  ) : paginatedManagers.length === 0 ||
+                    paginatedManagers.filter((manager) =>
+                      show === "active"
+                        ? manager.status === "active"
+                        : manager.status !== "active"
+                    ).length === 0 ? (
+                    <tbody>
+                      <tr>
+                        <td colSpan="9" className="px-4 pt-2">
+                          <p className="text-gray-500">
+                            No {show === "active" ? "active" : "suspended"}{" "}
+                            managers found.
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  ) : (
+                    <tbody>
+                      {paginatedManagers
+                        ?.filter((manager) =>
+                          show === "active"
+                            ? manager.status === "active"
+                            : manager.status !== "active"
+                        )
+                        .map((manager, index) => (
+                          <tr
+                            key={manager.id}
+                            className="bg-white border-b hover:bg-blue-50">
+                            <td className="px-2 py-2 border-r font-medium text-gray-900">
+                              {index + 1}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {manager.name}
+                            </td>
+                            <td className="px-6 border-r py-2">
+                              {manager.email}
+                            </td>
+                            <td className="px-6 border-r py-2">{manager.ID}</td>
+                            <td className="px-6 border-r py-2">
+                              {manager.phone}
+                            </td>
+                            <td className="px-6 border-r py-2">
+                              {manager?.region?.location}
+                            </td>
+                            <td className="px-6 border-r py-2">
+                              {formatDate(new Date(manager.lastLogin))}
+                            </td>
+                            <td className="px-6 border-r py-2">
+                              {manager.status === "active" ? (
+                                <p className="text-green-500 capitalize">
+                                  {manager.status}
+                                </p>
+                              ) : (
+                                <p className="text-amber-500 capitalize">
+                                  {manager.status}
+                                </p>
+                              )}
+                            </td>
+                            <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
+                              <button
+                                onClick={() => onEditManger(manager)}
+                                aria-label={`Edit ${manager.name}`}
+                                className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
+                                Edit
+                                <BiEdit />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(manager.id)}
+                                aria-label={`Delete ${manager.name}`}
+                                className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
+                                <MdDeleteOutline />
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  )}
+                </table>
+              </div>
+            </InfiniteScroll>
           </div>
         </div>
       </div>

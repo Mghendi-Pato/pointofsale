@@ -130,6 +130,8 @@ const AdminDashboard = () => {
     );
   };
 
+  console.log(phoneSummaries);
+
   const stats = [
     {
       name: "Phones Sold",

@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../redux/reducers/ sidebar";
 
 import {
+  Autocomplete,
   FormControl,
   InputAdornment,
   InputLabel,
@@ -22,6 +23,7 @@ import {
   editPhoneDetails,
   fetchActiveManagers,
   fetchAllModels,
+  fetchAllRegions,
   fetchAllSuppliers,
 } from "../services/services";
 
@@ -38,6 +40,13 @@ const EditPhone = ({
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
   const user = useSelector((state) => state.userSlice.user.user);
+  const [selectedRegion, setSelectedRegion] = useState(phone?.regionId);
+
+  useEffect(() => {
+    if (phone?.regionId) {
+      setSelectedRegion(phone.regionId);
+    }
+  }, [phone?.regionId]);
 
   const { data: activeData } = useQuery(
     ["managers", { status: "active", limit: 1000 }],
@@ -65,6 +74,21 @@ const EditPhone = ({
       enabled: !!token,
     }
   );
+
+  const { data: regions } = useQuery(
+    ["regions", { page: 1, limit: 100 }],
+    ({ queryKey, signal }) => fetchAllRegions({ queryKey, signal, token }),
+    {
+      keepPreviousData: true,
+      enabled: !!token,
+    }
+  );
+
+  const filteredManagers = selectedRegion
+    ? activeData?.managers?.filter(
+        (manager) => manager.regionId === selectedRegion
+      )
+    : [];
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)"); // Tailwind's `md` breakpoint
@@ -379,38 +403,55 @@ const EditPhone = ({
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel id="manager-label">Manager</InputLabel>
+                <InputLabel id="region-label">Location</InputLabel>
                 <Select
-                  labelId="manager-label"
-                  id="manager"
-                  name="manager"
-                  value={formik.values.manager || ""}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.manager && Boolean(formik.errors.manager)
-                  }
-                  label="Manager"
+                  labelId="region-label"
+                  id="region"
+                  value={selectedRegion}
+                  onChange={(event) => {
+                    setSelectedRegion(event.target.value);
+                    formik.setFieldValue("manager", ""); // Reset manager when region changes
+                  }}
+                  label="Location"
                   MenuProps={{
                     PaperProps: {
-                      style: {
-                        maxHeight: 200,
-                        overflowY: "auto",
-                      },
+                      style: { maxHeight: 200, overflowY: "auto" },
                     },
                   }}>
-                  {activeData?.managers?.map((manager) => (
-                    <MenuItem key={manager.id} value={manager.id}>
-                      <p className="capitalize">{manager.name}</p>
+                  {regions?.regions?.map((region) => (
+                    <MenuItem key={region.id} value={region.id}>
+                      {region.location}
                     </MenuItem>
                   ))}
                 </Select>
-                {formik.touched.manager && formik.errors.manager && (
-                  <div style={{ color: "red", fontSize: "0.875rem" }}>
-                    {formik.errors.manager}
-                  </div>
-                )}
               </FormControl>
+
+              <Autocomplete
+                fullWidth
+                options={filteredManagers}
+                getOptionLabel={(option) => option.name}
+                value={
+                  filteredManagers.find(
+                    (m) => m.id === formik.values.manager
+                  ) || null
+                }
+                onChange={(event, newValue) => {
+                  formik.setFieldValue("manager", newValue ? newValue.id : "");
+                }}
+                onBlur={formik.handleBlur}
+                disabled={!selectedRegion}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Manager"
+                    variant="outlined"
+                    error={
+                      formik.touched.manager && Boolean(formik.errors.manager)
+                    }
+                    helperText={formik.touched.manager && formik.errors.manager}
+                  />
+                )}
+              />
 
               <TextField
                 variant="outlined"

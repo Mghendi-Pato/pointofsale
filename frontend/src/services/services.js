@@ -3,12 +3,10 @@ import axios from "axios";
 const url = import.meta.env.VITE_API_URL;
 
 // Fetch active managers
-export const fetchActiveManagers = async ({ queryKey, signal, token }) => {
-  const [, { page, limit }] = queryKey;
-
+export const fetchActiveManagers = async ({ pageParam = 1, signal, token }) => {
   try {
     const response = await axios.get(`${url}/manager/active`, {
-      params: { page, limit },
+      params: { page: pageParam, limit: 20 },
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -18,7 +16,6 @@ export const fetchActiveManagers = async ({ queryKey, signal, token }) => {
     if (!response.data || !response.data.managers) {
       throw new Error("Invalid response structure from the server.");
     }
-
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) {
@@ -29,13 +26,15 @@ export const fetchActiveManagers = async ({ queryKey, signal, token }) => {
     throw error;
   }
 };
-// Fetch suspended managers
-export const fetchSuspendedManagers = async ({ queryKey, signal, token }) => {
-  const [, { page, limit }] = queryKey;
-
+//Fetch suspended managers
+export const fetchSuspendedManagers = async ({
+  pageParam = 1,
+  signal,
+  token,
+}) => {
   try {
     const response = await axios.get(`${url}/manager/suspended`, {
-      params: { page, limit },
+      params: { page: pageParam, limit: 20 },
       headers: {
         Authorization: `Bearer ${token}`,
       },

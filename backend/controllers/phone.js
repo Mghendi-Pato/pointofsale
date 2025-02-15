@@ -707,6 +707,7 @@ exports.getSalesComparison = async (req, res) => {
     const soldThisMonth = soldPhones.filter(
       (phone) => phone.saleDate >= firstDayOfThisMonth
     );
+
     const soldLastMonth = soldPhones.filter(
       (phone) =>
         phone.saleDate >= firstDayOfLastMonth &&
@@ -715,13 +716,17 @@ exports.getSalesComparison = async (req, res) => {
 
     const calculateTotalsAndPercentage = (thisMonthPhones, lastMonthPhones) => {
       const totalIncomeThisMonth = thisMonthPhones.reduce(
-        (sum, phone) => sum + (phone.sellingPrice || 0),
+        (sum, phone) =>
+          sum + ((phone.sellingPrice || 0) - (phone.buyingPrice || 0)),
         0
       );
+
       const totalIncomeLastMonth = lastMonthPhones.reduce(
-        (sum, phone) => sum + (phone.sellingPrice || 0),
+        (sum, phone) =>
+          sum + ((phone.sellingPrice || 0) - (phone.buyingPrice || 0)),
         0
       );
+
       const totalCommissionThisMonth = thisMonthPhones.reduce(
         (sum, phone) => sum + (phone.agentCommission || 0),
         0
