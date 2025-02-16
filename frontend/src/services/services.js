@@ -31,10 +31,11 @@ export const fetchSuspendedManagers = async ({
   pageParam = 1,
   signal,
   token,
+  limit = 1000,
 }) => {
   try {
     const response = await axios.get(`${url}/manager/suspended`, {
-      params: { page: pageParam, limit: 20 },
+      params: { page: pageParam, limit },
       headers: {
         Authorization: `Bearer ${token}`,
       },

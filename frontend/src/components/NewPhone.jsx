@@ -46,6 +46,8 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
     }
   );
 
+  console.log(activeData);
+
   const { data: regions } = useQuery(
     ["regions", { page: 1, limit: 100 }],
     ({ queryKey, signal }) => fetchAllRegions({ queryKey, signal, token }),
@@ -193,13 +195,15 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
     }
   };
 
+  console.log(selectedRegion);
+
   return (
     <AnimatePresence>
       {showAddPhone && (
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
-          className="absolute bottom-0 md:top-0 right-0 w-full h-[85%] md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center p-2 max-h-screen">
+          className="absolute bottom-0 md:top-0 right-0 w-full h-[87%] md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center p-2 max-h-screen">
           <div className=" w-full  md:hidden relative">
             <div className="absolute -top-10 right-2 p-1">
               <CiSaveDown2

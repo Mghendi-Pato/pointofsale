@@ -198,7 +198,7 @@ const EditProfile = ({
           </div>
           <div className="w-full">
             <div className="w-full text-center text-lg py-2">
-              <p className="font-roboto font-bold">Edit phone</p>
+              <p className="font-roboto font-bold">Edit Profile</p>
             </div>
             <form
               onSubmit={formik.handleSubmit}
