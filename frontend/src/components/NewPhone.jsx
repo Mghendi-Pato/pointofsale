@@ -46,8 +46,6 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
     }
   );
 
-  console.log(activeData);
-
   const { data: regions } = useQuery(
     ["regions", { page: 1, limit: 100 }],
     ({ queryKey, signal }) => fetchAllRegions({ queryKey, signal, token }),
@@ -168,6 +166,7 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
 
     validationSchema,
     onSubmit: (values) => {
+      console.log(values);
       const phoneData = { ...values, make: "samsung" };
       registerPhoneMutation.mutate({ token, phoneData });
     },
@@ -194,8 +193,6 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
       dispatch(setSidebar(true));
     }
   };
-
-  console.log(selectedRegion);
 
   return (
     <AnimatePresence>

@@ -15,11 +15,12 @@ exports.registerPhone = async (req, res) => {
       return res.status(403).send("Access Denied");
     }
 
+    console.log(req.body);
     // Destructure the incoming data
     const {
       imei,
       modelId,
-      purchasePrice: purchasePrice,
+      buyingPrice: purchasePrice,
       supplyDate: buyDate,
       supplier: supplierId,
       manager: managerId,
