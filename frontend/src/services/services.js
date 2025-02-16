@@ -3,10 +3,15 @@ import axios from "axios";
 const url = import.meta.env.VITE_API_URL;
 
 // Fetch active managers
-export const fetchActiveManagers = async ({ pageParam = 1, signal, token }) => {
+export const fetchActiveManagers = async ({
+  pageParam = 1,
+  signal,
+  token,
+  limit = 1000,
+}) => {
   try {
     const response = await axios.get(`${url}/manager/active`, {
-      params: { page: pageParam, limit: 20 },
+      params: { page: pageParam, limit },
       headers: {
         Authorization: `Bearer ${token}`,
       },
