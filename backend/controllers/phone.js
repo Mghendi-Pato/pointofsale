@@ -784,9 +784,9 @@ exports.getSalesComparison = async (req, res) => {
       }
     });
 
-    const topManagers = Object.entries(managerIncomeMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
+    const topManagers = Object.entries(managerIncomeMap).sort(
+      (a, b) => b[1] - a[1]
+    );
 
     const managerIds = topManagers.map(([managerId]) => managerId);
     const managers = await User.findAll({

@@ -7,7 +7,7 @@ export const fetchActiveManagers = async ({
   pageParam = 1,
   signal,
   token,
-  limit = 1000,
+  limit = 500,
 }) => {
   try {
     const response = await axios.get(`${url}/manager/active`, {

@@ -45,7 +45,7 @@ const AdminInventory = () => {
     ["phones", { status: "active" }],
     ({ pageParam = 1 }) =>
       fetchActivePhones({
-        queryKey: ["phones", { page: pageParam, limit: 20 }],
+        queryKey: ["phones", { page: pageParam, limit: 500 }],
         token,
       }),
     {
