@@ -235,38 +235,40 @@ const AdminDashboard = () => {
       </div>
       <div className="w-full md:w-[400px] lg:w-[500px] space-y-2 md:space-y-3">
         <div className="bg-white shadow-sm rounded-md border p-5">
-          <p className="font-bold text-lg mb-5">Overall Top Managers</p>
-          {phoneSummaries?.topManagers
-            .sort((a, b) => b.totalIncome - a.totalIncome)
-            .map((manager, index) => {
-              const salesPercentage =
-                (manager.totalIncome / highestSales) * 100;
-              return (
-                <div
-                  key={index}
-                  className="group flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer relative">
-                  <RxAvatar size={30} className="text-gray-700" />
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center">
-                      <p className="text-gray-800 text-sm font-medium capitalize">
-                        {manager.name}
-                      </p>
-                      <p className="text-gray-600">
-                        ksh {manager.totalIncome?.toLocaleString()}
-                      </p>
+          <p className="font-bold text-lg mb-5">Overall Managers' Perfomance</p>
+          <div className="max-h-64 overflow-y-auto">
+            {phoneSummaries?.topManagers
+              .sort((a, b) => b.totalIncome - a.totalIncome)
+              .map((manager, index) => {
+                const salesPercentage =
+                  (manager.totalIncome / highestSales) * 100;
+                return (
+                  <div
+                    key={index}
+                    className="group flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer relative">
+                    <RxAvatar size={30} className="text-gray-700" />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
+                        <p className="text-gray-800 text-sm font-medium capitalize">
+                          {manager.name}
+                        </p>
+                        <p className="text-gray-600">
+                          ksh {manager.totalIncome?.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="h-2 bg-amber-300 rounded-md w-full mt-1">
+                        <div
+                          className="h-full bg-green-500 rounded-md transition-all duration-500"
+                          style={{ width: `${salesPercentage}%` }}></div>
+                      </div>
                     </div>
-                    <div className="h-2 bg-amber-300 rounded-md w-full mt-1">
-                      <div
-                        className="h-full bg-green-500 rounded-md transition-all duration-500"
-                        style={{ width: `${salesPercentage}%` }}></div>
+                    <div className="absolute -top-8 right-0 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {manager.region} region
                     </div>
                   </div>
-                  <div className="absolute -top-8 right-0 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {manager.region} region
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+          </div>
         </div>
 
         <div className="bg-white shadow-sm rounded-md border flex flex-col items-center">
