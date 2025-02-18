@@ -48,7 +48,12 @@ const PhoneCheckout = ({
   const receiptRef = useRef(null);
   const user = useSelector((state) => state.userSlice.user.user);
   const [sellingPhoneLoading, setSellingPhoneLoading] = useState(false);
-  const formattedDate = new Date().toLocaleDateString("en-GB").slice(0, 8);
+  const date = new Date();
+  const formattedDate = `${date.getDate().toString().padStart(2, "0")}/${(
+    date.getMonth() + 1
+  )
+    .toString()
+    .padStart(2, "0")}/${date.getFullYear().toString().slice(-2)}`;
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
