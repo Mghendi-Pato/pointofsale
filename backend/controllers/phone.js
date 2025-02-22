@@ -1130,7 +1130,7 @@ exports.getActivePhonesByRegion = async (req, res) => {
 
     // Transform result into required format and ensure phone count is a number
     const result = activePhonesByRegion.map((region) => ({
-      region: region.name,
+      region: region.location,
       phones: Number(region.phoneCount) || 0, // Convert to number
     }));
 
