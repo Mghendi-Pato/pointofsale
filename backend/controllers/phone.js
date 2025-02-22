@@ -1106,7 +1106,7 @@ exports.getActivePhonesByRegion = async (req, res) => {
   try {
     const activePhonesByRegion = await Location.findAll({
       attributes: [
-        "name",
+        "location",
         [Sequelize.fn("COUNT", Sequelize.col("users.phones.id")), "phoneCount"],
       ],
       include: [
