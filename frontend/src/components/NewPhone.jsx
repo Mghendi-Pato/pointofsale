@@ -91,6 +91,21 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
     };
   }, []);
 
+  const formatNumber = (value) => {
+    if (!value) return "";
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Format with commas
+  };
+
+  const handlePriceChange = (fieldName) => (event) => {
+    let rawValue = event.target.value.replace(/,/g, ""); // Remove commas
+    if (!/^\d*$/.test(rawValue)) return; // Ensure it's numeric
+
+    formik.setFieldValue(fieldName, rawValue); // Store only numeric value
+  };
+
+  // Format value for display
+  const getFormattedValue = (value) => (value ? formatNumber(value) : "");
+
   const useRegisterPhone = () => {
     return useMutation(
       ({ phoneData, token }) => registerNewPhone(phoneData, token),
@@ -280,7 +295,6 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                       </div>
                     )}
                   </FormControl>
-
                   <TextField
                     variant="outlined"
                     fullWidth
@@ -308,7 +322,6 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                       "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
                     }}
                   />
-
                   <FormControl fullWidth variant="outlined">
                     <InputLabel id="supplier-label">Supplier</InputLabel>
                     <Select
@@ -343,7 +356,6 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                       </div>
                     )}
                   </FormControl>
-
                   <FormControl fullWidth variant="outlined">
                     <InputLabel id="region-label">Location</InputLabel>
                     <Select
@@ -367,7 +379,6 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                       ))}
                     </Select>
                   </FormControl>
-
                   <Autocomplete
                     fullWidth
                     options={filteredManagers}
@@ -406,8 +417,8 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                     id="buyingPrice"
                     name="buyingPrice"
                     label="Buying Price"
-                    value={formik.values.buyingPrice}
-                    onChange={formik.handleChange}
+                    value={getFormattedValue(formik.values.buyingPrice)}
+                    onChange={handlePriceChange("buyingPrice")}
                     onBlur={formik.handleBlur}
                     error={
                       formik.touched.buyingPrice &&
@@ -418,15 +429,9 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                     }
                     sx={{
                       "& .MuiOutlinedInput-root": {
-                        "& fieldset": {
-                          borderColor: "#ccc",
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "#2FC3D2",
-                        },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#2FC3D2",
-                        },
+                        "& fieldset": { borderColor: "#ccc" },
+                        "&:hover fieldset": { borderColor: "#2FC3D2" },
+                        "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
                       },
                       "& .MuiInputBase-input": { color: "#000" },
                       "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
@@ -444,8 +449,8 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                     id="sellingPrice"
                     name="sellingPrice"
                     label="Selling Price"
-                    value={formik.values.sellingPrice}
-                    onChange={formik.handleChange}
+                    value={getFormattedValue(formik.values.sellingPrice)}
+                    onChange={handlePriceChange("sellingPrice")}
                     onBlur={formik.handleBlur}
                     error={
                       formik.touched.sellingPrice &&
@@ -469,7 +474,6 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                       ),
                     }}
                   />
-
                   <TextField
                     variant="outlined"
                     type="number"
@@ -501,7 +505,6 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                       ),
                     }}
                   />
-
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <div className="w-full">
                       <DatePicker

@@ -190,6 +190,8 @@ const AdminSales = () => {
     }
   }, [company, startDate, endDate, refetch, isQueryEnabled, show]);
 
+  console.log(phonesData);
+
   const filteredPhones = useMemo(() => {
     const dataToFilter = phonesData;
     return dataToFilter?.filter((phone) =>
@@ -428,6 +430,11 @@ const AdminSales = () => {
                     )}
                     <th
                       scope="col"
+                      className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
+                      Date Recived
+                    </th>
+                    <th
+                      scope="col"
                       className="px-2 border-r text-[14px] normal-case py-2">
                       Manger
                     </th>
@@ -540,6 +547,9 @@ const AdminSales = () => {
                             </td>
                           )}
                           <td className="px-2 border-r py-2 capitalize">
+                            {formatDate(new Date(phone.createdAt))}
+                          </td>
+                          <td className="px-2 border-r py-2 capitalize">
                             {phone.managerName}
                           </td>
                           <td className="px-6 border-r py-2 capitalize">
@@ -617,11 +627,11 @@ const AdminSales = () => {
                         colSpan={
                           company === "combined"
                             ? show === "reconcile"
-                              ? 9
-                              : 7
+                              ? 10
+                              : 8
                             : show === "reconcile"
-                            ? 8
-                            : 6
+                            ? 9
+                            : 7
                         }>
                         Totals
                       </td>

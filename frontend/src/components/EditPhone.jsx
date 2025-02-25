@@ -256,6 +256,22 @@ const EditPhone = ({
   const declareLostPhone = (phoneId) => {
     declareLostMutation.mutate({ phoneId, token });
   };
+
+  const formatNumber = (value) => {
+    if (!value) return "";
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Format with commas
+  };
+
+  const handlePriceChange = (fieldName) => (event) => {
+    let rawValue = event.target.value.replace(/,/g, ""); // Remove commas
+    if (!/^\d*$/.test(rawValue)) return; // Ensure it's numeric
+
+    formik.setFieldValue(fieldName, rawValue); // Store only numeric value
+  };
+
+  // Format value for display
+  const getFormattedValue = (value) => (value ? formatNumber(value) : "");
+
   return (
     <AnimatePresence>
       {showEditPhoneModal && (
@@ -459,8 +475,8 @@ const EditPhone = ({
                 id="buyingPrice"
                 name="buyingPrice"
                 label="Buying Price"
-                value={formik.values.buyingPrice}
-                onChange={formik.handleChange}
+                value={getFormattedValue(formik.values.buyingPrice)}
+                onChange={handlePriceChange("buyingPrice")}
                 onBlur={formik.handleBlur}
                 error={
                   formik.touched.buyingPrice &&
@@ -497,8 +513,8 @@ const EditPhone = ({
                 id="sellingPrice"
                 name="sellingPrice"
                 label="Selling Price"
-                value={formik.values.sellingPrice}
-                onChange={formik.handleChange}
+                value={getFormattedValue(formik.values.sellingPrice)}
+                onChange={handlePriceChange("sellingPrice")}
                 onBlur={formik.handleBlur}
                 error={
                   formik.touched.sellingPrice &&
