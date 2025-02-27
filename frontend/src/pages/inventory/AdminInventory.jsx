@@ -57,6 +57,8 @@ const AdminInventory = () => {
     }
   );
 
+  console.log(activePhonesData);
+
   const {
     data: lostPhonesData,
     fetchNextPage: fetchNextLostPhones,
@@ -120,7 +122,7 @@ const AdminInventory = () => {
         .filter(Boolean)
         .every((part) =>
           [
-            phone?.model?.toLowerCase(),
+            phone?.modelName?.toLowerCase(),
             phone?.imei,
             phone?.supplierName?.toLowerCase(),
             phone?.managerName?.toLowerCase(),
