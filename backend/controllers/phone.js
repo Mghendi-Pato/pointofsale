@@ -15,22 +15,22 @@ exports.registerPhone = async (req, res) => {
       return res.status(403).send("Access Denied");
     }
 
-    console.log(req.body);
-    // Destructure the incoming data
+    // Destructure incoming data
     const {
-      imei,
+      imeis, // Now an array of IMEIs
       modelId,
       buyingPrice: purchasePrice,
       supplyDate: buyDate,
       supplier: supplierId,
       manager: managerId,
-      capacity: capacity,
-      sellingPrice: sellingPrice,
+      capacity,
+      sellingPrice,
     } = req.body;
 
     // Check if all required fields are provided
     if (
-      !imei ||
+      !imeis ||
+      imeis.length === 0 ||
       !modelId ||
       !purchasePrice ||
       !buyDate ||
@@ -57,34 +57,51 @@ exports.registerPhone = async (req, res) => {
     }
 
     // Check if the modelId corresponds to a valid phone model
-    const phoneModel = await PhoneModel.findByPk(modelId); // Added check for modelId
+    const phoneModel = await PhoneModel.findByPk(modelId);
     if (!phoneModel) {
       return res.status(404).json({ message: "Phone model not found." });
     }
 
-    // Check if the phone with the same IMEI already exists
-    const existingPhone = await Phone.findOne({ where: { imei } });
-    if (existingPhone) {
-      return res
-        .status(400)
-        .json({ message: "Phone with this IMEI already exists." });
+    let failedIMEIs = [];
+    let successfulPhones = [];
+
+    // Get today's date
+    const today = new Date();
+
+    // Loop through each IMEI
+    for (let imei of imeis) {
+      const existingPhone = await Phone.findOne({ where: { imei } });
+
+      if (existingPhone) {
+        failedIMEIs.push(imei); // Store failed IMEIs
+      } else {
+        const newPhone = await Phone.create({
+          imei,
+          modelId,
+          purchasePrice,
+          buyDate,
+          supplierId,
+          managerId,
+          capacity,
+          sellingPrice,
+          dateAssigned: today, // ✅ Assign today's date
+        });
+        successfulPhones.push(newPhone);
+      }
     }
 
-    // Create the phone
-    const newPhone = await Phone.create({
-      imei,
-      modelId,
-      purchasePrice,
-      buyDate,
-      supplierId,
-      managerId,
-      capacity,
-      sellingPrice,
-    });
+    // If some IMEIs failed, return an explicit error message with the failed IMEIs
+    if (failedIMEIs.length > 0) {
+      return res.status(400).json({
+        message: `Phones with IMEIs ${failedIMEIs.join(", ")} already exist.`,
+        failedIMEIs,
+        successfulPhones,
+      });
+    }
 
     return res.status(201).json({
-      message: "Phone registered successfully.",
-      phone: newPhone,
+      message: "All phones registered successfully.",
+      phones: successfulPhones,
     });
   } catch (error) {
     console.error("Error registering phone:", error);
@@ -111,9 +128,9 @@ exports.editPhone = async (req, res) => {
       purchasePrice,
       supplyDate: buyDate,
       supplier: supplierId,
-      managerId: managerId,
-      capacity: capacity,
-      sellingPrice: sellingPrice,
+      managerId: newManagerId,
+      capacity,
+      sellingPrice,
     } = req.body;
 
     // Check if the phone exists
@@ -122,18 +139,32 @@ exports.editPhone = async (req, res) => {
       return res.status(404).json({ message: "Phone not found." });
     }
 
+    let updateData = {
+      imei: imei || phone.imei,
+      modelId: model || phone.modelId,
+      purchasePrice: purchasePrice || phone.purchasePrice,
+      buyDate: buyDate || phone.buyDate,
+      supplierId: supplierId || phone.supplierId,
+      managerId: newManagerId || phone.managerId,
+      capacity: capacity || phone.capacity,
+      sellingPrice: sellingPrice || phone.sellingPrice,
+    };
+
     // Check if a manager is being updated and verify the manager exists
-    if (managerId) {
+    if (newManagerId && newManagerId !== phone.managerId) {
       const manager = await User.findOne({
-        where: { id: managerId, role: "manager" },
+        where: { id: newManagerId, role: "manager" },
       });
       if (!manager) {
         return res.status(404).json({ message: "Manager not found." });
       }
+
+      // ✅ If manager is changed, update `dateAssigned` to today
+      updateData.dateAssigned = new Date();
     }
 
     // Check if a supplier is being updated and verify the supplier exists
-    if (supplierId) {
+    if (supplierId && supplierId !== phone.supplierId) {
       const supplier = await Supplier.findByPk(supplierId);
       if (!supplier) {
         return res.status(404).json({ message: "Supplier not found." });
@@ -151,24 +182,15 @@ exports.editPhone = async (req, res) => {
     }
 
     // Check if the modelId exists
-    if (model) {
-      const phoneModel = await PhoneModel.findByPk(model); // Check if modelId exists
+    if (model && model !== phone.modelId) {
+      const phoneModel = await PhoneModel.findByPk(model);
       if (!phoneModel) {
         return res.status(404).json({ message: "Phone model not found." });
       }
     }
 
-    // Update the phone
-    await phone.update({
-      imei: imei || phone.imei,
-      modelId: model || phone.modelId,
-      purchasePrice: purchasePrice || phone.purchasePrice,
-      buyDate: buyDate || phone.buyDate,
-      supplierId: supplierId || phone.supplierId,
-      managerId: managerId || phone.managerId,
-      capacity: capacity || phone.capacity,
-      sellingPrice: sellingPrice || phone.sellingPrice,
-    });
+    // ✅ Update the phone with new data
+    await phone.update(updateData);
 
     return res.status(200).json({
       message: "Phone updated successfully.",

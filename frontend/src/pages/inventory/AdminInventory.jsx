@@ -57,8 +57,6 @@ const AdminInventory = () => {
     }
   );
 
-  console.log(activePhonesData);
-
   const {
     data: lostPhonesData,
     fetchNextPage: fetchNextLostPhones,
@@ -298,6 +296,9 @@ const AdminInventory = () => {
                       <th scope="col" className="px-2 border-r py-2">
                         #
                       </th>
+                      <th scope="col" className="px-2 border-r py-2">
+                        *
+                      </th>
                       <th
                         scope="col"
                         className="px-2 border-r text-[14px] normal-case py-2">
@@ -405,6 +406,11 @@ const AdminInventory = () => {
                             }`}>
                             <td className="px-2 py-2 border-r font-medium text-gray-900">
                               {index + 1}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {calculateDaysFromDate(
+                                phone?.dateAssigned || phone?.createdAt
+                              )}
                             </td>
                             <td className="px-2 border-r py-2 capitalize">
                               {phone?.modelName}

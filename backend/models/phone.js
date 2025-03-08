@@ -73,6 +73,7 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: "CASCADE",
         onDelete: "SET NULL",
       },
+      dateAssigned: { type: DataTypes.DATE, allowNull: true },
     },
     {
       sequelize,

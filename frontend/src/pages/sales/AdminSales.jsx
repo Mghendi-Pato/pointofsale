@@ -431,7 +431,7 @@ const AdminSales = () => {
                     <th
                       scope="col"
                       className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
-                      Date Recived
+                      Sale Date
                     </th>
                     <th
                       scope="col"
@@ -547,7 +547,7 @@ const AdminSales = () => {
                             </td>
                           )}
                           <td className="px-2 border-r py-2 capitalize">
-                            {formatDate(new Date(phone.createdAt))}
+                            {formatDate(new Date(phone.saleDate))}
                           </td>
                           <td className="px-2 border-r py-2 capitalize">
                             {phone.managerName}
