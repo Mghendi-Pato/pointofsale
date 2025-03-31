@@ -525,6 +525,32 @@ export const fetchSoldPhones = async ({
     throw error;
   }
 };
+//Fetch customer information
+export const fetchCustomerInformation = async ({
+  company,
+  startDate,
+  endDate,
+  token,
+  status,
+}) => {
+  try {
+    const response = await axios.get(`${url}/phone/customers/`, {
+      params: { company, startDate, endDate, status },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.data || !response.data.phones) {
+      throw new Error("Invalid response structure from the server.");
+    }
+
+    return response.data.phones;
+  } catch (error) {
+    console.error("Error fetching sold phones:", error.message);
+    throw error;
+  }
+};
 //Fetch summaries
 export const fetchPhoneSummaries = async ({ token }) => {
   try {

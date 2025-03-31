@@ -184,6 +184,12 @@ const PhoneDetails = () => {
                   </p>
                 </div>
               </div>
+              <div className="flex flex-col md:flex-row justify-between gap-4">
+                <div className="flex-1">
+                  <p className="text-neutral-400">Status</p>
+                  <p className=" font-medium capitalize">{phone?.status}</p>
+                </div>
+              </div>
             </div>
           </div>
         )}

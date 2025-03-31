@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import LogoutUser from "./LogoutUser";
 import { MdAttachMoney } from "react-icons/md";
 import { GiReceiveMoney } from "react-icons/gi";
+import { LiaPeopleCarrySolid } from "react-icons/lia";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -66,14 +67,18 @@ const Sidebar = () => {
       privileges: ["super admin", "admin", "manager"],
       route: "/inventory",
     },
-
     {
       area: "Sales",
       Icon: <GiReceiveMoney size={20} className="mx-4" />,
       privileges: ["super admin", "admin", "manager"],
       route: "/sales",
     },
-
+    {
+      area: "Customers",
+      Icon: <LiaPeopleCarrySolid size={20} className="mx-4" />,
+      privileges: ["super admin", "admin"],
+      route: "/customers",
+    },
     {
       area: "Regions",
       Icon: <BsPinMap size={20} className="mx-4" />,

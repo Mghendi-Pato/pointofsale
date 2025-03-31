@@ -18,6 +18,10 @@ import PhoneCheckout from "../../components/PhoneCheckout";
 import { MdDeleteOutline, MdSettingsBackupRestore } from "react-icons/md";
 import { toast } from "react-toastify";
 import DeleteConfirmationModal from "../../components/DeleteModal";
+import { HiOutlineDownload } from "react-icons/hi";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import dayjs from "dayjs";
 
 const AdminInventory = () => {
   const dispatch = useDispatch();
@@ -195,6 +199,49 @@ const AdminInventory = () => {
     setShowDeleteModal(false);
   };
 
+  // Function to generate and download Excel file
+  const handleDownload = () => {
+    if (!filteredPhones?.length) return; // Exit if no data is available
+
+    // Add a totals row at the end of the data
+    const dataWithTotal = [
+      ...filteredPhones.map((phone, index) => {
+        const row = {
+          "#": index + 1,
+          Model: phone?.modelName,
+          IMEI: phone?.imei,
+          Capacity: phone?.capacity,
+          Supplier: phone?.supplierName,
+          RAM: phone?.ram,
+          "Buying Price": phone?.purchasePrice,
+          "Selling Price": phone?.sellingPrice,
+          Location: phone?.managerLocation,
+          Manager: phone?.managerName,
+        };
+        return row;
+      }),
+    ];
+
+    // Convert JSON data to a worksheet for Excel
+    const worksheet = XLSX.utils.json_to_sheet(dataWithTotal);
+
+    // Create a new workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sales Data");
+
+    // Convert workbook to binary and create a downloadable Excel file
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const data = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    // Trigger download
+    saveAs(data, `Sales_Report_${dayjs().format("YYYY-MM-DD")}.xlsx`);
+  };
+
   return (
     <div className="p-5">
       <div className="space-y-2">
@@ -223,13 +270,26 @@ const AdminInventory = () => {
               className={`flex flex-col ${
                 user.role === "manager" ? "md:flex-row" : "md:flex-row-reverse"
               } justify-between space-y-5 md:space-y-0`}>
-              <button
-                className={`p-2 bg-primary-500 hover:scale-105 ${
-                  user.role === "manager" ? "hidden" : "flex"
-                } flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-300 ease-in-out`}
-                onClick={() => setShowAddPhone(!showAddPhone)}>
-                Add inventory
-              </button>
+              <div className="flex flex-row space-x-5">
+                <button
+                  className={`p-2 bg-primary-500 hover:scale-105 ${
+                    user.role === "manager" ? "hidden" : "flex"
+                  } flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-300 ease-in-out`}
+                  onClick={() => setShowAddPhone(!showAddPhone)}>
+                  Add inventory
+                </button>
+
+                {user.role !== "manager" && (
+                  <div
+                    className="p-2 hover:bg-neutral-200 rounded-full cursor-pointer transition-all duration-300 ease-in-out"
+                    onClick={handleDownload}>
+                    <HiOutlineDownload
+                      size={25}
+                      className="text-gray-500 hover:text-gray-700 transition-all duration-300 ease-in-out"
+                    />
+                  </div>
+                )}
+              </div>
 
               <div className="flex flex-col md:flex-row space-y-5 md:space-y-0 md:space-x-5">
                 <div className="flex flex-row justify-between items-center space-x-2 md:space-x-5">
@@ -395,12 +455,16 @@ const AdminInventory = () => {
                           <tr
                             key={phone?.id}
                             className={`bg-white border-b hover:bg-blue-50 border-l-4 ${
-                              calculateDaysFromDate(phone.createdAt) < 5 &&
-                              phone?.status !== "lost"
+                              calculateDaysFromDate(
+                                phone?.dateAssigned || phone.createdAt
+                              ) < 5 && phone?.status !== "lost"
                                 ? "border-l-green-500"
-                                : calculateDaysFromDate(phone?.createdAt) >=
-                                    5 &&
-                                  calculateDaysFromDate(phone?.createdAt) < 7
+                                : calculateDaysFromDate(
+                                    phone?.dateAssigned || phone?.createdAt
+                                  ) >= 5 &&
+                                  calculateDaysFromDate(
+                                    phone?.dateAssigned || phone?.createdAt
+                                  ) < 7
                                 ? "border-l-amber-500"
                                 : "border-l-red-500"
                             }`}>

@@ -44,6 +44,7 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
     buyingPrice: "",
     sellingPrice: "",
     capacity: "",
+    RAM: "",
     supplyDate: dayjs().format("YYYY-MM-DD"),
   });
 
@@ -153,7 +154,6 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
 
   const validationSchema = yup.object({
     modelId: yup.string("Enter the phone model").required("Model is required"),
-
     supplier: yup
       .number("Supplier must be a valid ID")
       .nullable()
@@ -171,9 +171,13 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
       .positive("Selling price must be a positive number")
       .required("Selling price is required"),
     capacity: yup
-      .number("Enter the phone capacity")
+      .number("Enter the phone storage capacity")
       .positive("Capacity must be a positive number")
       .required("Capacity is required"),
+    RAM: yup
+      .number("Enter the phone RAM")
+      .positive("RAM must be a positive number")
+      .required("RAM is required"),
     supplyDate: yup
       .date("Enter the supply date")
       .max(new Date(), "Supply date cannot be later than today")
@@ -513,6 +517,35 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                       helperText={
                         formik.touched.capacity && formik.errors.capacity
                       }
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": { borderColor: "#ccc" },
+                          "&:hover fieldset": { borderColor: "#2FC3D2" },
+                          "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
+                        },
+                        "& .MuiInputBase-input": { color: "#000" },
+                        "& .MuiInputLabel-root.Mui-focused": {
+                          color: "#2FC3D2",
+                        },
+                      }}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">GB</InputAdornment>
+                        ),
+                      }}
+                    />
+                    <TextField
+                      variant="outlined"
+                      type="number"
+                      fullWidth
+                      id="RAM"
+                      name="RAM"
+                      label="RAM"
+                      value={formik.values.RAM}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={formik.touched.RAM && Boolean(formik.errors.RAM)}
+                      helperText={formik.touched.RAM && formik.errors.RAM}
                       sx={{
                         "& .MuiOutlinedInput-root": {
                           "& fieldset": { borderColor: "#ccc" },

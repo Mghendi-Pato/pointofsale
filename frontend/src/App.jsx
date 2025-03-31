@@ -17,6 +17,7 @@ import Profile from "./pages/profile/Profile";
 import Regions from "./pages/regions/Regions";
 import Commissions from "./pages/Commissions";
 import PhoneDetails from "./pages/PhoneDetails";
+import Customers from "./pages/customers/Customers";
 
 const App = () => {
   return (
@@ -100,6 +101,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customers"
+          element={
+            <ProtectedRoute>
+              <Customers />
             </ProtectedRoute>
           }
         />

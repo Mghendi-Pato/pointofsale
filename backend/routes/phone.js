@@ -15,6 +15,7 @@ const {
   getActivePhonesByRegion,
   revertSale,
   deletePhone,
+  getCustomerInformation,
 } = require("../controllers/phone");
 const { verifyToken } = require("../middleware/auth");
 
@@ -29,6 +30,7 @@ router.get("/lost", verifyToken, getLostPhones);
 router.post("/sell", verifyToken, sellPhone);
 router.put("/revert-sale", verifyToken, revertSale);
 router.get("/sold", verifyToken, getSoldPhones);
+router.get("/customers", verifyToken, getCustomerInformation);
 router.get("/dashboard", verifyToken, getSalesComparison);
 router.get("/search/:imei", searchPhonesByIMEI);
 router.get("/reconciled", verifyToken, getReconciledPhones);

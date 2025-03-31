@@ -117,6 +117,8 @@ const PhoneCheckout = ({
 
   const sellPhoneMutation = useSellPhone();
 
+  console.log(phone);
+
   const onCheckout = () => {
     const updatedCustomerDetails = {
       ...customerDetails,
@@ -660,6 +662,9 @@ const PhoneCheckout = ({
                       </p>
                       <p className="font-semibold text-sm text-neutral-700">
                         Capacity: {phone?.capacity} GB
+                      </p>
+                      <p className="font-semibold text-sm text-neutral-700">
+                        RAM: {phone?.ram} GB
                       </p>
                       <p className="font-semibold text-sm text-neutral-700">
                         IMEI: {phone?.imei}

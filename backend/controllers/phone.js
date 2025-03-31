@@ -17,7 +17,7 @@ exports.registerPhone = async (req, res) => {
 
     // Destructure incoming data
     const {
-      imeis, // Now an array of IMEIs
+      imeis,
       modelId,
       buyingPrice: purchasePrice,
       supplyDate: buyDate,
@@ -25,6 +25,7 @@ exports.registerPhone = async (req, res) => {
       manager: managerId,
       capacity,
       sellingPrice,
+      RAM: ram,
     } = req.body;
 
     // Check if all required fields are provided
@@ -37,7 +38,8 @@ exports.registerPhone = async (req, res) => {
       !supplierId ||
       !managerId ||
       !capacity ||
-      !sellingPrice
+      !sellingPrice ||
+      !ram
     ) {
       return res.status(400).json({ message: "All fields are required." });
     }
@@ -62,6 +64,9 @@ exports.registerPhone = async (req, res) => {
       return res.status(404).json({ message: "Phone model not found." });
     }
 
+    // Update the phone model to store the RAM value
+    await phoneModel.update({ ram });
+
     let failedIMEIs = [];
     let successfulPhones = [];
 
@@ -83,6 +88,7 @@ exports.registerPhone = async (req, res) => {
           supplierId,
           managerId,
           capacity,
+          ram,
           sellingPrice,
           dateAssigned: today, // ✅ Assign today's date
         });
@@ -148,6 +154,7 @@ exports.editPhone = async (req, res) => {
       managerId: newManagerId || phone.managerId,
       capacity: capacity || phone.capacity,
       sellingPrice: sellingPrice || phone.sellingPrice,
+      dateAssigned: phone.dateAssigned,
     };
 
     // Check if a manager is being updated and verify the manager exists
@@ -256,7 +263,9 @@ const fetchPhones = async (status, page, limit, user) => {
       phoneModel,
       createdAt,
       capacity,
+      ram,
       sellingPrice,
+      dateAssigned,
     } = phone.toJSON();
 
     const supplierName = supplier ? supplier.name : "No supplier assigned";
@@ -299,9 +308,11 @@ const fetchPhones = async (status, page, limit, user) => {
       managerId,
       supplierId,
       capacity,
+      ram,
       regionId,
       sellingPrice,
       managerCommission,
+      dateAssigned,
     };
   });
 
@@ -663,6 +674,189 @@ exports.getSoldPhones = async (req, res) => {
 
     // Pass req.user for role-based filtering
     const { count, phones } = await fetchSoldPhones(
+      status,
+      company,
+      startDate,
+      endDate,
+      req.user
+    );
+
+    if (!status) {
+      return res.status(400).json({ error: "Status is required." });
+    }
+
+    if (phones.length === 0) {
+      return res.status(200).json({
+        message: "No sold phones found.",
+        phones: [],
+        total: 0,
+      });
+    }
+
+    res.status(200).json({
+      message: "Sold phones fetched successfully.",
+      phones,
+      total: count,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+//Fetch customer Information
+const fetchCustommerInformation = async (
+  status,
+  company,
+  startDate,
+  endDate,
+  user
+) => {
+  const whereClause = {
+    ...(status && { status }),
+    ...(user.role === "manager" && { managerId: user.id }),
+    ...(company !== "combined" && { company }),
+  };
+
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    whereClause.saleDate = {
+      [Op.between]: [start, end],
+    };
+  }
+
+  const { count, rows: phones } = await Phone.findAndCountAll({
+    where: whereClause,
+    include: [
+      {
+        model: Supplier,
+        as: "supplier",
+        attributes: ["name", "id"],
+        paranoid: false,
+      },
+      {
+        model: User,
+        as: "manager",
+        attributes: ["firstName", "lastName", "regionId", "id"],
+        include: [
+          {
+            model: Location,
+            as: "region",
+            attributes: ["name", "location", "id"],
+          },
+        ],
+        paranoid: false,
+      },
+      {
+        model: Customer,
+        as: "customer",
+        attributes: [
+          "firstName",
+          "lastName",
+          "middleName",
+          "phoneNumber",
+          "ID",
+          "nkFirstName",
+          "nkLastName",
+          "nkPhone",
+        ],
+      },
+      {
+        model: PhoneModel,
+        as: "phoneModel",
+        attributes: ["model", "make", "id"],
+        paranoid: false,
+      },
+    ],
+  });
+
+  const phonesWithDetails = phones.map((phone) => {
+    const {
+      id,
+      imei,
+      modelId,
+      purchasePrice,
+      agentCommission,
+      buyDate,
+      status,
+      supplier,
+      manager,
+      customer,
+      phoneModel,
+      createdAt,
+      capacity,
+      sellingPrice,
+      company,
+      saleDate,
+      reconcileDate,
+      ram,
+    } = phone.toJSON();
+
+    const supplierName = supplier ? supplier.name : "No supplier assigned";
+    const supplierId = supplier ? supplier.id : "No supplier assigned";
+    const managerId = manager ? manager.id : "No manager assigned";
+    const regionId = manager ? manager.regionId : "No region assigned";
+    const managerName = manager
+      ? `${manager.firstName} ${manager.lastName}`
+      : "No manager assigned";
+    const managerLocation = manager?.region
+      ? `${manager.region.location}`
+      : "No location assigned";
+    const customerName = customer
+      ? `${customer.firstName} ${customer.lastName}`
+      : "No customer assigned";
+    const nkName = customer
+      ? `${customer.nkFirstName} ${customer.nkLastName}`
+      : "No customer assigned";
+    const customerID = customer ? customer.ID : "No ID assigned";
+    const customerPhn = customer ? customer.phoneNumber : "No phone assigned";
+    const nkPhn = customer ? customer.nkPhone : "No phone assigned";
+    const modelName = phoneModel ? phoneModel.model : "No model assigned";
+    const modelMake = phoneModel ? phoneModel.make : "No make assigned";
+
+    return {
+      id,
+      imei,
+      modelId,
+      modelName,
+      modelMake,
+      purchasePrice,
+      buyDate,
+      status,
+      customerPhn,
+      supplierName,
+      managerName,
+      nkName,
+      customerID,
+      customerName,
+      managerLocation,
+      createdAt,
+      managerId,
+      supplierId,
+      capacity,
+      regionId,
+      nkPhn,
+      sellingPrice,
+      agentCommission,
+      company,
+      saleDate,
+      reconcileDate,
+      ram,
+    };
+  });
+
+  return { count, phones: phonesWithDetails };
+};
+//Get customer information
+exports.getCustomerInformation = async (req, res) => {
+  try {
+    const { status, company, startDate, endDate } = req.query;
+
+    // Pass req.user for role-based filtering
+    const { count, phones } = await fetchCustommerInformation(
       status,
       company,
       startDate,
