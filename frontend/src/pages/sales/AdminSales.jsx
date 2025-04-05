@@ -22,6 +22,8 @@ import { toast } from "react-toastify";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { FaUndoAlt } from "react-icons/fa";
 import DeleteConfirmationModal from "../../components/DeleteModal";
+import { FiPrinter } from "react-icons/fi";
+import ReceiptTemplate from "../../components/ReceiptTemplate";
 
 const AdminSales = () => {
   const token = useSelector((state) => state.userSlice.user.token);
@@ -31,13 +33,16 @@ const AdminSales = () => {
   const today = dayjs().endOf("day");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
-  const [revertSaleLoadin, setRevertSaleLoading] = useState(false);
+  const [revertSaleLoading, setRevertSaleLoading] = useState(false);
   const [showRevertModal, setShowRevertModal] = useState(false);
   const [revertPhoneId, setRevertPhoneId] = useState(null);
   const [showReconcileModal, setShowReconcileModal] = useState(false);
   const [reconcilePhoneId, setReconcilePhoneId] = useState(null);
   const [declareLostLoading, setDeclareLostLoading] = useState(false);
   const user = useSelector((state) => state.userSlice.user.user);
+  const [receiptPhone, setReceiptPhone] = useState(null);
+  const [showDownLoadReceiptModal, setShowDownLoadReceiptModal] =
+    useState(false);
 
   // Function to generate and download Excel file
   const handleDownload = () => {
@@ -190,8 +195,6 @@ const AdminSales = () => {
     }
   }, [company, startDate, endDate, refetch, isQueryEnabled, show]);
 
-  console.log(phonesData);
-
   const filteredPhones = useMemo(() => {
     const dataToFilter = phonesData;
     return dataToFilter?.filter((phone) =>
@@ -316,6 +319,11 @@ const AdminSales = () => {
       });
     }
     setShowRevertModal(false);
+  };
+
+  const handleReceiptDownload = (phone) => {
+    setReceiptPhone(phone);
+    setShowDownLoadReceiptModal(true);
   };
 
   return (
@@ -505,7 +513,7 @@ const AdminSales = () => {
                       </th>
                     )}
 
-                    {user?.role !== "manager" && show === "sold" && (
+                    {show === "sold" && (
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
@@ -594,8 +602,7 @@ const AdminSales = () => {
                               {netProfit.toLocaleString()}
                             </td>
                           )}
-
-                          {user.role !== "manager" && show === "sold" && (
+                          {user.role && show === "sold" && (
                             <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0 ">
                               {user.role === "super admin" && (
                                 <button
@@ -609,12 +616,21 @@ const AdminSales = () => {
                                   Revert
                                 </button>
                               )}
+                              {user.role === "super admin" && (
+                                <button
+                                  onClick={() => handleReconcilePhone(phone.id)}
+                                  aria-label={`Analyze ${phone?.name}`}
+                                  className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
+                                  <IoCheckmarkDone className="text-green-500" />
+                                  Reconcile
+                                </button>
+                              )}
                               <button
-                                onClick={() => handleReconcilePhone(phone.id)}
+                                onClick={() => handleReceiptDownload(phone)}
                                 aria-label={`Analyze ${phone?.name}`}
-                                className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
-                                <IoCheckmarkDone className="text-green-500" />
-                                Reconcile
+                                className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-blue-500 hover:bg-blue-300">
+                                <FiPrinter className="text-blue-500" />
+                                Receipt
                               </button>
                             </td>
                           )}
@@ -687,7 +703,7 @@ const AdminSales = () => {
                         </td>
                       )}
 
-                      {user.role !== "manager" && show === "sold" && (
+                      {show === "sold" && (
                         <td className="px-2 py-2 border-r text-center"></td>
                       )}
                     </tr>
@@ -715,6 +731,11 @@ const AdminSales = () => {
         admin={reconcilePhoneId}
         title={`Confirm Action!`}
         message="Phone will be moved to reconciled"
+      />
+      <ReceiptTemplate
+        phone={receiptPhone}
+        setShowDownLoadReceiptModal={setShowDownLoadReceiptModal}
+        showDownLoadReceiptModal={showDownLoadReceiptModal}
       />
     </div>
   );

@@ -661,3 +661,16 @@ export const deletePhone = async (imei, token) => {
     throw new Error(error.response?.data?.message || error.message);
   }
 };
+// Delete phone model
+export const deletePhoneModel = async (modelId, token) => {
+  try {
+    const response = await axios.delete(`${url}/model/${modelId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};

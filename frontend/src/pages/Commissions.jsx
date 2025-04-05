@@ -2,15 +2,17 @@ import { useEffect, useState } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-
+import { MdOutlineDelete } from "react-icons/md";
 import { toast } from "react-toastify";
 import NewModel from "../components/NewModel";
 import { setSidebar } from "../redux/reducers/ sidebar";
 import {
+  deletePhoneModel,
   editCommission,
   fetchAllModels,
   fetchAllRegions,
 } from "../services/services";
+import DeleteConfirmationModal from "../components/DeleteModal";
 
 const Commissions = () => {
   const [showAddModel, setShowAddModel] = useState(false);
@@ -19,6 +21,8 @@ const Commissions = () => {
   const [editedCells, setEditedCells] = useState(new Set());
   const [hasChanges, setHasChanges] = useState(false);
   const [editCommissionLoading, setEditCommissionLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [modelToDelete, setModelToDelete] = useState(null);
 
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -123,6 +127,34 @@ const Commissions = () => {
 
   const editCommisionMutation = useEditCommission();
 
+  const useDeletePhoneModel = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation(
+      ({ modelId, token }) => deletePhoneModel(modelId, token),
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries(["models"]);
+          toast.success("Model deleted successfully");
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to delete model");
+        },
+      }
+    );
+  };
+
+  const deletePhoneModelMutation = useDeletePhoneModel();
+
+  const handleDeleteModel = () => {
+    if (modelToDelete) {
+      deletePhoneModelMutation.mutate({ modelId: modelToDelete, token });
+    }
+    setShowDeleteModal(false);
+  };
+
+  console.log();
+
   return (
     <div className="p-5">
       <div className="space-y-2">
@@ -183,6 +215,28 @@ const Commissions = () => {
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="bg-neutral-100">
+                  <td className="border-x border-gray-200"></td>
+                  <td className="border-r border-gray-200 text-sm font-medium text-gray-600">
+                    Delete Model
+                  </td>
+                  {models?.models.map((model) => (
+                    <td
+                      key={model.id}
+                      className="border-r border-gray-200 text-center py-2">
+                      <button
+                        onClick={() => {
+                          setModelToDelete(model.id);
+                          setShowDeleteModal(true);
+                        }}
+                        className="text-red-500 hover:text-red-700 p-2 rounded-full transition-all duration-200">
+                        <MdOutlineDelete size={20} />
+                      </button>
+                    </td>
+                  ))}
+                </tr>
+              </tfoot>
             </table>
           </div>
 
@@ -201,6 +255,14 @@ const Commissions = () => {
         </div>
       </div>
       <NewModel showAddModel={showAddModel} setShowAddModel={setShowAddModel} />
+      <DeleteConfirmationModal
+        action="Delete"
+        showDeleteModal={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onDelete={handleDeleteModel}
+        title="Confirm Action!"
+        message={`Are you sure you want to delete model "${modelToDelete?.model}"?`}
+      />
     </div>
   );
 };

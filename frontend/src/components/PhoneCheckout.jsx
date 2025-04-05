@@ -212,8 +212,8 @@ const PhoneCheckout = ({
                 onClick={() => onCloseModal()}
               />
             </div>
-            <div className=" w-full  md:hidden relative">
-              <div className="absolute  -top-10 right-0  p-1">
+            <div className="w-full  md:hidden relative">
+              <div className="absolute right-0  p-1">
                 <CiSaveDown2
                   size={28}
                   className="cursor-pointer text-red-500  hover:text-red-400"

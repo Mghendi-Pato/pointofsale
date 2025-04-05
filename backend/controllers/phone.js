@@ -137,6 +137,7 @@ exports.editPhone = async (req, res) => {
       managerId: newManagerId,
       capacity,
       sellingPrice,
+      ram,
     } = req.body;
 
     // Check if the phone exists
@@ -155,6 +156,7 @@ exports.editPhone = async (req, res) => {
       capacity: capacity || phone.capacity,
       sellingPrice: sellingPrice || phone.sellingPrice,
       dateAssigned: phone.dateAssigned,
+      ram: ram || phone.ram,
     };
 
     // Check if a manager is being updated and verify the manager exists
@@ -585,6 +587,20 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
         paranoid: false,
       },
       {
+        model: Customer,
+        as: "customer",
+        attributes: [
+          "firstName",
+          "lastName",
+          "middleName",
+          "phoneNumber",
+          "ID",
+          "nkFirstName",
+          "nkLastName",
+          "nkPhone",
+        ],
+      },
+      {
         model: User,
         as: "manager",
         attributes: ["firstName", "lastName", "regionId", "id"],
@@ -616,6 +632,7 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       buyDate,
       status,
       supplier,
+      customer,
       manager,
       phoneModel,
       createdAt,
@@ -624,6 +641,7 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       company,
       saleDate,
       reconcileDate,
+      ram,
     } = phone.toJSON();
 
     const supplierName = supplier ? supplier.name : "No supplier assigned";
@@ -639,6 +657,16 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
 
     const modelName = phoneModel ? phoneModel.model : "No model assigned";
     const modelMake = phoneModel ? phoneModel.make : "No make assigned";
+
+    const customerName = customer
+      ? `${customer.firstName} ${customer.middleName}  ${customer.lastName}`
+      : "No customer assigned";
+    const nkName = customer
+      ? `${customer.nkFirstName} ${customer.nkLastName}`
+      : "No customer assigned";
+    const customerID = customer ? customer.ID : "No ID assigned";
+    const customerPhn = customer ? customer.phoneNumber : "No phone assigned";
+    const nkPhn = customer ? customer.nkPhone : "No phone assigned";
 
     return {
       id,
@@ -662,6 +690,12 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       company,
       saleDate,
       reconcileDate,
+      ram,
+      customerName,
+      customerID,
+      customerPhn,
+      nkName,
+      nkPhn,
     };
   });
 

@@ -49,7 +49,7 @@ const AdminInventory = () => {
     ["phones", { status: "active" }],
     ({ pageParam = 1 }) =>
       fetchActivePhones({
-        queryKey: ["phones", { page: pageParam, limit: 1000 }],
+        queryKey: ["phones", { page: pageParam, limit: 2000 }],
         token,
       }),
     {
@@ -208,13 +208,15 @@ const AdminInventory = () => {
       ...filteredPhones.map((phone, index) => {
         const row = {
           "#": index + 1,
+          "*": calculateDaysFromDate(phone?.dateAssigned || phone?.createdAt),
           Model: phone?.modelName,
           IMEI: phone?.imei,
           Capacity: phone?.capacity,
-          Supplier: phone?.supplierName,
           RAM: phone?.ram,
           "Buying Price": phone?.purchasePrice,
           "Selling Price": phone?.sellingPrice,
+          "Manager Commission": phone?.managerCommission,
+          Supplier: phone?.supplierName,
           Location: phone?.managerLocation,
           Manager: phone?.managerName,
         };

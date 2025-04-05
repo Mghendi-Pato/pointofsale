@@ -188,6 +188,10 @@ const EditPhone = ({
       .number("Enter the capacity")
       .positive("Capacity must be a positive number")
       .required("Capacity is required"),
+    ram: yup
+      .number("Enter the RAM")
+      .positive("RAM must be a positive number")
+      .required("RAM is required"),
   });
 
   const formik = useFormik({
@@ -199,11 +203,11 @@ const EditPhone = ({
       buyingPrice: phone?.purchasePrice || "",
       sellingPrice: phone?.sellingPrice || "",
       capacity: phone?.capacity || "",
+      ram: phone?.ram || "",
     },
     validationSchema,
     enableReinitialize: true,
     onSubmit: (values) => {
-      console.log(values);
       const fieldMapping = {
         supplier: "supplierId",
         manager: "managerId",
@@ -553,6 +557,34 @@ const EditPhone = ({
                   formik.touched.capacity && Boolean(formik.errors.capacity)
                 }
                 helperText={formik.touched.capacity && formik.errors.capacity}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#ccc" },
+                    "&:hover fieldset": { borderColor: "#2FC3D2" },
+                    "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
+                  },
+                  "& .MuiInputBase-input": { color: "#000" },
+                  "& .MuiInputLabel-root.Mui-focused": { color: "#2FC3D2" },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">GB</InputAdornment>
+                  ),
+                }}
+              />
+
+              <TextField
+                variant="outlined"
+                type="number"
+                fullWidth
+                id="ram"
+                name="ram"
+                label="Ram"
+                value={formik.values.ram}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.ram && Boolean(formik.errors.ram)}
+                helperText={formik.touched.ram && formik.errors.ram}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": { borderColor: "#ccc" },

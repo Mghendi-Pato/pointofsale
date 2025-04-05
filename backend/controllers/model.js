@@ -36,7 +36,6 @@ exports.createPhoneModel = async (req, res) => {
     });
   }
 };
-
 // Get all Phone Models
 exports.getAllPhoneModels = async (req, res) => {
   try {
@@ -71,7 +70,6 @@ exports.getAllPhoneModels = async (req, res) => {
   }
 };
 //Edit model
-
 exports.editPhoneModel = async (req, res) => {
   try {
     const loggedInUser = req.user;
@@ -146,6 +144,45 @@ exports.editPhoneModel = async (req, res) => {
     console.error("Error updating commission:", error);
     return res.status(500).json({
       message: "An error occurred while updating the commission.",
+      error: error.message,
+    });
+  }
+};
+// Delete a Phone Model
+exports.deletePhoneModel = async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+
+    // Check user role
+    if (!["admin", "super admin"].includes(loggedInUser.role)) {
+      return res.status(403).json({ message: "Access Denied" });
+    }
+
+    const { id } = req.params;
+
+    console.log("Params", req.params);
+
+    if (!id) {
+      return res.status(400).json({ message: "Model ID is required." });
+    }
+
+    // Find the model
+    const phoneModel = await PhoneModel.findByPk(id);
+
+    if (!phoneModel) {
+      return res.status(404).json({ message: "Phone model not found." });
+    }
+
+    // Delete the model
+    await phoneModel.destroy();
+
+    return res.status(200).json({
+      message: "Phone model deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Error deleting phone model:", error);
+    return res.status(500).json({
+      message: "An error occurred while deleting the phone model.",
       error: error.message,
     });
   }
