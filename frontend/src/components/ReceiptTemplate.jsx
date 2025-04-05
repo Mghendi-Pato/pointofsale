@@ -90,7 +90,7 @@ const ReceiptTemplate = ({
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
-          className="absolute md:top-0 right-0 w-full h-[92%]  md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center">
+          className="absolute bottom-0 md:top-0 right-0 w-full h-[92%]  md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center">
           <div className="overflow-auto">
             <div className="relative w-full hidden md:flex">
               <MdOutlineCancel
