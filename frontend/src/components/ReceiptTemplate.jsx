@@ -30,8 +30,6 @@ const ReceiptTemplate = ({
     hour12: true,
   });
 
-  const receiptNumber = Math.floor(100000 + Math.random() * 900000);
-
   const downloadReceipt = async () => {
     if (receiptRef.current) {
       const canvas = await html2canvas(receiptRef.current, { scale: 2 });
@@ -44,6 +42,8 @@ const ReceiptTemplate = ({
       link.click();
     }
   };
+
+  console.log(phone);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
@@ -90,7 +90,7 @@ const ReceiptTemplate = ({
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
-          className="absolute bottom-0 md:top-0 right-0 w-full h-[92%]  md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center">
+          className="absolute md:top-0 right-0 w-full h-[92%]  md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center">
           <div className="overflow-auto">
             <div className="relative w-full hidden md:flex">
               <MdOutlineCancel
@@ -163,7 +163,7 @@ const ReceiptTemplate = ({
                     <hr className="my-2 w-full bg-black h-1" />
                     <div className="flex flex-row justify-between items-center">
                       <p className="font-semibold text-sm text-neutral-700">
-                        Rcpt: {receiptNumber}
+                        Rcpt: {phone?.rcpNumber}
                       </p>
                       <p className="font-semibold text-sm text-neutral-700">
                         Date: {formattedDate}

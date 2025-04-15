@@ -502,7 +502,10 @@ exports.sellPhone = async (req, res) => {
       nkFirstName,
       nkLastName,
       agentCommission,
+      rcpNumber,
     } = req.body;
+
+    console.log(req.body);
 
     // Step 1: Check if the phone exists and is active
     const phone = await Phone.findByPk(phoneId);
@@ -513,6 +516,10 @@ exports.sellPhone = async (req, res) => {
       return res
         .status(400)
         .json({ message: "Phone is not available for sale." });
+    }
+
+    if (!rcpNumber) {
+      return res.status(400).json({ message: "RCPT number is required!" });
     }
 
     let customer;
@@ -543,6 +550,7 @@ exports.sellPhone = async (req, res) => {
       status: "sold",
       saleDate: new Date(),
       agentCommission,
+      rcpNumber,
     });
 
     return res.status(200).json({
@@ -641,6 +649,7 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       company,
       saleDate,
       reconcileDate,
+      rcpNumber,
       ram,
     } = phone.toJSON();
 
@@ -696,6 +705,7 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       customerPhn,
       nkName,
       nkPhn,
+      rcpNumber,
     };
   });
 

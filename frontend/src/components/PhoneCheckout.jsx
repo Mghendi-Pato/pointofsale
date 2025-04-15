@@ -117,8 +117,6 @@ const PhoneCheckout = ({
 
   const sellPhoneMutation = useSellPhone();
 
-  console.log(phone);
-
   const onCheckout = () => {
     const updatedCustomerDetails = {
       ...customerDetails,
@@ -126,6 +124,7 @@ const PhoneCheckout = ({
       phoneId: phone.id,
       company: sellingCompany,
       agentCommission: phone.managerCommission,
+      rcpNumber: receiptNumber,
     };
     const { ...finalCustomerDetails } = updatedCustomerDetails;
 
