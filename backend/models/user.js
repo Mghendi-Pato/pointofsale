@@ -26,6 +26,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM("super admin", "admin", "manager"),
         allowNull: true,
       },
+      designation: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       lastLogin: {
         type: DataTypes.DATE,
         allowNull: true,

@@ -617,18 +617,16 @@ const AdminSales = () => {
                                   Revert
                                 </button>
                               )}
-                              {user.role === "super admin" ||
-                                (user.role === "admin" && (
-                                  <button
-                                    onClick={() =>
-                                      handleReconcilePhone(phone.id)
-                                    }
-                                    aria-label={`Analyze ${phone?.name}`}
-                                    className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
-                                    <IoCheckmarkDone className="text-green-500" />
-                                    Reconcile
-                                  </button>
-                                ))}
+                              {(user.role === "admin" ||
+                                user.role === "super admin") && (
+                                <button
+                                  onClick={() => handleReconcilePhone(phone.id)}
+                                  aria-label={`Analyze ${phone?.name}`}
+                                  className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
+                                  <IoCheckmarkDone className="text-green-500" />
+                                  Reconcile
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleReceiptDownload(phone)}
                                 aria-label={`Analyze ${phone?.name}`}

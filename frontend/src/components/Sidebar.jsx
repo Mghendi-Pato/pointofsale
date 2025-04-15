@@ -16,6 +16,7 @@ import LogoutUser from "./LogoutUser";
 import { MdAttachMoney } from "react-icons/md";
 import { GiReceiveMoney } from "react-icons/gi";
 import { LiaPeopleCarrySolid } from "react-icons/lia";
+import { FaMoneyCheck } from "react-icons/fa";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -291,6 +292,51 @@ const Sidebar = () => {
             <p className="font-roboto text-white">Profile</p>
           </div>
         </div>
+        {user.designation === "cfo" && (
+          <div
+            className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${
+              pathname === "/payments"
+                ? "border-primary-500 border-r-4 bg-primary-300"
+                : ""
+            }`}
+            onClick={() => onNavigate("/payments")}>
+            <div className="hidden md:block">
+              <FaMoneyCheck size={20} className="mx-4" />
+            </div>
+            <AnimatePresence>
+              {showSideBar && (
+                <motion.div
+                  initial={{ x: -100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -100, opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="whitespace-nowrap text-black md:hidden ">
+                  <FaMoneyCheck size={20} className="mx-4" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div className={`overflow-hidden `}>
+              <AnimatePresence>
+                {showSideBar && (
+                  <motion.p
+                    initial={{ x: -100, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -100, opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="whitespace-nowrap text-black ">
+                    Payments
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+            <div
+              className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${
+                !showSideBar && "md:group-hover:flex"
+              }`}>
+              <p className="font-roboto text-white">Payments</p>
+            </div>
+          </div>
+        )}
       </div>
       <div className="py-4 border-t b-neutral-300 ">
         <div

@@ -18,6 +18,7 @@ import Regions from "./pages/regions/Regions";
 import Commissions from "./pages/Commissions";
 import PhoneDetails from "./pages/PhoneDetails";
 import Customers from "./pages/customers/Customers";
+import Payments from "./pages/Payments";
 
 const App = () => {
   return (
@@ -117,6 +118,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Regions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payments"
+          element={
+            <ProtectedRoute>
+              <Payments />
             </ProtectedRoute>
           }
         />
