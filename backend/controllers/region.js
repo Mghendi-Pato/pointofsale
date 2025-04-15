@@ -92,6 +92,7 @@ exports.fetchRegions = async (req, res) => {
     const soldPhones = await Phone.findAll({
       where: {
         status: "sold",
+        status: "reconcile",
         saleDate: { [Op.gte]: firstDayOfLastMonth },
       },
       include: {
