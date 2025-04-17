@@ -34,6 +34,7 @@ const Managers = () => {
     fetchNextPage: fetchNextActiveManagers,
     hasNextPage: hasMoreActiveManagers,
     isFetchingNextPage: isLoadingMoreActiveManagers,
+    isLoading: isLoadingActiveManagers,
   } = useInfiniteQuery(
     ["managers", { status: "active" }],
     ({ pageParam = 1, signal }) =>
@@ -47,13 +48,12 @@ const Managers = () => {
     }
   );
 
-  console.log(activeData);
-
   const {
     data: suspendedData,
     fetchNextPage: fetchNextSuspendedManagers,
     hasNextPage: hasMoreSuspendedManagers,
     isFetchingNextPage: isLoadingMoreSuspendedManagers,
+    isLoading: isLoadingSuspendedManagers,
   } = useInfiniteQuery(
     ["managers", { status: "suspended" }],
     ({ pageParam = 1, signal }) =>
@@ -317,12 +317,8 @@ const Managers = () => {
                       </th>
                     </tr>
                   </thead>
-                  {(isLoadingMoreActiveManagers &&
-                    !activeData &&
-                    show === "active") ||
-                  (isLoadingMoreSuspendedManagers &&
-                    !suspendedData &&
-                    show !== "active") ? (
+                  {(isLoadingActiveManagers && show === "active") ||
+                  (isLoadingSuspendedManagers && show !== "active") ? (
                     <p className="p-2">Fetching manager data...</p>
                   ) : paginatedManagers.length === 0 ||
                     paginatedManagers.filter((manager) =>

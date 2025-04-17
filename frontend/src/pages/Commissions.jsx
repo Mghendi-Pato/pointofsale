@@ -33,7 +33,7 @@ const Commissions = () => {
     }
   }, [showAddModel, dispatch]);
 
-  const { data: models } = useQuery(
+  const { data: models, isLoading: isLoadingModels } = useQuery(
     ["models", { page: 1, limit: 100 }],
     ({ queryKey, signal }) => fetchAllModels({ queryKey, signal, token }),
     {
@@ -42,7 +42,7 @@ const Commissions = () => {
     }
   );
 
-  const { data: regions } = useQuery(
+  const { data: regions, isLoading: isLoadingRegions } = useQuery(
     ["regions", { page: 1, limit: 100 }],
     ({ queryKey, signal }) => fetchAllRegions({ queryKey, signal, token }),
     {
@@ -50,6 +50,8 @@ const Commissions = () => {
       enabled: !!token,
     }
   );
+
+  const isLoading = isLoadingModels || isLoadingRegions;
 
   useEffect(() => {
     setHasChanges(editedCells.size > 0);
@@ -170,75 +172,99 @@ const Commissions = () => {
           <div className="py-5">
             <p className="text-zinc-600 font-bold">Set Commissions</p>
           </div>
-          <div className="overflow-x-auto max-h-[450px]">
-            <table className="text-sm w-full text-left text-gray-500">
-              <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-gray-200 border sticky top-0 z-10">
-                <tr>
-                  <th className="px-1 w-5 py-3 border-x border-gray-200">#</th>
-                  <th className="px-1 w-60 py-3 border-r border-gray-200">
-                    Region
-                  </th>
-                  {models?.models.map((model) => (
-                    <th
-                      key={model.id}
-                      className="px-1 w-40 py-3 border-r border-gray-200">
-                      {model.model}
+          {isLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-400 mr-2"></div>
+              <p>Loading commissions data...</p>
+            </div>
+          ) : !regions?.regions ||
+            regions.regions.length === 0 ||
+            !models?.models ||
+            models.models.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-gray-500">
+                {!regions?.regions || regions.regions.length === 0
+                  ? "No regions available. Please add regions first."
+                  : "No models available. Please add models first."}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto max-h-[450px]">
+              <table className="text-sm w-full text-left text-gray-500">
+                <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-gray-200 border sticky top-0 z-10">
+                  <tr>
+                    <th className="px-1 w-5 py-3 border-x border-gray-200">
+                      #
                     </th>
+                    <th className="px-1 w-60 py-3 border-r border-gray-200">
+                      Region
+                    </th>
+                    {models?.models.map((model) => (
+                      <th
+                        key={model.id}
+                        className="px-1 w-40 py-3 border-r border-gray-200">
+                        {model.model}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {regions?.regions.map((region, index) => (
+                    <tr key={region.id} className="bg-white border-b">
+                      <td className="px-3 py-2 border-x border-gray-200">
+                        {index + 1}
+                      </td>
+                      <td className="px-3 py-2 border-r border-gray-200">
+                        {region.location}
+                      </td>
+                      {models?.models.map((model) => (
+                        <td
+                          key={model.id}
+                          className=" border-r border-gray-200">
+                          <input
+                            type="text"
+                            value={
+                              commissions[`${region.id}-${model.id}`] || ""
+                            }
+                            onChange={(e) =>
+                              handleInputChange(
+                                region.id,
+                                model.id,
+                                e.target.value
+                              )
+                            }
+                            className="text-center outline-none focus:border-primary-500"
+                          />
+                        </td>
+                      ))}
+                    </tr>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {regions?.regions.map((region, index) => (
-                  <tr key={region.id} className="bg-white border-b">
-                    <td className="px-3 py-2 border-x border-gray-200">
-                      {index + 1}
-                    </td>
-                    <td className="px-3 py-2 border-r border-gray-200">
-                      {region.location}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-neutral-100">
+                    <td className="border-x border-gray-200"></td>
+                    <td className="border-r border-gray-200 text-sm font-medium text-gray-600">
+                      Delete Model
                     </td>
                     {models?.models.map((model) => (
-                      <td key={model.id} className=" border-r border-gray-200">
-                        <input
-                          type="text"
-                          value={commissions[`${region.id}-${model.id}`] || ""}
-                          onChange={(e) =>
-                            handleInputChange(
-                              region.id,
-                              model.id,
-                              e.target.value
-                            )
-                          }
-                          className="text-center outline-none focus:border-primary-500"
-                        />
+                      <td
+                        key={model.id}
+                        className="border-r border-gray-200 text-center py-2">
+                        <button
+                          onClick={() => {
+                            setModelToDelete(model.id);
+                            setShowDeleteModal(true);
+                          }}
+                          className="text-red-500 hover:text-red-700 p-2 rounded-full transition-all duration-200">
+                          <MdOutlineDelete size={20} />
+                        </button>
                       </td>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="bg-neutral-100">
-                  <td className="border-x border-gray-200"></td>
-                  <td className="border-r border-gray-200 text-sm font-medium text-gray-600">
-                    Delete Model
-                  </td>
-                  {models?.models.map((model) => (
-                    <td
-                      key={model.id}
-                      className="border-r border-gray-200 text-center py-2">
-                      <button
-                        onClick={() => {
-                          setModelToDelete(model.id);
-                          setShowDeleteModal(true);
-                        }}
-                        className="text-red-500 hover:text-red-700 p-2 rounded-full transition-all duration-200">
-                        <MdOutlineDelete size={20} />
-                      </button>
-                    </td>
-                  ))}
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                </tfoot>
+              </table>
+            </div>
+          )}
 
           <div className="my-5 flex flex-row justify-end">
             <button

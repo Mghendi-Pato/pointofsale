@@ -45,6 +45,7 @@ const AdminInventory = () => {
     fetchNextPage: fetchNextActivePhones,
     hasNextPage: hasMoreActivePhones,
     isFetchingNextPage: isLoadingMoreActivePhones,
+    isLoading: isLoadingActivePhones,
   } = useInfiniteQuery(
     ["phones", { status: "active" }],
     ({ pageParam = 1 }) =>
@@ -66,6 +67,7 @@ const AdminInventory = () => {
     fetchNextPage: fetchNextLostPhones,
     hasNextPage: hasMoreLostPhones,
     isFetchingNextPage: isLoadingMoreLostPhones,
+    isLoading: isLoadingLostPhones,
   } = useInfiniteQuery(
     ["phones", { status: "lost" }],
     ({ pageParam = 1 }) =>
@@ -422,13 +424,9 @@ const AdminInventory = () => {
                       </th>
                     </tr>
                   </thead>
-                  {(isLoadingMoreActivePhones &&
-                    !activePhones &&
-                    show === "active") ||
-                  (isLoadingMoreLostPhones &&
-                    !lostPhonesData &&
-                    show !== "active") ? (
-                    <p className="p-2">Fetching phone data...</p>
+                  {(isLoadingActivePhones && show === "active") ||
+                  (isLoadingLostPhones && show !== "active") ? (
+                    <p className="p-2">Fetching inventory data...</p>
                   ) : paginatedPhones.length === 0 ||
                     paginatedPhones.filter((phone) =>
                       show === "active"

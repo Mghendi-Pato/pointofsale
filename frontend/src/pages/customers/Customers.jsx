@@ -361,7 +361,7 @@ const Customers = () => {
                   </tr>
                 </thead>
                 {isLoading ? (
-                  <p className="p-2">Fetching sales data...</p>
+                  <p className="p-2">Fetching customer data...</p>
                 ) : isError || paginatedPhones?.length === 0 ? (
                   <tbody>
                     <tr>
