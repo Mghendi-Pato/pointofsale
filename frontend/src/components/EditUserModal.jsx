@@ -21,6 +21,7 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import { editUser, fetchAllRegions } from "../services/services";
 import { LuEye } from "react-icons/lu";
 import { LuEyeOff } from "react-icons/lu";
+import { useLocation } from "react-router-dom";
 
 const EditManagerModal = ({
   showEditUserModal,
@@ -34,6 +35,23 @@ const EditManagerModal = ({
   const token = useSelector((state) => state.userSlice.user.token);
   const [editUserLoading, setEditUserLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const { pathname } = useLocation();
+
+  const formatNumber = (value) => {
+    if (!value) return "";
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Format with commas
+  };
+
+  const handlePriceChange = (fieldName) => (event) => {
+    let rawValue = event.target.value.replace(/,/g, ""); // Remove commas
+    if (!/^\d*$/.test(rawValue)) return; // Ensure it's numeric
+
+    formik.setFieldValue(fieldName, rawValue); // Store only numeric value
+  };
+
+  // Format value for display
+  const getFormattedValue = (value) => (value ? formatNumber(value) : "");
 
   const { data: regions } = useQuery(
     ["regions", { page: 1, limit: 100 }],
@@ -98,6 +116,9 @@ const EditManagerModal = ({
       .string()
       .oneOf(["active", "suspended"], "Status must be 'active' or 'suspended'")
       .required("Status is required"),
+    poolCommission: yup
+      .number("Enter the commission")
+      .positive("Commission must be a positive number"),
     password: yup
       .string("Enter your password")
       .nullable()
@@ -155,6 +176,7 @@ const EditManagerModal = ({
       region: user?.regionId || "",
       status: user?.status || "",
       password: "",
+      commission: user?.commission || "",
     },
     validationSchema,
     enableReinitialize: true,
@@ -439,6 +461,42 @@ const EditManagerModal = ({
                   </div>
                 )}
               </FormControl>
+
+              {pathname === "/managers" && (
+                <TextField
+                  variant="outlined"
+                  fullWidth
+                  id="commission"
+                  name="commission"
+                  label="Commission"
+                  value={getFormattedValue(formik.values.commission)}
+                  onChange={handlePriceChange("commission")}
+                  onBlur={formik.handleBlur}
+                  error={
+                    formik.touched.commission &&
+                    Boolean(formik.errors.commission)
+                  }
+                  helperText={
+                    formik.touched.commission && formik.errors.commission
+                  }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": { borderColor: "#ccc" },
+                      "&:hover fieldset": { borderColor: "#2FC3D2" },
+                      "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
+                    },
+                    "& .MuiInputBase-input": { color: "#000" },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: "#2FC3D2",
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">KSh</InputAdornment>
+                    ),
+                  }}
+                />
+              )}
 
               <FormControl fullWidth variant="outlined">
                 <InputLabel htmlFor="password">Password</InputLabel>

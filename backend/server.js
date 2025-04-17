@@ -12,6 +12,7 @@ const managerRoutes = require("./routes/manager.js");
 const supplierRoutes = require("./routes/supplier.js");
 const phonesRoutes = require("./routes/phone.js");
 const modelRoutes = require("./routes/model");
+const poolRoutes = require("./routes/pool.js");
 
 const app = express();
 
@@ -41,8 +42,8 @@ sequelize
   .authenticate()
   .then(() => console.log("Database connected..."))
   .catch((err) => console.error("Error connecting to the database:", err));
-app.get('/', (req, res) => {
-  res.send('Hello, world!');
+app.get("/", (req, res) => {
+  res.send("Hello, world!");
 });
 
 // Routes
@@ -53,6 +54,7 @@ app.use("/manager", managerRoutes);
 app.use("/supplier", supplierRoutes);
 app.use("/phone", phonesRoutes);
 app.use("/model", modelRoutes);
+app.use("/pool", poolRoutes);
 
 // Start Server
 app.listen(PORT, () =>

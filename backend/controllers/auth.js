@@ -7,8 +7,17 @@ const { Op } = require("sequelize");
 // Register a new user
 exports.register = async (req, res) => {
   try {
-    const { firstName, phone, lastName, email, password, role, ID, regionId } =
-      req.body;
+    const {
+      firstName,
+      phone,
+      lastName,
+      email,
+      commission,
+      password,
+      role,
+      ID,
+      regionId,
+    } = req.body;
     const loggedInUser = req.user;
 
     // Check if the logged-in user has the appropriate role to register users
@@ -65,6 +74,7 @@ exports.register = async (req, res) => {
       ID,
       phone,
       regionId,
+      commission,
     });
 
     // If the role is manager, append the user ID to the respective location
@@ -239,6 +249,7 @@ exports.editUser = async (req, res) => {
       regionId,
       status,
       password,
+      commission,
     } = req.body;
 
     // Find the user to be updated
@@ -287,6 +298,7 @@ exports.editUser = async (req, res) => {
       regionId: regionId || user.regionId,
       status: status || user.status,
       password: hashedPassword, // Only update if a new password is provided
+      commission: commission || user.commission,
     });
 
     res.status(200).json({

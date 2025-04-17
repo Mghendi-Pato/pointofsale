@@ -264,7 +264,7 @@ export const deleteQueryRegion = async (regionId, token) => {
     throw new Error(error.response?.data?.message || error.message);
   }
 };
-//REgister phone
+//Register phone
 export const registerNewPhone = async (phoneData, token) => {
   try {
     const response = await axios.post(`${url}/phone/register`, phoneData, {
@@ -667,6 +667,59 @@ export const deletePhone = async (imei, token) => {
 export const deletePhoneModel = async (modelId, token) => {
   try {
     const response = await axios.delete(`${url}/model/${modelId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};
+//Register pool
+export const registerNewPool = async (poolData, token) => {
+  try {
+    const response = await axios.post(`${url}/pool/new`, poolData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};
+// Fetch all pools
+export const fetchAllPools = async ({ signal, token }) => {
+  try {
+    const response = await axios.get(`${url}/pool/all`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      signal,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};
+// Delete pool
+export const deletePool = async (poolId, token) => {
+  try {
+    const response = await axios.delete(`${url}/pool/${poolId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};
+// Edit pool
+export const editPool = async (poolId, poolData, token) => {
+  try {
+    const response = await axios.put(`${url}/pool/${poolId}`, poolData, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

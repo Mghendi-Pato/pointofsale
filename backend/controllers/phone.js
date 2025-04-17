@@ -568,7 +568,7 @@ exports.sellPhone = async (req, res) => {
 //Fetch sold phones
 const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
   const whereClause = {
-    ...(status && { status }),
+    ...(status ? { status } : { status: { [Op.in]: ["sold", "reconcile"] } }),
     ...(user.role === "manager" && { managerId: user.id }),
     ...(company !== "combined" && { company }),
   };
@@ -724,10 +724,6 @@ exports.getSoldPhones = async (req, res) => {
       endDate,
       req.user
     );
-
-    if (!status) {
-      return res.status(400).json({ error: "Status is required." });
-    }
 
     if (phones.length === 0) {
       return res.status(200).json({

@@ -7,6 +7,16 @@ module.exports = (sequelize, DataTypes) => {
       User.belongsTo(models.Location, { as: "region", foreignKey: "regionId" });
       User.hasMany(models.Location, { as: "manager", foreignKey: "managerId" });
       User.hasMany(models.Phone, { as: "phones", foreignKey: "managerId" });
+      User.hasMany(models.Pool, {
+        as: "supervisedPools",
+        foreignKey: "superManagerId",
+      });
+      User.belongsToMany(models.Pool, {
+        through: models.PoolMembers,
+        as: "memberOfPool",
+        foreignKey: "managerId",
+        otherKey: "poolId",
+      });
     }
   }
   User.init(
@@ -21,6 +31,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM("active", "suspended"),
         allowNull: false,
         defaultValue: "active",
+      },
+      commission: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
+      managerType: {
+        type: DataTypes.ENUM("manager", "super manager"),
+        allowNull: true,
       },
       role: {
         type: DataTypes.ENUM("super admin", "admin", "manager"),

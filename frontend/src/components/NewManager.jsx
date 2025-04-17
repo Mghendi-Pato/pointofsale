@@ -29,6 +29,21 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
   const queryClient = useQueryClient();
   const token = useSelector((state) => state.userSlice.user.token);
 
+  const formatNumber = (value) => {
+    if (!value) return "";
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Format with commas
+  };
+
+  const handlePriceChange = (fieldName) => (event) => {
+    let rawValue = event.target.value.replace(/,/g, ""); // Remove commas
+    if (!/^\d*$/.test(rawValue)) return; // Ensure it's numeric
+
+    formik.setFieldValue(fieldName, rawValue); // Store only numeric value
+  };
+
+  // Format value for display
+  const getFormattedValue = (value) => (value ? formatNumber(value) : "");
+
   const { data: regions } = useQuery(
     ["regions", { page: 1, limit: 100 }],
     ({ queryKey, signal }) => fetchAllRegions({ queryKey, signal, token }),
@@ -95,6 +110,10 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
       .number("Location must be a valid ID")
       .nullable()
       .required("Location is required"),
+    commission: yup
+      .number("Enter the manager")
+      .positive("Commission must be a positive number")
+      .required("Commission is required"),
   });
 
   const useRegisterUser = () => {
@@ -135,6 +154,7 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
       ID: "",
       phone: "",
       region: "",
+      commission: "",
     },
     validationSchema,
     onSubmit: (values) => {
@@ -420,6 +440,38 @@ const NewManager = ({ showAddManager, setShowAddManager }) => {
                   </div>
                 )}
               </FormControl>
+              <TextField
+                variant="outlined"
+                fullWidth
+                id="commission"
+                name="commission"
+                label="Commission"
+                value={getFormattedValue(formik.values.commission)}
+                onChange={handlePriceChange("commission")}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.commission && Boolean(formik.errors.commission)
+                }
+                helperText={
+                  formik.touched.commission && formik.errors.commission
+                }
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#ccc" },
+                    "&:hover fieldset": { borderColor: "#2FC3D2" },
+                    "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
+                  },
+                  "& .MuiInputBase-input": { color: "#000" },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#2FC3D2",
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">KSh</InputAdornment>
+                  ),
+                }}
+              />
               <div className="flex flex-row-reverse justify-between items-center">
                 <button
                   type="submit"
