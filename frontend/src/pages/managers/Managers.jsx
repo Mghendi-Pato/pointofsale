@@ -18,6 +18,123 @@ import EditUserModal from "../../components/EditUserModal";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useNavigate } from "react-router-dom";
 
+// Skeleton components
+const SkeletonPulse = () => (
+  <div className="animate-pulse bg-gray-200 rounded-md h-full w-full" />
+);
+
+const TableSkeletonRow = () => (
+  <tr className="bg-white border-b">
+    <td className="px-2 py-3 border-r">
+      <div className="h-4 w-4">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-2 py-3 border-r">
+      <div className="h-4 w-32">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-3 border-r">
+      <div className="h-4 w-48">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-3 border-r">
+      <div className="h-4 w-24">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-3 border-r">
+      <div className="h-4 w-24">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-3 border-r">
+      <div className="h-4 w-32">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-3 border-r">
+      <div className="h-4 w-24">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-3 border-r">
+      <div className="h-4 w-16">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-3 flex flex-row space-x-2">
+      <div className="h-8 w-20 rounded-xl">
+        <SkeletonPulse />
+      </div>
+      <div className="h-8 w-20 rounded-xl">
+        <SkeletonPulse />
+      </div>
+    </td>
+  </tr>
+);
+
+const TableSkeleton = () => (
+  <div className="max-h-[57vh] overflow-y-auto" id="scrollableDiv">
+    <table className="w-full text-sm text-left text-gray-500 relative">
+      <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200">
+        <tr>
+          <th scope="col" className="px-2 border-r py-2">
+            #
+          </th>
+          <th
+            scope="col"
+            className="px-2 border-r text-[14px] normal-case py-2">
+            Name
+          </th>
+          <th
+            scope="col"
+            className="px-6 border-r text-[14px] normal-case py-2">
+            Email
+          </th>
+          <th
+            scope="col"
+            className="px-6 border-r text-[14px] normal-case py-2">
+            ID
+          </th>
+          <th
+            scope="col"
+            className="px-6 border-r text-[14px] normal-case py-2">
+            Phone
+          </th>
+          <th
+            scope="col"
+            className="px-6 border-r text-[14px] normal-case py-2">
+            Location
+          </th>
+          <th
+            scope="col"
+            className="px-6 border-r text-[14px] normal-case py-2">
+            Last login
+          </th>
+          <th
+            scope="col"
+            className="px-6 border-r text-[14px] normal-case py-2">
+            Status
+          </th>
+          <th scope="col" className="px-6 text-[14px] normal-case py-2">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {Array(8)
+          .fill(0)
+          .map((_, index) => (
+            <TableSkeletonRow key={index} />
+          ))}
+      </tbody>
+    </table>
+  </div>
+);
+
 const Managers = () => {
   const [show, setShow] = useState("active");
   const [managerToDelete, setManagerToDelete] = useState(null);
@@ -69,6 +186,10 @@ const Managers = () => {
       enabled: show === "inactive" && !!token,
     }
   );
+
+  const isLoading =
+    (show === "active" && isLoadingActiveManagers) ||
+    (show === "inactive" && isLoadingSuspendedManagers);
 
   // Handles search query change
   const handleSearchChange = (event) => setSearchQuery(event.target.value);
@@ -214,7 +335,10 @@ const Managers = () => {
           <div className="p-5 flex flex-col space-y-5">
             <div className="flex flex-col md:flex-row-reverse justify-between space-y-5 md:space-y-0">
               <button
-                className="p-2 bg-primary-500 hover:scale-105 flex flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-500 ease-in-out"
+                className={`p-2 ${
+                  isLoading ? "bg-gray-400" : "bg-primary-500 hover:scale-105"
+                } flex flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-500 ease-in-out`}
+                disabled={isLoading}
                 onClick={() => setShowAddManager(!showAddManager)}>
                 New Manager
               </button>
@@ -225,6 +349,7 @@ const Managers = () => {
                     id="outlined-search"
                     label="Search by admin name, or status"
                     variant="outlined"
+                    disabled={isLoading}
                     sx={{
                       minWidth: { xs: "280px", md: "300px" },
                       "& .MuiInputLabel-root": {
@@ -249,167 +374,172 @@ const Managers = () => {
             </div>
           </div>
           <div className="overflow-x-auto">
-            <InfiniteScroll
-              dataLength={filteredManagers.length}
-              next={() => {
-                if (
-                  show === "active" &&
-                  hasMoreActiveManagers &&
-                  !isLoadingMoreActiveManagers
-                ) {
-                  fetchNextActiveManagers();
-                } else if (
-                  show === "suspended" &&
-                  hasMoreSuspendedManagers &&
-                  !isLoadingMoreSuspendedManagers
-                ) {
-                  fetchNextSuspendedManagers();
+            {isLoading ? (
+              <TableSkeleton />
+            ) : (
+              <InfiniteScroll
+                dataLength={filteredManagers.length}
+                next={() => {
+                  if (
+                    show === "active" &&
+                    hasMoreActiveManagers &&
+                    !isLoadingMoreActiveManagers
+                  ) {
+                    fetchNextActiveManagers();
+                  } else if (
+                    show === "suspended" &&
+                    hasMoreSuspendedManagers &&
+                    !isLoadingMoreSuspendedManagers
+                  ) {
+                    fetchNextSuspendedManagers();
+                  }
+                }}
+                hasMore={
+                  show === "active"
+                    ? hasMoreActiveManagers
+                    : hasMoreSuspendedManagers
                 }
-              }}
-              hasMore={
-                show === "active"
-                  ? hasMoreActiveManagers
-                  : hasMoreSuspendedManagers
-              }
-              loader={
-                <div className="flex justify-center py-4">
-                  <p>Loading more users...</p>
-                </div>
-              }
-              scrollableTarget="scrollableDiv">
-              <div className="max-h-[57vh] overflow-y-auto" id="scrollableDiv">
-                <table className="w-full text-sm text-left text-gray-500 relative">
-                  <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200">
-                    <tr>
-                      <th scope="col" className="px-2 border-r py-2">
-                        #
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-2 border-r text-[14px] normal-case py-2">
-                        Name
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Email
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        ID
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Phone
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Location
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Last login
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Status
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 text-[14px] normal-case py-2">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  {(isLoadingActiveManagers && show === "active") ||
-                  (isLoadingSuspendedManagers && show !== "active") ? (
-                    <p className="p-2">Fetching manager data...</p>
-                  ) : paginatedManagers.length === 0 ||
+                loader={
+                  <div className="flex justify-center py-4">
+                    <p>Loading more users...</p>
+                  </div>
+                }
+                scrollableTarget="scrollableDiv">
+                <div
+                  className="max-h-[57vh] overflow-y-auto"
+                  id="scrollableDiv">
+                  <table className="w-full text-sm text-left text-gray-500 relative">
+                    <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200">
+                      <tr>
+                        <th scope="col" className="px-2 border-r py-2">
+                          #
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-2 border-r text-[14px] normal-case py-2">
+                          Name
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Email
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          ID
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Phone
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Location
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Last login
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Status
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 text-[14px] normal-case py-2">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    {paginatedManagers.length === 0 ||
                     paginatedManagers.filter((manager) =>
                       show === "active"
                         ? manager.status === "active"
                         : manager.status !== "active"
                     ).length === 0 ? (
-                    <tbody>
-                      <tr>
-                        <td colSpan="9" className="px-4 pt-2">
-                          <p className="text-gray-500">
-                            No {show === "active" ? "active" : "suspended"}{" "}
-                            managers found.
-                          </p>
-                        </td>
-                      </tr>
-                    </tbody>
-                  ) : (
-                    <tbody>
-                      {paginatedManagers
-                        ?.filter((manager) =>
-                          show === "active"
-                            ? manager.status === "active"
-                            : manager.status !== "active"
-                        )
-                        .map((manager, index) => (
-                          <tr
-                            key={manager.id}
-                            className="bg-white border-b hover:bg-blue-50">
-                            <td className="px-2 py-2 border-r font-medium text-gray-900">
-                              {index + 1}
-                            </td>
-                            <td className="px-2 border-r py-2 capitalize">
-                              {manager.name}
-                            </td>
-                            <td className="px-6 border-r py-2">
-                              {manager.email}
-                            </td>
-                            <td className="px-6 border-r py-2">{manager.ID}</td>
-                            <td className="px-6 border-r py-2">
-                              {manager.phone}
-                            </td>
-                            <td className="px-6 border-r py-2">
-                              {manager?.region?.location}
-                            </td>
-                            <td className="px-6 border-r py-2">
-                              {formatDate(new Date(manager.lastLogin))}
-                            </td>
-                            <td className="px-6 border-r py-2">
-                              {manager.status === "active" ? (
-                                <p className="text-green-500 capitalize">
-                                  {manager.status}
-                                </p>
-                              ) : (
-                                <p className="text-amber-500 capitalize">
-                                  {manager.status}
-                                </p>
-                              )}
-                            </td>
-                            <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
-                              <button
-                                onClick={() => onEditManger(manager)}
-                                aria-label={`Edit ${manager.name}`}
-                                className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
-                                Edit
-                                <BiEdit />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteUser(manager.id)}
-                                aria-label={`Delete ${manager.name}`}
-                                className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
-                                <MdDeleteOutline />
-                                Delete
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  )}
-                </table>
-              </div>
-            </InfiniteScroll>
+                      <tbody>
+                        <tr>
+                          <td colSpan="9" className="px-4 pt-2">
+                            <p className="text-gray-500">
+                              No {show === "active" ? "active" : "suspended"}{" "}
+                              managers found.
+                            </p>
+                          </td>
+                        </tr>
+                      </tbody>
+                    ) : (
+                      <tbody>
+                        {paginatedManagers
+                          ?.filter((manager) =>
+                            show === "active"
+                              ? manager.status === "active"
+                              : manager.status !== "active"
+                          )
+                          .map((manager, index) => (
+                            <tr
+                              key={manager.id}
+                              className="bg-white border-b hover:bg-blue-50">
+                              <td className="px-2 py-2 border-r font-medium text-gray-900">
+                                {index + 1}
+                              </td>
+                              <td className="px-2 border-r py-2 capitalize">
+                                {manager.name}
+                              </td>
+                              <td className="px-6 border-r py-2">
+                                {manager.email}
+                              </td>
+                              <td className="px-6 border-r py-2">
+                                {manager.ID}
+                              </td>
+                              <td className="px-6 border-r py-2">
+                                {manager.phone}
+                              </td>
+                              <td className="px-6 border-r py-2">
+                                {manager?.region?.location}
+                              </td>
+                              <td className="px-6 border-r py-2">
+                                {formatDate(new Date(manager.lastLogin))}
+                              </td>
+                              <td className="px-6 border-r py-2">
+                                {manager.status === "active" ? (
+                                  <p className="text-green-500 capitalize">
+                                    {manager.status}
+                                  </p>
+                                ) : (
+                                  <p className="text-amber-500 capitalize">
+                                    {manager.status}
+                                  </p>
+                                )}
+                              </td>
+                              <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
+                                <button
+                                  onClick={() => onEditManger(manager)}
+                                  aria-label={`Edit ${manager.name}`}
+                                  className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
+                                  Edit
+                                  <BiEdit />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteUser(manager.id)}
+                                  aria-label={`Delete ${manager.name}`}
+                                  className="flex flex-row justify-center items-center gap-2 px-2 py-1 rounded-xl border text-black border-rose-500 hover:bg-rose-300">
+                                  <MdDeleteOutline />
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    )}
+                  </table>
+                </div>
+              </InfiniteScroll>
+            )}
           </div>
         </div>
       </div>

@@ -24,6 +24,151 @@ import { toast } from "react-toastify";
 import EditPool from "../components/EditPoolModal";
 import { useNavigate } from "react-router-dom";
 
+// Skeleton components
+const SkeletonPulse = () => (
+  <div className="animate-pulse bg-gray-200 rounded-md h-full w-full" />
+);
+
+// Skeleton for a pool card header
+const PoolHeaderSkeleton = () => (
+  <div className="px-4 py-2 bg-gray-100 border-b flex justify-between items-center">
+    <div>
+      <div className="h-6 w-40 mb-2">
+        <SkeletonPulse />
+      </div>
+      <div className="h-4 w-48">
+        <SkeletonPulse />
+      </div>
+    </div>
+    <div className="flex flex-row space-x-2">
+      <div className="h-8 w-8 rounded-full">
+        <SkeletonPulse />
+      </div>
+      <div className="h-8 w-8 rounded-full">
+        <SkeletonPulse />
+      </div>
+    </div>
+  </div>
+);
+
+// Skeleton for a single table row
+const TableRowSkeleton = ({ highlight = false }) => (
+  <tr className={highlight ? "bg-primary-100" : ""}>
+    <td className="px-6 py-2 whitespace-nowrap">
+      <div className="h-5 w-36">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-2 whitespace-nowrap">
+      <div className="h-5 w-12">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-2 whitespace-nowrap">
+      <div className="h-5 w-24">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-2 whitespace-nowrap">
+      <div className="h-5 w-24">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-6 py-2 whitespace-nowrap">
+      <div className="h-5 w-24">
+        <SkeletonPulse />
+      </div>
+    </td>
+  </tr>
+);
+
+// Skeleton for an entire pool card
+const PoolCardSkeleton = () => (
+  <div className="bg-white border shadow-sm overflow-hidden">
+    <PoolHeaderSkeleton />
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th
+              scope="col"
+              className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Name
+            </th>
+            <th
+              scope="col"
+              className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Sales Count
+            </th>
+            <th
+              scope="col"
+              className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Commission (KES)
+            </th>
+            <th
+              scope="col"
+              className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Pool Commission (KES)
+            </th>
+            <th
+              scope="col"
+              className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Total (KES)
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {/* Super Manager Row */}
+          <TableRowSkeleton highlight={true} />
+          {/* Pool Members Rows */}
+          <TableRowSkeleton />
+          <TableRowSkeleton />
+          <TableRowSkeleton />
+          {/* Totals Row */}
+          <tr className="bg-gray-50">
+            <td className="px-6 py-2 whitespace-nowrap">
+              <div className="h-5 w-16 font-bold">
+                <SkeletonPulse />
+              </div>
+            </td>
+            <td className="px-6 py-2 whitespace-nowrap">
+              <div className="h-5 w-12 font-bold">
+                <SkeletonPulse />
+              </div>
+            </td>
+            <td className="px-6 py-2 whitespace-nowrap">
+              <div className="h-5 w-24 font-bold">
+                <SkeletonPulse />
+              </div>
+            </td>
+            <td className="px-6 py-2 whitespace-nowrap">
+              <div className="h-5 w-24 font-bold">
+                <SkeletonPulse />
+              </div>
+            </td>
+            <td className="px-6 py-2 whitespace-nowrap">
+              <div className="h-5 w-24 font-bold">
+                <SkeletonPulse />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+// Skeleton for multiple pool cards
+const PoolsSkeletonLoader = ({ count = 2 }) => (
+  <div className="grid grid-cols-1 gap-3">
+    {Array(count)
+      .fill(0)
+      .map((_, index) => (
+        <PoolCardSkeleton key={index} />
+      ))}
+  </div>
+);
+
 const Payments = () => {
   const token = useSelector((state) => state.userSlice.user.token);
   const user = useSelector((state) => state.userSlice.user.user);
@@ -89,6 +234,8 @@ const Payments = () => {
       enabled: !!token,
     }
   );
+
+  const isLoading = poolsLoading || salesLoading;
 
   useEffect(() => {
     if (isQueryEnabled) {
@@ -213,8 +360,10 @@ const Payments = () => {
             <p className="text-xl font-bold">Payments</p>
           </div>
           <div
-            onClick={() => setShowAddPool(!showAddPool)}
-            className={`p-2 py-3 text-sm font-roboto font-bold w-full md:w-36 text-center cursor-pointer bg-primary-400`}>
+            onClick={isLoading ? undefined : () => setShowAddPool(!showAddPool)}
+            className={`p-2 py-3 text-sm font-roboto font-bold w-full md:w-36 text-center cursor-pointer ${
+              isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-primary-400"
+            }`}>
             New Pool
           </div>
         </div>
@@ -227,6 +376,7 @@ const Payments = () => {
               setFromDate={setEndDate}
               toDate={endDate}
               fromDate={startDate}
+              disabled={isLoading}
             />
             <div className="flex flex-col md:pt-5">
               <div className="flex flex-row justify-between items-center">
@@ -236,20 +386,21 @@ const Payments = () => {
                     aria-labelledby="demo-row-radio-buttons-group-label"
                     name="row-radio-buttons-group"
                     value={company}
-                    onChange={(e) => setcompany(e.target.value)}>
+                    onChange={(e) => setcompany(e.target.value)}
+                    disabled={isLoading}>
                     <FormControlLabel
                       value="shuhari"
-                      control={<Radio />}
+                      control={<Radio disabled={isLoading} />}
                       label="Shuhari"
                     />
                     <FormControlLabel
                       value="muchami"
-                      control={<Radio />}
+                      control={<Radio disabled={isLoading} />}
                       label="Muchami"
                     />
                     <FormControlLabel
                       value="combined"
-                      control={<Radio />}
+                      control={<Radio disabled={isLoading} />}
                       label="Combined"
                     />
                   </RadioGroup>
@@ -262,10 +413,8 @@ const Payments = () => {
             <div
               className="flex-grow overflow-y-auto mt-6"
               style={{ maxHeight: "calc(100vh - 350px)" }}>
-              {poolsLoading || salesLoading ? (
-                <div className="flex justify-center items-center h-40">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary-400"></div>
-                </div>
+              {isLoading ? (
+                <PoolsSkeletonLoader count={2} />
               ) : poolsError || salesError ? (
                 <div className="text-red-500 text-center py-5">
                   Error loading data. Please try again later.

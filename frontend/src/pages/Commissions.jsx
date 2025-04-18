@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import { useDispatch, useSelector } from "react-redux";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { MdOutlineDelete } from "react-icons/md";
@@ -14,6 +13,77 @@ import {
 } from "../services/services";
 import DeleteConfirmationModal from "../components/DeleteModal";
 import { useNavigate } from "react-router-dom";
+
+// Skeleton components
+const SkeletonPulse = () => (
+  <div className="animate-pulse bg-gray-200 rounded-md h-full w-full" />
+);
+
+const SkeletonHeader = () => (
+  <tr>
+    <th className="px-1 w-5 py-3 border-x border-gray-200">
+      <div className="h-4 w-4">
+        <SkeletonPulse />
+      </div>
+    </th>
+    <th className="px-1 w-60 py-3 border-r border-gray-200">
+      <div className="h-4 w-40">
+        <SkeletonPulse />
+      </div>
+    </th>
+    {[1, 2, 3, 4].map((i) => (
+      <th key={i} className="px-1 w-40 py-3 border-r border-gray-200">
+        <div className="h-4 w-28 mx-auto">
+          <SkeletonPulse />
+        </div>
+      </th>
+    ))}
+  </tr>
+);
+
+const SkeletonRow = ({ columns = 5 }) => (
+  <tr className="bg-white border-b">
+    <td className="px-3 py-4 border-x border-gray-200">
+      <div className="h-4 w-4">
+        <SkeletonPulse />
+      </div>
+    </td>
+    <td className="px-3 py-4 border-r border-gray-200">
+      <div className="h-4 w-36">
+        <SkeletonPulse />
+      </div>
+    </td>
+    {Array(columns - 2)
+      .fill(0)
+      .map((_, i) => (
+        <td key={i} className="px-3 py-4 border-r border-gray-200">
+          <div className="h-5 w-16 mx-auto">
+            <SkeletonPulse />
+          </div>
+        </td>
+      ))}
+  </tr>
+);
+
+const SkeletonFooter = ({ columns = 5 }) => (
+  <tr className="bg-neutral-100">
+    <td className="border-x border-gray-200"></td>
+    <td className="border-r border-gray-200 px-3 py-4">
+      <div className="h-4 w-28">
+        <SkeletonPulse />
+      </div>
+    </td>
+    {Array(columns - 2)
+      .fill(0)
+      .map((_, i) => (
+        <td key={i} className="border-r border-gray-200 text-center py-2">
+          <div className="h-6 w-6 mx-auto rounded-full">
+            <SkeletonPulse />
+          </div>
+        </td>
+      ))}
+  </tr>
+);
 
 const Commissions = () => {
   const [showAddModel, setShowAddModel] = useState(false);
@@ -164,6 +234,11 @@ const Commissions = () => {
     }
   }, [user, navigate]);
 
+  const getSkeletonColumns = () => {
+    // Default to 5 columns if data isn't loaded yet
+    return models?.models?.length ? models.models.length + 2 : 5;
+  };
+
   return (
     <div className="p-5">
       <div className="space-y-2">
@@ -171,7 +246,10 @@ const Commissions = () => {
         <div className="flex flex-row items-center justify-end p-5">
           <button
             onClick={() => setShowAddModel(true)}
-            className={`p-2 py-3 text-sm font-roboto font-bold bg-primary-500 md:w-36 text-center cursor-pointer `}>
+            disabled={isLoading}
+            className={`p-2 py-3 text-sm font-roboto font-bold ${
+              isLoading ? "bg-gray-400" : "bg-primary-500"
+            } md:w-36 text-center cursor-pointer`}>
             Add Model
           </button>
         </div>
@@ -180,9 +258,22 @@ const Commissions = () => {
             <p className="text-zinc-600 font-bold">Set Commissions</p>
           </div>
           {isLoading ? (
-            <div className="flex justify-center items-center h-40">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-400 mr-2"></div>
-              <p>Loading commissions data...</p>
+            <div className="overflow-x-auto max-h-[450px]">
+              <table className="text-sm w-full text-left text-gray-500">
+                <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-gray-200 border sticky top-0 z-10">
+                  <SkeletonHeader />
+                </thead>
+                <tbody>
+                  {Array(6)
+                    .fill(0)
+                    .map((_, idx) => (
+                      <SkeletonRow key={idx} columns={getSkeletonColumns()} />
+                    ))}
+                </tbody>
+                <tfoot>
+                  <SkeletonFooter columns={getSkeletonColumns()} />
+                </tfoot>
+              </table>
             </div>
           ) : !regions?.regions ||
             regions.regions.length === 0 ||
@@ -276,13 +367,15 @@ const Commissions = () => {
           <div className="my-5 flex flex-row justify-end">
             <button
               className={`p-2 h-12 w-[300px] md:w-40 ${
-                hasChanges
+                isLoading
+                  ? "bg-gray-400 text-gray-700"
+                  : hasChanges
                   ? "bg-primary-500 text-white"
                   : "bg-gray-400 text-gray-700"
               }`}
               onClick={handleSubmit}
-              disabled={!hasChanges}>
-              {editCommissionLoading ? "Submiting..." : "Submit Changes"}
+              disabled={!hasChanges || isLoading}>
+              {editCommissionLoading ? "Submitting..." : "Submit Changes"}
             </button>
           </div>
         </div>
@@ -294,7 +387,9 @@ const Commissions = () => {
         onClose={() => setShowDeleteModal(false)}
         onDelete={handleDeleteModel}
         title="Confirm Action!"
-        message={`Are you sure you want to delete model "${modelToDelete?.model}"?`}
+        message={`Are you sure you want to delete model "${
+          models?.models?.find((m) => m.id === modelToDelete)?.model || ""
+        }"?`}
       />
     </div>
   );

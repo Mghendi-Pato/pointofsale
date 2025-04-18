@@ -21,6 +21,74 @@ import { toast } from "react-toastify";
 import DeleteConfirmationModal from "../../components/DeleteModal";
 import { useNavigate } from "react-router-dom";
 
+// Skeleton components
+const SkeletonPulse = () => (
+  <div className="animate-pulse bg-gray-200 rounded-md h-full w-full" />
+);
+
+const SupplierCardSkeleton = () => (
+  <div className="p-6 bg-white rounded-sm shadow-sm border border-neutral-200 relative">
+    <div className="absolute top-5 right-5">
+      <div className="h-8 w-8 rounded-full">
+        <SkeletonPulse />
+      </div>
+    </div>
+    <div className="p-2 bg-gray-100 inline-flex items-center space-x-3 rounded-md">
+      <div className="h-[18px] w-[18px]">
+        <SkeletonPulse />
+      </div>
+      <div className="h-4 w-24">
+        <SkeletonPulse />
+      </div>
+    </div>
+    <div className="flex flex-row items-center space-x-3 py-4">
+      <div className="h-5 w-32">
+        <SkeletonPulse />
+      </div>
+      <div className="h-6 w-6">
+        <SkeletonPulse />
+      </div>
+    </div>
+    <div className="flex flex-row items-center space-x-4">
+      <div className="h-[18px] w-[18px]">
+        <SkeletonPulse />
+      </div>
+      <div>
+        <div className="h-4 w-28 mb-2">
+          <SkeletonPulse />
+        </div>
+        <div className="h-3 w-24">
+          <SkeletonPulse />
+        </div>
+      </div>
+    </div>
+    <hr className="my-4 border-neutral-200" />
+    <div className="flex flex-row items-center space-x-4">
+      <div className="h-[18px] w-[18px]">
+        <SkeletonPulse />
+      </div>
+      <div>
+        <div className="h-4 w-16 mb-2">
+          <SkeletonPulse />
+        </div>
+        <div className="h-3 w-28">
+          <SkeletonPulse />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const SuppliersGridSkeleton = ({ count = 8 }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {Array(count)
+      .fill(0)
+      .map((_, index) => (
+        <SupplierCardSkeleton key={index} />
+      ))}
+  </div>
+);
+
 const Suppliers = () => {
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -107,28 +175,33 @@ const Suppliers = () => {
 
   return (
     <div className="p-5 ">
-      <div className="flex flex-row justify-end items-center  shadow">
+      <div className="flex flex-row justify-end items-center shadow">
         <div
-          className={`p-2 py-3 text-sm font-roboto font-bold bg-primary-400 w-[33%] md:w-36 text-center cursor-pointer`}
-          onClick={() => setShowAddSupplier(!showAddSupplier)}>
+          className={`p-2 py-3 text-sm font-roboto font-bold ${
+            isLoadingSuppliers ? "bg-gray-400" : "bg-primary-400"
+          } w-[33%] md:w-36 text-center ${
+            isLoadingSuppliers ? "cursor-not-allowed" : "cursor-pointer"
+          }`}
+          onClick={
+            isLoadingSuppliers
+              ? undefined
+              : () => setShowAddSupplier(!showAddSupplier)
+          }>
           Add supplier
         </div>
       </div>
       <div className="py-5 ">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {isLoadingSuppliers ? (
-            // Loading state
-            <div className="col-span-full flex justify-center items-center py-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-400 mr-2"></div>
-              <p>Loading suppliers...</p>
-            </div>
-          ) : totalItems === 0 ? (
-            // Empty state
-            <div className="col-span-full text-center py-10">
-              <p className="text-gray-500">No suppliers data found</p>
-            </div>
-          ) : (
-            currentSuppliers?.map((supplier, index) => (
+        {isLoadingSuppliers ? (
+          // Skeleton loading state
+          <SuppliersGridSkeleton count={itemsPerPage} />
+        ) : totalItems === 0 ? (
+          // Empty state
+          <div className="col-span-full text-center py-10">
+            <p className="text-gray-500">No suppliers data found</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {currentSuppliers?.map((supplier, index) => (
               <div
                 className="p-6 bg-white rounded-sm shadow-sm border border-neutral-200 cursor-pointer transition-all duration-1000 ease-in-out relative"
                 key={index}>
@@ -203,10 +276,10 @@ const Suppliers = () => {
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-        {totalPages > 1 && (
+            ))}
+          </div>
+        )}
+        {!isLoadingSuppliers && totalPages > 1 && (
           <div className="flex justify-center items-center space-x-4 py-5 mt-auto bg-white">
             <span className="text-sm font-medium text-neutral-700">
               {`${(currentPage - 1) * itemsPerPage + 1}-${Math.min(

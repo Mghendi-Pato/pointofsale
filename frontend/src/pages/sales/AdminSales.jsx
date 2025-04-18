@@ -25,6 +25,307 @@ import DeleteConfirmationModal from "../../components/DeleteModal";
 import { FiPrinter } from "react-icons/fi";
 import ReceiptTemplate from "../../components/ReceiptTemplate";
 
+// Skeleton components
+const SkeletonPulse = () => (
+  <div className="animate-pulse bg-gray-200 rounded-md h-full w-full" />
+);
+
+const TableSkeletonRow = ({ userRole, show, company }) => {
+  // Calculate the number of columns based on role, show status, and company setting
+  const getColSpan = () => {
+    if (company === "combined") {
+      return userRole === "manager"
+        ? show === "sold"
+          ? 9
+          : 8
+        : show === "sold"
+        ? 14
+        : 16;
+    } else {
+      return userRole === "manager"
+        ? show === "sold"
+          ? 8
+          : 7
+        : show === "sold"
+        ? 13
+        : 15;
+    }
+  };
+
+  return (
+    <tr className="bg-white border-b">
+      <td className="px-2 py-3 border-r">
+        <div className="h-4 w-4">
+          <SkeletonPulse />
+        </div>
+      </td>
+      {company === "combined" && (
+        <td className="px-2 py-3 border-r">
+          <div className="h-4 w-16">
+            <SkeletonPulse />
+          </div>
+        </td>
+      )}
+      <td className="px-2 py-3 border-r">
+        <div className="h-4 w-24">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-2 py-3 border-r">
+        <div className="h-4 w-20">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-24">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-20">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-24">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-20">
+          <SkeletonPulse />
+        </div>
+      </td>
+      {userRole !== "manager" && show === "reconcile" && (
+        <>
+          <td className="px-6 py-3 border-r">
+            <div className="h-4 w-24">
+              <SkeletonPulse />
+            </div>
+          </td>
+          <td className="px-6 py-3 border-r">
+            <div className="h-4 w-24">
+              <SkeletonPulse />
+            </div>
+          </td>
+        </>
+      )}
+      {userRole !== "manager" && (
+        <td className="px-6 py-3 border-r">
+          <div className="h-4 w-20">
+            <SkeletonPulse />
+          </div>
+        </td>
+      )}
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-20">
+          <SkeletonPulse />
+        </div>
+      </td>
+      {userRole !== "manager" && (
+        <td className="px-6 py-3 border-r">
+          <div className="h-4 w-20">
+            <SkeletonPulse />
+          </div>
+        </td>
+      )}
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-20">
+          <SkeletonPulse />
+        </div>
+      </td>
+      {userRole !== "manager" && (
+        <td className="px-6 py-3 border-r">
+          <div className="h-4 w-20">
+            <SkeletonPulse />
+          </div>
+        </td>
+      )}
+      {show === "sold" && (
+        <td className="px-6 py-3 flex flex-row space-x-2">
+          {userRole === "super admin" && (
+            <div className="h-8 w-28 rounded-xl">
+              <SkeletonPulse />
+            </div>
+          )}
+          {(userRole === "admin" || userRole === "super admin") && (
+            <div className="h-8 w-28 rounded-xl">
+              <SkeletonPulse />
+            </div>
+          )}
+          <div className="h-8 w-28 rounded-xl">
+            <SkeletonPulse />
+          </div>
+        </td>
+      )}
+    </tr>
+  );
+};
+
+const TableSkeleton = ({ userRole, show, company }) => {
+  return (
+    <div className="max-h-[57vh] overflow-y-auto" id="scrollableDiv">
+      <table className="w-full text-sm text-left text-gray-500 sticky top-0 z-10">
+        <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200 sticky top-0 z-10">
+          <tr>
+            <th scope="col" className="px-2 border-r py-2">
+              #
+            </th>
+            {company === "combined" && (
+              <th
+                scope="col"
+                className="px-2 border-r text-[14px] normal-case py-2">
+                Company
+              </th>
+            )}
+            <th
+              scope="col"
+              className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
+              Sale Date
+            </th>
+            <th
+              scope="col"
+              className="px-2 border-r text-[14px] normal-case py-2">
+              Manager
+            </th>
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              Location
+            </th>
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              Model
+            </th>
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              IMEI
+            </th>
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              Supplier
+            </th>
+            {userRole !== "manager" && show === "reconcile" && (
+              <th
+                scope="col"
+                className="px-6 border-r text-[14px] normal-case py-2">
+                Sale Date
+              </th>
+            )}
+            {userRole !== "manager" && show === "reconcile" && (
+              <th
+                scope="col"
+                className="px-6 border-r text-[14px] normal-case py-2">
+                Reconcile Date
+              </th>
+            )}
+            {userRole !== "manager" && (
+              <th
+                scope="col"
+                className="px-6 border-r text-[14px] normal-case py-2">
+                Buying Price
+              </th>
+            )}
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              Selling Price
+            </th>
+            {userRole !== "manager" && (
+              <th
+                scope="col"
+                className="px-6 border-r text-[14px] normal-case py-2">
+                Gross Profit
+              </th>
+            )}
+
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              Agent Commission
+            </th>
+            {userRole !== "manager" && (
+              <th
+                scope="col"
+                className="px-6 border-r text-[14px] normal-case py-2">
+                Net Profit
+              </th>
+            )}
+
+            {show === "sold" && (
+              <th scope="col" className="px-6 text-[14px] normal-case py-2">
+                Actions
+              </th>
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {[...Array(6)].map((_, index) => (
+            <TableSkeletonRow
+              key={index}
+              userRole={userRole}
+              show={show}
+              company={company}
+            />
+          ))}
+          <tr className="bg-gray-100 font-bold text-gray-900 sticky bottom-0 z-10 border-t">
+            <td
+              className="px-2 py-2 border-r"
+              colSpan={
+                company === "combined"
+                  ? show === "reconcile"
+                    ? 10
+                    : 8
+                  : show === "reconcile"
+                  ? 9
+                  : 7
+              }>
+              <div className="h-4 w-16">
+                <SkeletonPulse />
+              </div>
+            </td>
+            {userRole !== "manager" && (
+              <td className="px-6 border-r py-2">
+                <div className="h-4 w-24">
+                  <SkeletonPulse />
+                </div>
+              </td>
+            )}
+            <td className="px-6 border-r py-2">
+              <div className="h-4 w-24">
+                <SkeletonPulse />
+              </div>
+            </td>
+            {userRole !== "manager" && (
+              <td className="px-6 border-r py-2">
+                <div className="h-4 w-24">
+                  <SkeletonPulse />
+                </div>
+              </td>
+            )}
+            <td className="px-6 border-r py-2">
+              <div className="h-4 w-24">
+                <SkeletonPulse />
+              </div>
+            </td>
+            {userRole !== "manager" && (
+              <td className="px-6 border-r py-2">
+                <div className="h-4 w-24">
+                  <SkeletonPulse />
+                </div>
+              </td>
+            )}
+            {show === "sold" && <td className="px-6 py-2"></td>}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const AdminSales = () => {
   const token = useSelector((state) => state.userSlice.user.token);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,6 +344,69 @@ const AdminSales = () => {
   const [receiptPhone, setReceiptPhone] = useState(null);
   const [showDownLoadReceiptModal, setShowDownLoadReceiptModal] =
     useState(false);
+
+  const [show, setShow] = useState("sold");
+
+  const isQueryEnabled =
+    company !== undefined &&
+    startDate !== undefined &&
+    endDate !== undefined &&
+    !!token;
+
+  const {
+    data: phonesData,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery(
+    ["phones", { company, startDate, endDate, show }],
+    () =>
+      fetchSoldPhones({
+        company,
+        startDate,
+        endDate,
+        token,
+        status: show,
+      }),
+    {
+      enabled: isQueryEnabled,
+      onSuccess: (data) => {
+        queryClient.setQueryData(
+          ["phones", { company, startDate, endDate, show }],
+          data
+        );
+      },
+      onError: (error) => {
+        console.error(`Error fetching ${show} phones:`, error.message);
+      },
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  useEffect(() => {
+    if (isQueryEnabled) {
+      refetch();
+    }
+  }, [company, startDate, endDate, refetch, isQueryEnabled, show]);
+
+  const filteredPhones = useMemo(() => {
+    const dataToFilter = phonesData;
+    return dataToFilter?.filter((phone) =>
+      searchQuery
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean)
+        .every((part) =>
+          [
+            phone?.modelName?.toLowerCase() || "",
+            phone?.imei || "",
+            phone?.supplierName?.toLowerCase() || "",
+            phone?.managerName?.toLowerCase() || "",
+            phone?.managerLocation?.toLowerCase() || "",
+          ].some((field) => field.includes(part))
+        )
+    );
+  }, [searchQuery, phonesData]);
 
   // Function to generate and download Excel file
   const handleDownload = () => {
@@ -152,69 +516,6 @@ const AdminSales = () => {
     saveAs(data, `Sales_Report_${dayjs().format("YYYY-MM-DD")}.xlsx`);
   };
 
-  const [show, setShow] = useState("sold");
-
-  const isQueryEnabled =
-    company !== undefined &&
-    startDate !== undefined &&
-    endDate !== undefined &&
-    !!token;
-
-  const {
-    data: phonesData,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery(
-    ["phones", { company, startDate, endDate, show }],
-    () =>
-      fetchSoldPhones({
-        company,
-        startDate,
-        endDate,
-        token,
-        status: show,
-      }),
-    {
-      enabled: isQueryEnabled,
-      onSuccess: (data) => {
-        queryClient.setQueryData(
-          ["phones", { company, startDate, endDate, show }],
-          data
-        );
-      },
-      onError: (error) => {
-        console.error(`Error fetching ${show} phones:`, error.message);
-      },
-      refetchOnWindowFocus: false,
-    }
-  );
-
-  useEffect(() => {
-    if (isQueryEnabled) {
-      refetch();
-    }
-  }, [company, startDate, endDate, refetch, isQueryEnabled, show]);
-
-  const filteredPhones = useMemo(() => {
-    const dataToFilter = phonesData;
-    return dataToFilter?.filter((phone) =>
-      searchQuery
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(Boolean)
-        .every((part) =>
-          [
-            phone?.modelName?.toLowerCase() || "",
-            phone?.imei || "",
-            phone?.supplierName?.toLowerCase() || "",
-            phone?.managerName?.toLowerCase() || "",
-            phone?.managerLocation?.toLowerCase() || "",
-          ].some((field) => field.includes(part))
-        )
-    );
-  }, [searchQuery, phonesData]);
-
   const handleSearchChange = (event) => setSearchQuery(event.target.value);
 
   const paginatedPhones = filteredPhones;
@@ -319,7 +620,7 @@ const AdminSales = () => {
         token,
       });
     }
-    setShowRevertModal(false);
+    setShowReconcileModal(false);
   };
 
   const handleReceiptDownload = (phone) => {
@@ -356,12 +657,14 @@ const AdminSales = () => {
             setFromDate={setEndDate}
             toDate={endDate}
             fromDate={startDate}
+            disabled={isLoading}
           />
           <div className="flex flex-col md:flex-row md:items-center md:space-x-2 md:pt-5">
             <TextField
               id="outlined-search"
               label="Search phone..."
               variant="outlined"
+              disabled={isLoading}
               sx={{
                 minWidth: { xs: "320px", md: "330px" },
                 "& .MuiInputLabel-root": {
@@ -388,31 +691,40 @@ const AdminSales = () => {
                   aria-labelledby="demo-row-radio-buttons-group-label"
                   name="row-radio-buttons-group"
                   value={company}
-                  onChange={(e) => setcompany(e.target.value)}>
+                  onChange={(e) => setcompany(e.target.value)}
+                  disabled={isLoading}>
                   <FormControlLabel
                     value="shuhari"
-                    control={<Radio />}
+                    control={<Radio disabled={isLoading} />}
                     label="Shuhari"
                   />
                   <FormControlLabel
                     value="muchami"
-                    control={<Radio />}
+                    control={<Radio disabled={isLoading} />}
                     label="Muchami"
                   />
                   <FormControlLabel
                     value="combined"
-                    control={<Radio />}
+                    control={<Radio disabled={isLoading} />}
                     label="Combined"
                   />
                 </RadioGroup>
               </FormControl>
               {user.role !== "manager" && (
                 <div
-                  className="p-2 hover:bg-neutral-200 rounded-full cursor-pointer transition-all duration-300 ease-in-out"
-                  onClick={handleDownload}>
+                  className={`p-2 ${
+                    isLoading
+                      ? "text-gray-400"
+                      : "hover:bg-neutral-200 cursor-pointer text-gray-500 hover:text-gray-700"
+                  } rounded-full transition-all duration-300 ease-in-out`}
+                  onClick={isLoading ? undefined : handleDownload}>
                   <HiOutlineDownload
                     size={25}
-                    className="text-gray-500 hover:text-gray-700 transition-all duration-300 ease-in-out"
+                    className={
+                      isLoading
+                        ? "text-gray-400"
+                        : "transition-all duration-300 ease-in-out"
+                    }
                   />
                 </div>
               )}
@@ -423,119 +735,262 @@ const AdminSales = () => {
       <div className="border border-gray-200">
         <div className="">
           <div className="overflow-x-auto">
-            <div className="max-h-[57vh]  overflow-y-auto " id="scrollableDiv">
-              <table className="w-full text-sm text-left text-gray-500 sticky top-0 z-10">
-                <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200 sticky top-0 z-10">
-                  <tr>
-                    <th scope="col" className="px-2 border-r py-2">
-                      #
-                    </th>
-                    {company === "combined" && (
+            <div className="max-h-[57vh] overflow-y-auto" id="scrollableDiv">
+              {isLoading ? (
+                <TableSkeleton
+                  userRole={user.role}
+                  show={show}
+                  company={company}
+                />
+              ) : isError || paginatedPhones?.length === 0 ? (
+                <table className="w-full text-sm text-left text-gray-500 sticky top-0 z-10">
+                  <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200 sticky top-0 z-10">
+                    <tr>
+                      <th scope="col" className="px-2 border-r py-2">
+                        #
+                      </th>
+                      {company === "combined" && (
+                        <th
+                          scope="col"
+                          className="px-2 border-r text-[14px] normal-case py-2">
+                          Company
+                        </th>
+                      )}
+                      <th
+                        scope="col"
+                        className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
+                        Sale Date
+                      </th>
                       <th
                         scope="col"
                         className="px-2 border-r text-[14px] normal-case py-2">
-                        Company
+                        Manager
                       </th>
-                    )}
-                    <th
-                      scope="col"
-                      className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
-                      Sale Date
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-2 border-r text-[14px] normal-case py-2">
-                      Manger
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Location
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Model
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      IMEI
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Supplier
-                    </th>
-                    {user?.role !== "manager" && show === "reconcile" && (
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
-                        Sale Date
+                        Location
                       </th>
-                    )}
-                    {user?.role !== "manager" && show === "reconcile" && (
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
-                        Reconcile Date
+                        Model
                       </th>
-                    )}
-                    {user.role !== "manager" && (
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
-                        Buying Price
+                        IMEI
                       </th>
-                    )}
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Selling Price
-                    </th>
-                    {user.role !== "manager" && (
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
-                        Gross Profit
+                        Supplier
                       </th>
-                    )}
+                      {user?.role !== "manager" && show === "reconcile" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Sale Date
+                        </th>
+                      )}
+                      {user?.role !== "manager" && show === "reconcile" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Reconcile Date
+                        </th>
+                      )}
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Buying Price
+                        </th>
+                      )}
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Selling Price
+                      </th>
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Gross Profit
+                        </th>
+                      )}
 
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Agent Commission
-                    </th>
-                    {user.role !== "manager" && (
                       <th
                         scope="col"
                         className="px-6 border-r text-[14px] normal-case py-2">
-                        Net Profit
+                        Agent Commission
                       </th>
-                    )}
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Net Profit
+                        </th>
+                      )}
 
-                    {show === "sold" && (
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Actions
-                      </th>
-                    )}
-                  </tr>
-                </thead>
-                {isLoading ? (
-                  <p className="p-2">Fetching sales data...</p>
-                ) : isError || paginatedPhones?.length === 0 ? (
+                      {show === "sold" && (
+                        <th
+                          scope="col"
+                          className="px-6 text-[14px] normal-case py-2">
+                          Actions
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
                   <tbody>
                     <tr>
-                      <td colSpan="9" className="px-4 pt-2">
+                      <td
+                        colSpan={
+                          company === "combined"
+                            ? user.role === "manager"
+                              ? show === "sold"
+                                ? 9
+                                : 8
+                              : show === "sold"
+                              ? 14
+                              : 16
+                            : user.role === "manager"
+                            ? show === "sold"
+                              ? 8
+                              : 7
+                            : show === "sold"
+                            ? 13
+                            : 15
+                        }
+                        className="px-4 py-8 text-center"></td>
+                      <td
+                        colSpan={
+                          company === "combined"
+                            ? user.role === "manager"
+                              ? show === "sold"
+                                ? 9
+                                : 8
+                              : show === "sold"
+                              ? 14
+                              : 16
+                            : user.role === "manager"
+                            ? show === "sold"
+                              ? 8
+                              : 7
+                            : show === "sold"
+                            ? 13
+                            : 15
+                        }
+                        className="px-4 py-8 text-center">
                         <p className="text-gray-500">
-                          No sales found or error fetching data.
+                          {isError
+                            ? "Error fetching data. Please try again."
+                            : "No sales found for the selected criteria."}
                         </p>
                       </td>
                     </tr>
                   </tbody>
-                ) : (
+                </table>
+              ) : (
+                <table className="w-full text-sm text-left text-gray-500 sticky top-0 z-10">
+                  <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200 sticky top-0 z-10">
+                    <tr>
+                      <th scope="col" className="px-2 border-r py-2">
+                        #
+                      </th>
+                      {company === "combined" && (
+                        <th
+                          scope="col"
+                          className="px-2 border-r text-[14px] normal-case py-2">
+                          Company
+                        </th>
+                      )}
+                      <th
+                        scope="col"
+                        className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
+                        Sale Date
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-2 border-r text-[14px] normal-case py-2">
+                        Manager
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Location
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Model
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        IMEI
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Supplier
+                      </th>
+                      {user?.role !== "manager" && show === "reconcile" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Sale Date
+                        </th>
+                      )}
+                      {user?.role !== "manager" && show === "reconcile" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Reconcile Date
+                        </th>
+                      )}
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Buying Price
+                        </th>
+                      )}
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Selling Price
+                      </th>
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Gross Profit
+                        </th>
+                      )}
+
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Agent Commission
+                      </th>
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Net Profit
+                        </th>
+                      )}
+
+                      {show === "sold" && (
+                        <th
+                          scope="col"
+                          className="px-6 text-[14px] normal-case py-2">
+                          Actions
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
                   <tbody>
                     {paginatedPhones?.map((phone, index) => {
                       const grossProfit =
@@ -608,7 +1063,7 @@ const AdminSales = () => {
                               {user.role === "super admin" && (
                                 <button
                                   onClick={() => handleRevertPhone(phone.id)}
-                                  aria-label={`Analyze ${phone?.name}`}
+                                  aria-label={`Revert ${phone?.name}`}
                                   className="flex flex-row justify-center items-center w-28  gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
                                   <FaUndoAlt
                                     className="text-amber-500"
@@ -621,7 +1076,7 @@ const AdminSales = () => {
                                 user.role === "super admin") && (
                                 <button
                                   onClick={() => handleReconcilePhone(phone.id)}
-                                  aria-label={`Analyze ${phone?.name}`}
+                                  aria-label={`Reconcile ${phone?.name}`}
                                   className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
                                   <IoCheckmarkDone className="text-green-500" />
                                   Reconcile
@@ -629,7 +1084,7 @@ const AdminSales = () => {
                               )}
                               <button
                                 onClick={() => handleReceiptDownload(phone)}
-                                aria-label={`Analyze ${phone?.name}`}
+                                aria-label={`Receipt for ${phone?.name}`}
                                 className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-blue-500 hover:bg-blue-300">
                                 <FiPrinter className="text-blue-500" />
                                 Receipt
@@ -710,8 +1165,8 @@ const AdminSales = () => {
                       )}
                     </tr>
                   </tbody>
-                )}
-              </table>
+                </table>
+              )}
             </div>
           </div>
         </div>

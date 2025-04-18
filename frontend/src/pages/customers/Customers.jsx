@@ -16,6 +16,172 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useNavigate } from "react-router-dom";
 
+// Skeleton components
+const SkeletonPulse = () => (
+  <div className="animate-pulse bg-gray-200 rounded-md h-full w-full" />
+);
+
+const TableSkeletonRow = ({ userRole }) => {
+  return (
+    <tr className="bg-white border-b">
+      <td className="px-2 py-3 border-r">
+        <div className="h-4 w-4">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-2 py-3 border-r">
+        <div className="h-4 w-28">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-2 py-3 border-r">
+        <div className="h-4 w-20">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-2 py-3 border-r">
+        <div className="h-4 w-28">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-28">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-28">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-32">
+          <SkeletonPulse />
+        </div>
+      </td>
+      {userRole !== "manager" && (
+        <td className="px-6 py-3 border-r">
+          <div className="h-4 w-24">
+            <SkeletonPulse />
+          </div>
+        </td>
+      )}
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-20">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-16">
+          <SkeletonPulse />
+        </div>
+      </td>
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-16">
+          <SkeletonPulse />
+        </div>
+      </td>
+      {userRole !== "manager" && (
+        <td className="px-6 py-3 border-r">
+          <div className="h-4 w-24">
+            <SkeletonPulse />
+          </div>
+        </td>
+      )}
+      <td className="px-6 py-3 border-r">
+        <div className="h-4 w-24">
+          <SkeletonPulse />
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+const TableSkeleton = ({ userRole }) => {
+  return (
+    <div className="max-h-[57vh] overflow-y-auto" id="scrollableDiv">
+      <table className="w-full text-sm text-left text-gray-500 sticky top-0 z-10">
+        <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200 sticky top-0 z-10">
+          <tr>
+            <th scope="col" className="px-2 border-r py-2">
+              #
+            </th>
+            <th
+              scope="col"
+              className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
+              Customer
+            </th>
+            <th
+              scope="col"
+              className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
+              ID
+            </th>
+            <th
+              scope="col"
+              className="px-2 border-r text-[14px] normal-case py-2">
+              Phn
+            </th>
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              N.K Name
+            </th>
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              N.K Phn
+            </th>
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              IMEI
+            </th>
+            {userRole !== "manager" && (
+              <th
+                scope="col"
+                className="px-6 border-r text-[14px] normal-case py-2">
+                Sale Date
+              </th>
+            )}
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              Model
+            </th>
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              Capacity
+            </th>
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              RAM
+            </th>
+            {userRole !== "manager" && (
+              <th
+                scope="col"
+                className="px-6 border-r text-[14px] normal-case py-2">
+                Buying Price
+              </th>
+            )}
+            <th
+              scope="col"
+              className="px-6 border-r text-[14px] normal-case py-2">
+              Selling Price
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...Array(8)].map((_, index) => (
+            <TableSkeletonRow key={index} userRole={userRole} />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const Customers = () => {
   const token = useSelector((state) => state.userSlice.user.token);
   const [searchQuery, setSearchQuery] = useState("");
@@ -227,12 +393,14 @@ const Customers = () => {
             setFromDate={setEndDate}
             toDate={endDate}
             fromDate={startDate}
+            disabled={isLoading}
           />
           <div className="flex flex-col md:flex-row md:items-center md:space-x-2 md:pt-5">
             <TextField
               id="outlined-search"
               label="Search phone..."
               variant="outlined"
+              disabled={isLoading}
               sx={{
                 minWidth: { xs: "320px", md: "330px" },
                 "& .MuiInputLabel-root": {
@@ -259,31 +427,40 @@ const Customers = () => {
                   aria-labelledby="demo-row-radio-buttons-group-label"
                   name="row-radio-buttons-group"
                   value={company}
-                  onChange={(e) => setcompany(e.target.value)}>
+                  onChange={(e) => setcompany(e.target.value)}
+                  disabled={isLoading}>
                   <FormControlLabel
                     value="shuhari"
-                    control={<Radio />}
+                    control={<Radio disabled={isLoading} />}
                     label="Shuhari"
                   />
                   <FormControlLabel
                     value="muchami"
-                    control={<Radio />}
+                    control={<Radio disabled={isLoading} />}
                     label="Muchami"
                   />
                   <FormControlLabel
                     value="combined"
-                    control={<Radio />}
+                    control={<Radio disabled={isLoading} />}
                     label="Combined"
                   />
                 </RadioGroup>
               </FormControl>
               {user.role !== "manager" && (
                 <div
-                  className="p-2 hover:bg-neutral-200 rounded-full cursor-pointer transition-all duration-300 ease-in-out"
-                  onClick={handleDownload}>
+                  className={`p-2 ${
+                    isLoading
+                      ? "text-gray-400"
+                      : "hover:bg-neutral-200 cursor-pointer text-gray-500 hover:text-gray-700"
+                  } rounded-full transition-all duration-300 ease-in-out`}
+                  onClick={isLoading ? undefined : handleDownload}>
                   <HiOutlineDownload
                     size={25}
-                    className="text-gray-500 hover:text-gray-700 transition-all duration-300 ease-in-out"
+                    className={
+                      isLoading
+                        ? "text-gray-400"
+                        : "transition-all duration-300 ease-in-out"
+                    }
                   />
                 </div>
               )}
@@ -294,144 +471,156 @@ const Customers = () => {
       <div className="border border-gray-200">
         <div className="">
           <div className="overflow-x-auto">
-            <div className="max-h-[57vh]  overflow-y-auto " id="scrollableDiv">
-              <table className="w-full text-sm text-left text-gray-500 sticky top-0 z-10">
-                <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200 sticky top-0 z-10">
-                  <tr>
-                    <th scope="col" className="px-2 border-r py-2">
-                      #
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
-                      Customer
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
-                      ID
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-2 border-r text-[14px] normal-case py-2">
-                      Phn
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      N.K Name
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      N.K Phn
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      IMEI
-                    </th>
-                    {user.role !== "manager" && (
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Sale Date
-                      </th>
-                    )}
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Model
-                    </th>
-
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Capacity
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      RAM
-                    </th>
-                    {user.role !== "manager" && (
-                      <th
-                        scope="col"
-                        className="px-6 border-r text-[14px] normal-case py-2">
-                        Buying Price
-                      </th>
-                    )}
-                    <th
-                      scope="col"
-                      className="px-6 border-r text-[14px] normal-case py-2">
-                      Selling Price
-                    </th>
-                  </tr>
-                </thead>
-                {isLoading ? (
-                  <p className="p-2">Fetching customer data...</p>
-                ) : isError || paginatedPhones?.length === 0 ? (
-                  <tbody>
+            <div className="max-h-[57vh] overflow-y-auto" id="scrollableDiv">
+              {isLoading ? (
+                <TableSkeleton userRole={user.role} />
+              ) : (
+                <table className="w-full text-sm text-left text-gray-500 sticky top-0 z-10">
+                  <thead className="text-xs text-gray-700 uppercase bg-neutral-100 border-b border-gray-200 sticky top-0 z-10">
                     <tr>
-                      <td colSpan="9" className="px-4 pt-2">
-                        <p className="text-gray-500">
-                          No sales found or error fetching data.
-                        </p>
-                      </td>
+                      <th scope="col" className="px-2 border-r py-2">
+                        #
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
+                        Customer
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-2 border-r text-[14px] normal-case py-2 min-w-28">
+                        ID
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-2 border-r text-[14px] normal-case py-2">
+                        Phn
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        N.K Name
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        N.K Phn
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        IMEI
+                      </th>
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Sale Date
+                        </th>
+                      )}
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Model
+                      </th>
+
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Capacity
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        RAM
+                      </th>
+                      {user.role !== "manager" && (
+                        <th
+                          scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Buying Price
+                        </th>
+                      )}
+                      <th
+                        scope="col"
+                        className="px-6 border-r text-[14px] normal-case py-2">
+                        Selling Price
+                      </th>
                     </tr>
-                  </tbody>
-                ) : (
-                  <tbody>
-                    {paginatedPhones?.map((phone, index) => {
-                      return (
-                        <tr
-                          key={phone.id}
-                          className={`bg-white border-b hover:bg-blue-50 cursor-pointer`}>
-                          <td className="px-2 py-2 border-r font-medium text-gray-900">
-                            {index + 1}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.customerName}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.customerID}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.customerPhn}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.nkName}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.nkPhn}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.imei}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {formatDate(new Date(phone.saleDate))}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.modelName}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.capacity}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.ram} GB
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.purchasePrice}
-                          </td>
-                          <td className="px-2 border-r py-2 capitalize">
-                            {phone?.sellingPrice}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                )}
-              </table>
+                  </thead>
+                  {isError ||
+                  !paginatedPhones ||
+                  paginatedPhones.length === 0 ? (
+                    <tbody>
+                      <tr>
+                        <td
+                          colSpan={user.role !== "manager" ? 13 : 11}
+                          className="px-4 py-8 text-center">
+                          <p className="text-gray-500">
+                            {isError
+                              ? "Error fetching data. Please try again."
+                              : "No customer data found for the selected criteria."}
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  ) : (
+                    <tbody>
+                      {paginatedPhones.map((phone, index) => {
+                        return (
+                          <tr
+                            key={phone.id}
+                            className={`bg-white border-b hover:bg-blue-50 cursor-pointer`}>
+                            <td className="px-2 py-2 border-r font-medium text-gray-900">
+                              {index + 1}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.customerName}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.customerID}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.customerPhn}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.nkName}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.nkPhn}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.imei}
+                            </td>
+                            {user.role !== "manager" && (
+                              <td className="px-2 border-r py-2 capitalize">
+                                {formatDate(new Date(phone.saleDate))}
+                              </td>
+                            )}
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.modelName}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.capacity}
+                            </td>
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.ram} GB
+                            </td>
+                            {user.role !== "manager" && (
+                              <td className="px-2 border-r py-2 capitalize">
+                                {phone?.purchasePrice}
+                              </td>
+                            )}
+                            <td className="px-2 border-r py-2 capitalize">
+                              {phone?.sellingPrice}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  )}
+                </table>
+              )}
             </div>
           </div>
         </div>
