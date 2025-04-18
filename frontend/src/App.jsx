@@ -19,6 +19,7 @@ import Commissions from "./pages/Commissions";
 import PhoneDetails from "./pages/PhoneDetails";
 import Customers from "./pages/customers/Customers";
 import Payments from "./pages/Payments";
+import NotFound from "./pages/NotFound";
 
 const App = () => {
   return (
@@ -129,6 +130,7 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

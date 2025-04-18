@@ -13,10 +13,12 @@ import {
   fetchAllRegions,
 } from "../services/services";
 import DeleteConfirmationModal from "../components/DeleteModal";
+import { useNavigate } from "react-router-dom";
 
 const Commissions = () => {
   const [showAddModel, setShowAddModel] = useState(false);
   const token = useSelector((state) => state.userSlice.user.token);
+  const user = useSelector((state) => state.userSlice.user.user);
   const [commissions, setCommissions] = useState({});
   const [editedCells, setEditedCells] = useState(new Set());
   const [hasChanges, setHasChanges] = useState(false);
@@ -25,6 +27,7 @@ const Commissions = () => {
   const [modelToDelete, setModelToDelete] = useState(null);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -155,7 +158,11 @@ const Commissions = () => {
     setShowDeleteModal(false);
   };
 
-  console.log();
+  useEffect(() => {
+    if (!["super admin", "admin"].includes(user?.role)) {
+      navigate("/inventory");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="p-5">

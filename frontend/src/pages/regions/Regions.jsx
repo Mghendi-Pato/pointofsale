@@ -14,6 +14,7 @@ import { GrFormPrevious } from "react-icons/gr";
 import { MdOutlineDelete } from "react-icons/md";
 import DeleteConfirmationModal from "../../components/DeleteModal";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const Regions = () => {
   const [showAddRegion, setShowAddRegion] = useState(false);
@@ -21,8 +22,10 @@ const Regions = () => {
   const [deleteRegion, setDeleteRegion] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const token = useSelector((state) => state.userSlice.user.token);
+  const user = useSelector((state) => state.userSlice.user.user);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (showAddRegion) {
@@ -91,6 +94,12 @@ const Regions = () => {
     }
     setShowDeleteModal(false);
   };
+
+  useEffect(() => {
+    if (!["super admin", "admin"].includes(user?.role)) {
+      navigate("/inventory");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="p-5 ">

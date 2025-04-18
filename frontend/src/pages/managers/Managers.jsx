@@ -16,6 +16,7 @@ import { useMutation, useQueryClient } from "react-query";
 import DeleteConfirmationModal from "../../components/DeleteModal";
 import EditUserModal from "../../components/EditUserModal";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { useNavigate } from "react-router-dom";
 
 const Managers = () => {
   const [show, setShow] = useState("active");
@@ -26,8 +27,10 @@ const Managers = () => {
   const [editUser, setEditUser] = useState([]);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const token = useSelector((state) => state.userSlice.user.token);
+  const user = useSelector((state) => state.userSlice.user.user);
 
   const {
     data: activeData,
@@ -178,6 +181,12 @@ const Managers = () => {
     setEditUser(manager);
     setShowEditUserModal(true);
   };
+
+  useEffect(() => {
+    if (!["super admin", "admin"].includes(user?.role)) {
+      navigate("/inventory");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="p-5">

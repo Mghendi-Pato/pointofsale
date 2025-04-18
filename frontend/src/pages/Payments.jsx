@@ -22,9 +22,11 @@ import { MdOutlineDelete } from "react-icons/md";
 import DeleteConfirmationModal from "../components/DeleteModal";
 import { toast } from "react-toastify";
 import EditPool from "../components/EditPoolModal";
+import { useNavigate } from "react-router-dom";
 
 const Payments = () => {
   const token = useSelector((state) => state.userSlice.user.token);
+  const user = useSelector((state) => state.userSlice.user.user);
 
   const [company, setcompany] = useState("shuhari");
   const queryClient = useQueryClient();
@@ -37,6 +39,8 @@ const Payments = () => {
   const [editPool, setEditpool] = useState(null);
   const dispatch = useDispatch();
   const [showEditPoolModal, setShowEditPoolModal] = useState();
+
+  const navigate = useNavigate();
 
   const isQueryEnabled =
     company !== undefined &&
@@ -96,6 +100,12 @@ const Payments = () => {
     setStartDate(startDate);
     setEndDate(endDate);
   };
+
+  useEffect(() => {
+    if (user?.designation !== "cfo") {
+      navigate("/inventory");
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     if (showAddPool || showEditPoolModal) {

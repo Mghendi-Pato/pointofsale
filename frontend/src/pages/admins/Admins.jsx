@@ -16,6 +16,7 @@ import {
 import { useMutation, useQueryClient } from "react-query";
 import DeleteConfirmationModal from "../../components/DeleteModal";
 import EditUserModal from "../../components/EditUserModal";
+import { useNavigate } from "react-router-dom";
 
 const Admins = () => {
   const [page, setPage] = useState(0);
@@ -28,8 +29,10 @@ const Admins = () => {
   const [editUser, setEditUser] = useState(null);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const token = useSelector((state) => state.userSlice.user.token);
+  const user = useSelector((state) => state.userSlice.user.user);
 
   const { data: activeAdminsData, isLoading: activeAdminsLoading } = useQuery(
     ["admins", { status: "active", page: page + 1, limit: rowsPerPage }],
@@ -146,6 +149,12 @@ const Admins = () => {
         return "th";
     }
   }
+
+  useEffect(() => {
+    if (user?.role !== "super admin") {
+      navigate("/inventory");
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     setPage(0);

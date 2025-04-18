@@ -27,11 +27,15 @@ import { useQuery } from "react-query";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { Switch } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const token = useSelector((state) => state.userSlice.user.token);
+  const user = useSelector((state) => state.userSlice.user.user);
   const [show, setShow] = useState(true);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
@@ -143,6 +147,12 @@ const AdminDashboard = () => {
       percentage: phoneSummaries?.soldThisMonth?.percentageProfit,
     },
   ];
+
+  useEffect(() => {
+    if (!["super admin", "admin"].includes(user?.role)) {
+      navigate("/inventory");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="flex flex-col md:flex-row justify-between bg-slate-50 md:h-[calc(100vh-72px)] p-5 space-y-2 md:space-y-0 md:space-x-5">

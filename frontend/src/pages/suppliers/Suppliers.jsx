@@ -19,6 +19,7 @@ import {
 import { GrFormPrevious } from "react-icons/gr";
 import { toast } from "react-toastify";
 import DeleteConfirmationModal from "../../components/DeleteModal";
+import { useNavigate } from "react-router-dom";
 
 const Suppliers = () => {
   const [showAddSupplier, setShowAddSupplier] = useState(false);
@@ -26,7 +27,9 @@ const Suppliers = () => {
   const [deleteSupplier, setDeleteSupplier] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const token = useSelector((state) => state.userSlice.user.token);
+  const user = useSelector((state) => state.userSlice.user.user);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (showAddSupplier) {
@@ -95,6 +98,12 @@ const Suppliers = () => {
     }
     setShowDeleteModal(false);
   };
+
+  useEffect(() => {
+    if (!["super admin", "admin"].includes(user?.role)) {
+      navigate("/inventory");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="p-5 ">

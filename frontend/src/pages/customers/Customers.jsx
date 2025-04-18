@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import { HiOutlineDownload } from "react-icons/hi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { useNavigate } from "react-router-dom";
 
 const Customers = () => {
   const token = useSelector((state) => state.userSlice.user.token);
@@ -24,6 +25,7 @@ const Customers = () => {
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const user = useSelector((state) => state.userSlice.user.user);
+  const navigate = useNavigate();
 
   // Function to generate and download Excel file
   const handleDownload = () => {
@@ -189,6 +191,12 @@ const Customers = () => {
     // Combine day with ordinal suffix and the rest of the date
     return formattedDate.replace(day, `${day}${ordinalSuffix}`);
   }
+
+  useEffect(() => {
+    if (!["super admin", "admin"].includes(user?.role)) {
+      navigate("/inventory");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="p-5">
