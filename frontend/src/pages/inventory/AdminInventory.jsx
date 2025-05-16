@@ -1,4 +1,4 @@
-import { TextField } from "@mui/material";
+import { TextField, Switch, FormControlLabel } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../../redux/reducers/ sidebar";
@@ -208,6 +208,8 @@ const AdminInventory = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePhoneImei, setDeletePhoneImei] = useState(null);
   const user = useSelector((state) => state.userSlice.user.user);
+  // New state for the days filter toggle
+  const [filterByDaysOnly, setFilterByDaysOnly] = useState(false);
 
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -308,50 +310,48 @@ const AdminInventory = () => {
     const dataToFilter =
       show === "active" ? activePhones : show === "lost" ? lostPhones : [];
 
+    // If no search query, return all data
+    if (!searchQuery.trim()) {
+      return dataToFilter;
+    }
+
     return dataToFilter.filter((phone) => {
+      // If filtering by days only and the query is a number
+      if (filterByDaysOnly && !isNaN(searchQuery.trim())) {
+        const searchDays = parseInt(searchQuery.trim(), 10);
+        const daysSinceAssigned = calculateDaysFromDate(
+          phone?.dateAssigned || phone?.createdAt
+        );
+
+        // Return true if days since assigned is >= the search days
+        return daysSinceAssigned >= searchDays;
+      }
+
+      // Otherwise use the regular search logic
       const searchParts = searchQuery
         .toLowerCase()
         .split(/\s+/)
         .filter(Boolean);
 
       return searchParts.every((part) => {
-        // Check if the search term is a number (potentially days)
-        const isNumber = !isNaN(part) && part.trim() !== "";
-
-        if (isNumber) {
-          // If it's a number, check if days since assignment is >= the searched number
-          const daysSinceAssigned = calculateDaysFromDate(
-            phone?.dateAssigned || phone?.createdAt
-          );
-          const searchDays = parseInt(part, 10);
-
-          // Check regular fields OR if days match/exceed the search value
-          return (
-            [
-              phone?.modelName?.toLowerCase(),
-              phone?.imei,
-              phone?.supplierName?.toLowerCase(),
-              phone?.managerName?.toLowerCase(),
-              phone?.managerLocation?.toLowerCase(),
-            ].some((field) => field?.includes(part)) ||
-            daysSinceAssigned >= searchDays
-          );
-        } else {
-          // For non-numeric search terms, use the original fields
-          return [
-            phone?.modelName?.toLowerCase(),
-            phone?.imei,
-            phone?.supplierName?.toLowerCase(),
-            phone?.managerName?.toLowerCase(),
-            phone?.managerLocation?.toLowerCase(),
-          ].some((field) => field?.includes(part));
-        }
+        return [
+          phone?.modelName?.toLowerCase(),
+          phone?.imei,
+          phone?.supplierName?.toLowerCase(),
+          phone?.managerName?.toLowerCase(),
+          phone?.managerLocation?.toLowerCase(),
+        ].some((field) => field?.includes(part));
       });
     });
-  }, [activePhones, lostPhones, searchQuery, show]);
+  }, [activePhones, lostPhones, searchQuery, show, filterByDaysOnly]);
 
   // Handles search query change
   const handleSearchChange = (event) => setSearchQuery(event.target.value);
+
+  // Handle toggle change for days filter
+  const handleToggleFilterByDays = (event) => {
+    setFilterByDaysOnly(event.target.checked);
+  };
 
   const paginatedPhones = filteredPhones;
 
@@ -518,9 +518,12 @@ const AdminInventory = () => {
 
               <div className="flex flex-col md:flex-row space-y-5 md:space-y-0 md:space-x-5">
                 <div className="flex flex-row justify-between items-center space-x-2 md:space-x-5">
+                  {/* Search input */}
                   <TextField
                     id="outlined-search"
-                    label="Search phone..."
+                    label={
+                      filterByDaysOnly ? "Filter by days ≥" : "Search phone..."
+                    }
                     variant="outlined"
                     disabled={isLoading}
                     sx={{
@@ -541,6 +544,32 @@ const AdminInventory = () => {
                     }}
                     value={searchQuery}
                     onChange={handleSearchChange}
+                    type={filterByDaysOnly ? "number" : "text"}
+                  />
+
+                  {/* Days filter toggle switch */}
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={filterByDaysOnly}
+                        onChange={handleToggleFilterByDays}
+                        color="primary"
+                        size="small"
+                        sx={{
+                          "& .MuiSwitch-switchBase.Mui-checked": {
+                            color: "#2FC3D2",
+                          },
+                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                            {
+                              backgroundColor: "#2FC3D2",
+                            },
+                        }}
+                      />
+                    }
+                    label={
+                      <span className="text-xs md:text-sm">Filter by days</span>
+                    }
+                    labelPlacement="end"
                   />
                 </div>
               </div>
@@ -659,10 +688,13 @@ const AdminInventory = () => {
                     ).length === 0 ? (
                       <tbody>
                         <tr>
-                          <td colSpan="9" className="px-4 pt-2">
+                          <td colSpan="12" className="px-4 py-4 text-center">
                             <p className="text-gray-500">
-                              No {show === "active" ? "active" : "lost"} phones
-                              found.
+                              {filterByDaysOnly && searchQuery
+                                ? `No phones found that are ${searchQuery} days or older.`
+                                : `No ${
+                                    show === "active" ? "active" : "lost"
+                                  } phones found.`}
                             </p>
                           </td>
                         </tr>
