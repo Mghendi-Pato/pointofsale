@@ -250,7 +250,7 @@ const Payments = () => {
 
   useEffect(() => {
     if (user?.designation !== "cfo") {
-      navigate("/inventory");
+      navigate("/404");
     }
   }, [user, navigate]);
 

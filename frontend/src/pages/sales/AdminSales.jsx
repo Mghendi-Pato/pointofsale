@@ -24,6 +24,7 @@ import { FaUndoAlt } from "react-icons/fa";
 import DeleteConfirmationModal from "../../components/DeleteModal";
 import { FiPrinter } from "react-icons/fi";
 import ReceiptTemplate from "../../components/ReceiptTemplate";
+import { useNavigate } from "react-router-dom";
 
 // Skeleton components
 const SkeletonPulse = () => (
@@ -32,25 +33,6 @@ const SkeletonPulse = () => (
 
 const TableSkeletonRow = ({ userRole, show, company }) => {
   // Calculate the number of columns based on role, show status, and company setting
-  const getColSpan = () => {
-    if (company === "combined") {
-      return userRole === "manager"
-        ? show === "sold"
-          ? 9
-          : 8
-        : show === "sold"
-        ? 14
-        : 16;
-    } else {
-      return userRole === "manager"
-        ? show === "sold"
-          ? 8
-          : 7
-        : show === "sold"
-        ? 13
-        : 15;
-    }
-  };
 
   return (
     <tr className="bg-white border-b">
@@ -347,6 +329,8 @@ const AdminSales = () => {
 
   const [show, setShow] = useState("sold");
 
+  const navigate = useNavigate();
+
   const isQueryEnabled =
     company !== undefined &&
     startDate !== undefined &&
@@ -628,6 +612,12 @@ const AdminSales = () => {
     setShowDownLoadReceiptModal(true);
   };
 
+  useEffect(() => {
+    if (!["super admin", "admin", "manager"].includes(user?.role)) {
+      navigate("/404");
+    }
+  }, [user, navigate]);
+
   return (
     <div className="p-5">
       <div className="">
@@ -833,13 +823,11 @@ const AdminSales = () => {
                         </th>
                       )}
 
-                      {show === "sold" && (
-                        <th
-                          scope="col"
-                          className="px-6 text-[14px] normal-case py-2">
-                          Actions
-                        </th>
-                      )}
+                      <th
+                        scope="col"
+                        className="px-6 text-[14px] normal-case py-2">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -982,13 +970,11 @@ const AdminSales = () => {
                         </th>
                       )}
 
-                      {show === "sold" && (
-                        <th
-                          scope="col"
-                          className="px-6 text-[14px] normal-case py-2">
-                          Actions
-                        </th>
-                      )}
+                      <th
+                        scope="col"
+                        className="px-6 text-[14px] normal-case py-2">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1058,39 +1044,42 @@ const AdminSales = () => {
                               {netProfit.toLocaleString()}
                             </td>
                           )}
-                          {user.role && show === "sold" && (
-                            <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0 ">
-                              {user.role === "super admin" && (
-                                <button
-                                  onClick={() => handleRevertPhone(phone.id)}
-                                  aria-label={`Revert ${phone?.name}`}
-                                  className="flex flex-row justify-center items-center w-28  gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300">
-                                  <FaUndoAlt
-                                    className="text-amber-500"
-                                    size={10}
-                                  />
-                                  Revert
-                                </button>
-                              )}
-                              {(user.role === "admin" ||
-                                user.role === "super admin") && (
-                                <button
-                                  onClick={() => handleReconcilePhone(phone.id)}
-                                  aria-label={`Reconcile ${phone?.name}`}
-                                  className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300">
-                                  <IoCheckmarkDone className="text-green-500" />
-                                  Reconcile
-                                </button>
-                              )}
+
+                          <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0 ">
+                            {user.role === "super admin" && (
                               <button
-                                onClick={() => handleReceiptDownload(phone)}
-                                aria-label={`Receipt for ${phone?.name}`}
-                                className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-blue-500 hover:bg-blue-300">
-                                <FiPrinter className="text-blue-500" />
-                                Receipt
+                                onClick={() => handleRevertPhone(phone.id)}
+                                aria-label={`Revert ${phone?.name}`}
+                                className={`flex flex-row justify-center items-center w-28  gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300 ${
+                                  show === "reconcile" && "hidden"
+                                }`}>
+                                <FaUndoAlt
+                                  className="text-amber-500"
+                                  size={10}
+                                />
+                                Revert
                               </button>
-                            </td>
-                          )}
+                            )}
+                            {(user.role === "admin" ||
+                              user.role === "super admin") && (
+                              <button
+                                onClick={() => handleReconcilePhone(phone.id)}
+                                aria-label={`Reconcile ${phone?.name}`}
+                                className={`flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300 ${
+                                  show === "reconcile" && "hidden"
+                                }`}>
+                                <IoCheckmarkDone className="text-green-500" />
+                                Reconcile
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleReceiptDownload(phone)}
+                              aria-label={`Receipt for ${phone?.name}`}
+                              className="flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-blue-500 hover:bg-blue-300">
+                              <FiPrinter className="text-blue-500" />
+                              Receipt
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}

@@ -23,7 +23,22 @@ const Login = () => {
   useEffect(() => {
     if (user) {
       loginNotify();
-      user?.user?.role === "manager" ? navigate("/inventory") : navigate("/");
+
+      console.log(user);
+
+      const role = user?.user?.role;
+
+      switch (role) {
+        case "manager":
+        case "shop keeper":
+          navigate("/inventory");
+          break;
+        case "collection officer":
+          navigate("/customers");
+          break;
+        default:
+          navigate("/");
+      }
     } else if (error) {
       errorNotify(error || "Login failed");
       dispatch(logoutUser());

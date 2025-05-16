@@ -32,8 +32,20 @@ const ReceiptTemplate = ({
 
   const downloadReceipt = async () => {
     if (receiptRef.current) {
-      const canvas = await html2canvas(receiptRef.current, { scale: 2 });
+      // Create a clone of the receipt for downloading to ensure high quality
+      const receiptClone = receiptRef.current.cloneNode(true);
+      document.body.appendChild(receiptClone);
+
+      // Temporarily style the clone for optimal image capture (fixed width for print quality)
+      receiptClone.style.position = "absolute";
+      receiptClone.style.left = "-9999px";
+      receiptClone.style.width = "320px"; // Fixed width for download quality
+
+      const canvas = await html2canvas(receiptClone, { scale: 2 });
       const image = canvas.toDataURL("image/png");
+
+      // Remove the clone after capturing
+      document.body.removeChild(receiptClone);
 
       // Create a download link
       const link = document.createElement("a");
@@ -42,8 +54,6 @@ const ReceiptTemplate = ({
       link.click();
     }
   };
-
-  console.log(phone);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
@@ -90,8 +100,9 @@ const ReceiptTemplate = ({
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
-          className="absolute md:top-0 right-0 w-full h-[92%]  md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center">
-          <div className="overflow-auto">
+          className="absolute bottom-0 md:top-0 right-0 w-full h-[90vh] md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col">
+          {/* Fixed header section */}
+          <div className="sticky top-0 bg-neutral-100 z-10 p-2">
             <div className="relative w-full hidden md:flex">
               <MdOutlineCancel
                 size={28}
@@ -99,167 +110,234 @@ const ReceiptTemplate = ({
                 onClick={() => onCloseModal()}
               />
             </div>
-            <div className=" w-full  md:hidden relative">
-              <div className="absolute right-0  p-1">
+            <div className="w-full md:hidden relative">
+              <div className="absolute right-0 p-1">
                 <CiSaveDown2
                   size={28}
-                  className="cursor-pointer text-red-500  hover:text-red-400"
+                  className="cursor-pointer text-red-500 hover:text-red-400"
                   onClick={() => onCloseModal()}
                 />
               </div>
             </div>
             <div className="w-full">
-              <div className="w-full  text-lg py-2">
+              <div className="w-full text-lg py-2">
                 <p className="font-roboto text-center font-bold">
                   Print Phone Receipt
                 </p>
               </div>
+            </div>
+          </div>
 
-              <div className="py-5">
-                <div className="flex flex-col justify-center items-center">
-                  <div
-                    ref={receiptRef}
-                    className="p-5 border border-gray-500 h-full w-80  bg-white">
-                    <div className="flex flex-col items-center">
-                      {phone?.company === "shuhari" ? (
-                        <img
-                          alt="lgo"
-                          src="/shuhari-logo1.png"
-                          className="w-28"
-                        />
-                      ) : (
-                        <img alt="lgo" src="/muchami.png" className="w-32" />
-                      )}
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-y-auto pb-16">
+            <div className="py-4 flex justify-center">
+              <div
+                ref={receiptRef}
+                className="p-4 border border-gray-500 bg-white mx-auto"
+                style={{
+                  width: isSmallScreen ? "90%" : "320px",
+                  maxWidth: isSmallScreen ? "none" : "320px",
+                }}>
+                <div className="flex flex-col items-center">
+                  {phone?.company === "shuhari" ? (
+                    <img
+                      alt="lgo"
+                      src="/shuhari-logo1.png"
+                      className={`${isSmallScreen ? "w-32" : "w-28"} mb-2`}
+                    />
+                  ) : (
+                    <img
+                      alt="lgo"
+                      src="/muchami.png"
+                      className={`${isSmallScreen ? "w-36" : "w-32"} mb-2`}
+                    />
+                  )}
 
-                      {phone?.company === "muchami" ? (
-                        <p className="font-roboto font-bold text-center uppercase text-sm pt-2">
-                          Muchami phones and accesories
-                        </p>
-                      ) : (
-                        <p className="font-roboto font-bold uppercase pt-2 text-lg">
-                          Shuhari communication
-                        </p>
-                      )}
-                      {phone?.company === "muchami" ? (
-                        <p className="font-roboto font-bold text-center uppercase text-sm pt-2">
-                          Kiembeni Next to Start Gardens
-                        </p>
-                      ) : (
-                        <p className="font-roboto font-bold uppercase pt-2 text-lg">
-                          Likoni Mall first floor -F21
-                        </p>
-                      )}
-                      {phone?.company === "muchami" ? (
-                        <p className="font-roboto font-bold text-center uppercase text-sm pt-2">
-                          Tel: +254 720 3900 41 /+254 780 3900 41
-                        </p>
-                      ) : (
-                        <p className="font-roboto font-bold uppercase pt-2 text-lg">
-                          Tel: +254 746 435869
-                        </p>
-                      )}
-                    </div>
+                  {phone?.company === "muchami" ? (
+                    <p className="font-roboto font-bold text-center uppercase text-sm pt-1">
+                      Muchami phones and accesories
+                    </p>
+                  ) : (
+                    <p className="font-roboto font-bold uppercase pt-1 text-sm">
+                      Shuhari communication
+                    </p>
+                  )}
+                  {phone?.company === "muchami" ? (
+                    <p className="font-roboto font-bold text-center uppercase text-sm pt-1">
+                      Kiembeni Next to Start Gardens
+                    </p>
+                  ) : (
+                    <p className="font-roboto font-bold uppercase pt-1 text-sm">
+                      Likoni Mall first floor -F21
+                    </p>
+                  )}
+                  {phone?.company === "muchami" ? (
+                    <p className="font-roboto font-bold text-center uppercase text-sm pt-1">
+                      Tel: +254 720 3900 41 /+254 780 3900 41
+                    </p>
+                  ) : (
+                    <p className="font-roboto font-bold uppercase pt-1 text-sm">
+                      Tel: +254 746 435869
+                    </p>
+                  )}
+                </div>
 
-                    <hr className="my-2 w-full bg-black h-1" />
-                    <div className="flex flex-row justify-between items-center">
-                      <p className="font-semibold text-sm text-neutral-700">
-                        Rcpt: {phone?.rcpNumber}
-                      </p>
-                      <p className="font-semibold text-sm text-neutral-700">
-                        Date: {formattedDate}
-                      </p>
-                    </div>
-                    <div className="flex flex-row justify-between items-center">
-                      <p className="font-semibold text-sm text-neutral-700">
-                        Served by: {user?.firstName}
-                      </p>
-                      <p className="font-semibold text-sm text-neutral-700">
-                        Time: {formattedTime}
-                      </p>
-                    </div>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      Location: {phone?.managerLocation}
-                    </p>
-                    <hr className="my-2 w-full bg-black h-1" />
-                    <p className="font-semibold text-sm text-neutral-700">
-                      Name: {phone.customerName}
-                    </p>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      Tel: {phone.customerPhn}
-                    </p>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      ID No: {phone.customerID}
-                    </p>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      NOK Name: {phone.nkName}
-                    </p>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      NOK Tel: {phone.nkPhn}
-                    </p>
-                    <hr className="my-2 w-full bg-black h-1" />
-                    <p className="font-bold uppercase text-center">
-                      Phone description
-                    </p>
-                    <hr className="my-2 w-full bg-black h-1" />
-                    <p className="font-semibold text-sm text-neutral-700">
-                      Phone model: {phone?.modelName}
-                    </p>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      Capacity: {phone?.capacity} GB
-                    </p>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      RAM: {phone?.ram} GB
-                    </p>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      IMEI: {phone?.imei}
-                    </p>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      Waranty: 2 years
-                    </p>
-                    <hr className="my-2 w-full bg-black h-1" />
-                    <p className="font-roboto text-center uppercase font-semibold mb-2">
-                      Gross total: {phone?.sellingPrice}/=
-                    </p>
-                    <div className="p-2 flex flex-row items-center border border-neutral-500 rounded-md">
-                      <div className="w-[50%]">
-                        <img
-                          alt="buy now pay later"
-                          src="/buynow-logo.png"
-                          className="w-32"
-                        />
-                      </div>
-                      <div className="flex flex-col w-[50%]">
-                        <img
-                          alt="samsung logo"
-                          src="/samsung-logo.png"
-                          className="w-20"
-                        />
-                        <img
-                          alt="watu logo"
-                          src="/watu-logo1.png"
-                          className="w-16"
-                        />
-                      </div>
-                    </div>
-                    <p className=" text-sm italic text-neutral-700 text-center">
-                      Thank you for shopping with us
-                    </p>
-                    <p className=" italic text-sm text-neutral-700 text-center">
-                      Goods Once Sold Cannot be Re-accepted
-                    </p>
+                <hr className="my-2 w-full bg-black h-[1px]" />
+                <div className="flex flex-row justify-between items-center">
+                  <p
+                    className={`font-semibold ${
+                      isSmallScreen ? "text-sm" : "text-xs"
+                    } text-neutral-700`}>
+                    Rcpt: {phone?.rcpNumber}
+                  </p>
+                  <p
+                    className={`font-semibold ${
+                      isSmallScreen ? "text-sm" : "text-xs"
+                    } text-neutral-700`}>
+                    Date: {formattedDate}
+                  </p>
+                </div>
+                <div className="flex flex-row justify-between items-center">
+                  <p
+                    className={`font-semibold ${
+                      isSmallScreen ? "text-sm" : "text-xs"
+                    } text-neutral-700`}>
+                    Served by: {user?.firstName}
+                  </p>
+                  <p
+                    className={`font-semibold ${
+                      isSmallScreen ? "text-sm" : "text-xs"
+                    } text-neutral-700`}>
+                    Time: {formattedTime}
+                  </p>
+                </div>
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  Location: {phone?.managerLocation}
+                </p>
+                <hr className="my-2 w-full bg-black h-[1px]" />
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  Name: {phone.customerName}
+                </p>
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  Tel: {phone.customerPhn}
+                </p>
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  ID No: {phone.customerID}
+                </p>
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  NOK Name: {phone.nkName}
+                </p>
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  NOK Tel: {phone.nkPhn}
+                </p>
+                <hr className="my-2 w-full bg-black h-[1px]" />
+                <p
+                  className={`font-bold uppercase text-center ${
+                    isSmallScreen ? "text-base" : "text-sm"
+                  }`}>
+                  Phone description
+                </p>
+                <hr className="my-2 w-full bg-black h-[1px]" />
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  Phone model: {phone?.modelName}
+                </p>
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  Capacity: {phone?.capacity} GB
+                </p>
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  RAM: {phone?.ram} GB
+                </p>
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  IMEI: {phone?.imei}
+                </p>
+                <p
+                  className={`font-semibold ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700`}>
+                  Waranty: 2 years
+                </p>
+                <hr className="my-2 w-full bg-black h-[1px]" />
+                <p
+                  className={`font-roboto text-center uppercase font-semibold ${
+                    isSmallScreen ? "text-base" : "text-sm"
+                  } mb-2`}>
+                  Gross total: {phone?.sellingPrice}/=
+                </p>
+                <div className="p-2 flex flex-row items-center border border-neutral-500 rounded-md">
+                  <div className="w-[50%]">
+                    <img
+                      alt="buy now pay later"
+                      src="/buynow-logo.png"
+                      className={isSmallScreen ? "w-32" : "w-28"}
+                    />
+                  </div>
+                  <div className="flex flex-col w-[50%]">
+                    <img
+                      alt="samsung logo"
+                      src="/samsung-logo.png"
+                      className={isSmallScreen ? "w-20" : "w-16"}
+                    />
+                    <img
+                      alt="watu logo"
+                      src="/watu-logo1.png"
+                      className={isSmallScreen ? "w-16" : "w-14"}
+                    />
                   </div>
                 </div>
-
-                <div className="py-5 w-full flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
-                  <button
-                    onClick={() => onCheckout()}
-                    className="p-3 bg-primary-500 flex items-center justify-center text-white  hover:bg-primary-600 transition-all duration-300 ease-in-out w-full space-x-2">
-                    <span className="text-sm md:text-base">Download</span>
-                    <GrDownload size={20} className="md:ml-2" />
-                  </button>
-                </div>
+                <p
+                  className={`${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } italic text-neutral-700 text-center mt-1`}>
+                  Thank you for shopping with us
+                </p>
+                <p
+                  className={`italic ${
+                    isSmallScreen ? "text-sm" : "text-xs"
+                  } text-neutral-700 text-center`}>
+                  Goods Once Sold Cannot be Re-accepted
+                </p>
               </div>
             </div>
+          </div>
+
+          {/* Fixed footer button */}
+          <div className="absolute bottom-0 left-0 right-0 w-full bg-neutral-100 py-3 px-4 z-10 border-t border-gray-200">
+            <button
+              onClick={() => onCheckout()}
+              className="p-3 bg-primary-500 flex items-center justify-center text-white hover:bg-primary-600 transition-all duration-300 ease-in-out w-full space-x-2">
+              <span className="text-sm md:text-base">Download</span>
+              <GrDownload size={20} className="md:ml-2" />
+            </button>
           </div>
         </motion.div>
       )}

@@ -281,7 +281,7 @@ const Admins = () => {
 
   useEffect(() => {
     if (user?.role !== "super admin") {
-      navigate("/inventory");
+      navigate("/404");
     }
   }, [user, navigate]);
 
@@ -420,6 +420,11 @@ const Admins = () => {
                         </th>
                         <th
                           scope="col"
+                          className="px-6 border-r text-[14px] normal-case py-2">
+                          Role
+                        </th>
+                        <th
+                          scope="col"
                           className="px-6 text-[14px] normal-case py-2">
                           Actions
                         </th>
@@ -482,6 +487,9 @@ const Admins = () => {
                                     {admin.status}
                                   </p>
                                 )}
+                              </td>
+                              <td className="px-6 border-r py-2">
+                                {admin.role}
                               </td>
                               <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
                                 <button

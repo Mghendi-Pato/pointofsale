@@ -305,7 +305,7 @@ const Managers = () => {
 
   useEffect(() => {
     if (!["super admin", "admin"].includes(user?.role)) {
-      navigate("/inventory");
+      navigate("/404");
     }
   }, [user, navigate]);
 

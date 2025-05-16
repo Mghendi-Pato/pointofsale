@@ -51,6 +51,12 @@ const Sidebar = () => {
     case user.role === "manager":
       role = "manager";
       break;
+    case user.role === "shop keeper":
+      role = "shop keeper";
+      break;
+    case user.role === "collection officer":
+      role = "collection officer";
+      break;
     default:
       role = "guest";
   }
@@ -65,7 +71,7 @@ const Sidebar = () => {
     {
       area: "Inventory",
       Icon: <LuClipboardList size={20} className="mx-4" />,
-      privileges: ["super admin", "admin", "manager"],
+      privileges: ["super admin", "admin", "manager", "shop keeper"],
       route: "/inventory",
     },
     {
@@ -77,7 +83,7 @@ const Sidebar = () => {
     {
       area: "Customers",
       Icon: <LiaPeopleCarrySolid size={20} className="mx-4" />,
-      privileges: ["super admin", "admin"],
+      privileges: ["super admin", "admin", "collection officer"],
       route: "/customers",
     },
     {
@@ -158,8 +164,8 @@ const Sidebar = () => {
         </div>
 
         <div
-          className={`relative  ${
-            user.role === "manager" ? "hidden" : "flex"
+          className={`relative ${
+            !["super admin", "admin"].includes(user?.role) ? "hidden" : "flex"
           } flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${
             pathname === "/"
               ? "border-primary-500 border-r-4 bg-primary-300"
@@ -181,7 +187,7 @@ const Sidebar = () => {
               </motion.div>
             )}
           </AnimatePresence>
-          <div className={`overflow-hidden `}>
+          <div className={`overflow-hidden`}>
             <AnimatePresence>
               {showSideBar && (
                 <motion.p

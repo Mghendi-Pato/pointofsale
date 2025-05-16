@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
+import { useSelector } from "react-redux";
 
 const NotFound = () => {
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState(10);
+  const user = useSelector((state) => state?.userSlice?.user?.user);
 
   // Auto-redirect countdown
   useEffect(() => {
@@ -15,9 +17,23 @@ const NotFound = () => {
       }, 1000);
       return () => clearTimeout(timer);
     } else {
-      navigate("/");
+      if (!user) {
+        navigate("/login");
+      } else {
+        switch (user.role) {
+          case "manager":
+          case "shop keeper":
+            navigate("/inventory");
+            break;
+          case "collection officer":
+            navigate("/customers");
+            break;
+          default:
+            navigate("/");
+        }
+      }
     }
-  }, [countdown, navigate]);
+  }, [countdown, navigate, user]);
 
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-white p-5">
@@ -77,7 +93,23 @@ const NotFound = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate("/")}
+              onClick={() => {
+                if (!user) {
+                  navigate("/login");
+                } else {
+                  switch (user.role) {
+                    case "manager":
+                    case "shop keeper":
+                      navigate("/inventory");
+                      break;
+                    case "collection officer":
+                      navigate("/customers");
+                      break;
+                    default:
+                      navigate("/");
+                  }
+                }
+              }}
               className="flex items-center justify-center gap-2 bg-primary-500 text-white py-3 px-6 rounded-md shadow-md hover:bg-primary-600 transition-all duration-300">
               <BiArrowBack size={18} />
               Return Home

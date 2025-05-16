@@ -250,6 +250,7 @@ exports.editUser = async (req, res) => {
       status,
       password,
       commission,
+      role,
     } = req.body;
 
     // Find the user to be updated
@@ -297,8 +298,9 @@ exports.editUser = async (req, res) => {
       phone: phone || user.phone,
       regionId: regionId || user.regionId,
       status: status || user.status,
-      password: hashedPassword, // Only update if a new password is provided
+      password: hashedPassword,
       commission: commission || user.commission,
+      role: role || user.role,
     });
 
     res.status(200).json({
@@ -312,6 +314,7 @@ exports.editUser = async (req, res) => {
         phone: user.phone,
         regionId: user.regionId,
         status: user.status,
+        role: user.role,
       },
     });
   } catch (error) {

@@ -1,9 +1,11 @@
+const { Op } = require("sequelize");
 const { User } = require("../models");
 
 // Fetch admins based on status, pagination, and role
 const fetchAdmins = async (status, page, limit) => {
+  const allowedRoles = ["admin", "shop keeper", "collection officer"];
   const whereClause = {
-    role: "admin",
+    role: { [Op.in]: allowedRoles },
     deletedAt: null,
     ...(status && { status }),
   };

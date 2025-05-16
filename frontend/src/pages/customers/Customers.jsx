@@ -359,8 +359,8 @@ const Customers = () => {
   }
 
   useEffect(() => {
-    if (!["super admin", "admin"].includes(user?.role)) {
-      navigate("/inventory");
+    if (!["super admin", "admin", "collection officer"].includes(user?.role)) {
+      navigate("/404");
     }
   }, [user, navigate]);
 

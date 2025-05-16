@@ -22,6 +22,7 @@ import { HiOutlineDownload } from "react-icons/hi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 
 // Skeleton components
 const SkeletonPulse = () => (
@@ -29,8 +30,6 @@ const SkeletonPulse = () => (
 );
 
 const TableSkeletonRow = ({ userRole }) => {
-  const columns = userRole === "manager" ? 6 : 10;
-
   return (
     <tr className="bg-white border-b border-l-4 border-l-gray-300">
       <td className="px-2 py-3 border-r">
@@ -211,6 +210,7 @@ const AdminInventory = () => {
   const user = useSelector((state) => state.userSlice.user.user);
 
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const {
     data: activePhonesData,
@@ -284,6 +284,18 @@ const AdminInventory = () => {
 
   const declareLostMutation = useDeclarePhoneLost();
 
+  const calculateDaysFromDate = (dateString) => {
+    const givenDate = new Date(dateString);
+    const today = new Date();
+
+    const differenceInMilliseconds = today - givenDate;
+    const differenceInDays = Math.floor(
+      differenceInMilliseconds / (1000 * 60 * 60 * 24)
+    );
+
+    return differenceInDays;
+  };
+
   const activePhones = useMemo(() => {
     return activePhonesData?.pages?.flatMap((page) => page.phones) || [];
   }, [activePhonesData?.pages]);
@@ -295,21 +307,47 @@ const AdminInventory = () => {
   const filteredPhones = useMemo(() => {
     const dataToFilter =
       show === "active" ? activePhones : show === "lost" ? lostPhones : [];
-    return dataToFilter.filter((phone) =>
-      searchQuery
+
+    return dataToFilter.filter((phone) => {
+      const searchParts = searchQuery
         .toLowerCase()
         .split(/\s+/)
-        .filter(Boolean)
-        .every((part) =>
-          [
+        .filter(Boolean);
+
+      return searchParts.every((part) => {
+        // Check if the search term is a number (potentially days)
+        const isNumber = !isNaN(part) && part.trim() !== "";
+
+        if (isNumber) {
+          // If it's a number, check if days since assignment is >= the searched number
+          const daysSinceAssigned = calculateDaysFromDate(
+            phone?.dateAssigned || phone?.createdAt
+          );
+          const searchDays = parseInt(part, 10);
+
+          // Check regular fields OR if days match/exceed the search value
+          return (
+            [
+              phone?.modelName?.toLowerCase(),
+              phone?.imei,
+              phone?.supplierName?.toLowerCase(),
+              phone?.managerName?.toLowerCase(),
+              phone?.managerLocation?.toLowerCase(),
+            ].some((field) => field?.includes(part)) ||
+            daysSinceAssigned >= searchDays
+          );
+        } else {
+          // For non-numeric search terms, use the original fields
+          return [
             phone?.modelName?.toLowerCase(),
             phone?.imei,
             phone?.supplierName?.toLowerCase(),
             phone?.managerName?.toLowerCase(),
             phone?.managerLocation?.toLowerCase(),
-          ].some((field) => field?.includes(part))
-        )
-    );
+          ].some((field) => field?.includes(part));
+        }
+      });
+    });
   }, [activePhones, lostPhones, searchQuery, show]);
 
   // Handles search query change
@@ -322,18 +360,6 @@ const AdminInventory = () => {
       dispatch(setSidebar(false));
     }
   }, [showAddPhone, showEditPhoneModal, showPhoneCheckout, dispatch]);
-
-  const calculateDaysFromDate = (dateString) => {
-    const givenDate = new Date(dateString);
-    const today = new Date();
-
-    const differenceInMilliseconds = today - givenDate;
-    const differenceInDays = Math.floor(
-      differenceInMilliseconds / (1000 * 60 * 60 * 24)
-    );
-
-    return differenceInDays;
-  };
 
   const onEditPhone = (phone) => {
     setEditPhone(phone);
@@ -421,6 +447,14 @@ const AdminInventory = () => {
     // Trigger download
     saveAs(data, `Sales_Report_${dayjs().format("YYYY-MM-DD")}.xlsx`);
   };
+
+  useEffect(() => {
+    if (
+      !["super admin", "admin", "manager", "shop keeper"].includes(user?.role)
+    ) {
+      navigate("/404");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="p-5">
@@ -610,7 +644,9 @@ const AdminInventory = () => {
                         )}
                         <th
                           scope="col"
-                          className="px-6 text-[14px] normal-case py-2">
+                          className={`px-6 text-[14px] normal-case py-2 ${
+                            user.role === "shop keeper" && "hidden"
+                          }`}>
                           Actions
                         </th>
                       </tr>
@@ -700,7 +736,10 @@ const AdminInventory = () => {
                                   {phone?.managerName}
                                 </td>
                               )}
-                              <td className="px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0">
+                              <td
+                                className={`px-6 py-2 flex flex-col md:flex-row items-center md:space-x-5 space-y-2 md:space-y-0 ${
+                                  user.role === "shop keeper" && "hidden"
+                                }`}>
                                 {phone?.status === "lost" ? (
                                   <button
                                     onClick={() => declareLostPhone(phone?.id)}

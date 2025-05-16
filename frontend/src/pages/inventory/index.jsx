@@ -16,6 +16,9 @@ const Index = () => {
     case user.role === "manager":
       userRole = "manager";
       break;
+    case user.role === "shop keeper":
+      userRole = "shop keeper";
+      break;
     default:
       userRole = "guest";
   }
@@ -26,6 +29,8 @@ const Index = () => {
     case "admin":
       return <AdminInventory />;
     case "manager":
+      return <AdminInventory />;
+    case "shop keeper":
       return <AdminInventory />;
     default:
       return <div>Unauthorized</div>;

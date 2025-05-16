@@ -119,6 +119,10 @@ const EditManagerModal = ({
     poolCommission: yup
       .number("Enter the commission")
       .positive("Commission must be a positive number"),
+    role: yup
+      .string()
+      .oneOf(["admin", "shop keeper", "collection officer", ""], "Invalid role")
+      .nullable(),
     password: yup
       .string("Enter your password")
       .nullable()
@@ -177,6 +181,7 @@ const EditManagerModal = ({
       status: user?.status || "",
       password: "",
       commission: user?.commission || "",
+      role: user?.role || "",
     },
     validationSchema,
     enableReinitialize: true,
@@ -496,6 +501,43 @@ const EditManagerModal = ({
                     ),
                   }}
                 />
+              )}
+              {pathname === "/admins" && (
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="role-label">Role (optional)</InputLabel>
+                  <Select
+                    labelId="role-label"
+                    id="role"
+                    name="role"
+                    value={formik.values.role || ""}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.role && Boolean(formik.errors.role)}
+                    label="Role (optional)"
+                    displayEmpty
+                    MenuProps={{
+                      PaperProps: {
+                        style: {
+                          maxHeight: 200,
+                          overflowY: "auto",
+                        },
+                      },
+                    }}>
+                    <MenuItem value="">
+                      <em>Unchanged</em>
+                    </MenuItem>
+                    <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="shop keeper">Shop Keeper</MenuItem>
+                    <MenuItem value="collection officer">
+                      Collection Officer
+                    </MenuItem>
+                  </Select>
+                  {formik.touched.role && formik.errors.role && (
+                    <div style={{ color: "red", fontSize: "0.875rem" }}>
+                      {formik.errors.role}
+                    </div>
+                  )}
+                </FormControl>
               )}
 
               <FormControl fullWidth variant="outlined">
