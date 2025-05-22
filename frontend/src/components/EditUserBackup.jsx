@@ -119,6 +119,11 @@ const EditManagerModal = ({
     poolCommission: yup
       .number("Enter the commission")
       .positive("Commission must be a positive number"),
+    role: yup
+      .string()
+      .oneOf(["admin", "shop keeper", "collection officer", ""], "Invalid role")
+      .nullable()
+      .notRequired(),
     password: yup
       .string("Enter your password")
       .nullable()
@@ -182,6 +187,7 @@ const EditManagerModal = ({
     validationSchema,
     enableReinitialize: true,
     onSubmit: (values) => {
+      console.log(values);
       const updatedFields = Object.keys(values).reduce((acc, key) => {
         if (values[key] !== formik.initialValues[key]) {
           acc[key] = values[key];
@@ -498,10 +504,9 @@ const EditManagerModal = ({
                   }}
                 />
               )}
-
               {pathname === "/admins" && (
                 <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="password">Role (Optional)</InputLabel>
+                  <InputLabel id="role-label">Role (optional)</InputLabel>
                   <Select
                     labelId="role-label"
                     id="role"

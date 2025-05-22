@@ -496,7 +496,7 @@ const AdminInventory = () => {
                   Add inventory
                 </button>
 
-                {user.role !== "manager" && (
+                {["admin", "super admin"].includes(user.role) && (
                   <div
                     className={`p-2 ${
                       isLoading

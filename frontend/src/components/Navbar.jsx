@@ -75,7 +75,7 @@ const Navbar = () => {
       <div className="relative" ref={dropdownRef}>
         <div
           className={` ${
-            user.role === "manager" ? "hidden" : "flex"
+            ["admin", "super admin"].includes(user.role) ? "flex" : "hidden"
           } items-center`}>
           <input
             ref={inputRef}

@@ -183,13 +183,13 @@ const Managers = () => {
         const { page, total, limit } = lastPage;
         return page * limit < total ? page + 1 : undefined;
       },
-      enabled: show === "inactive" && !!token,
+      enabled: show === "suspended" && !!token,
     }
   );
 
   const isLoading =
     (show === "active" && isLoadingActiveManagers) ||
-    (show === "inactive" && isLoadingSuspendedManagers);
+    (show === "suspended" && isLoadingSuspendedManagers);
 
   // Handles search query change
   const handleSearchChange = (event) => setSearchQuery(event.target.value);
@@ -323,9 +323,9 @@ const Managers = () => {
           </div>
           <div
             className={`p-2 py-3 text-sm font-roboto font-bold md:w-36 text-center cursor-pointer w-[50%] ${
-              show === "inactive" ? "bg-primary-400" : "text-gray-600"
+              show === "suspended" ? "bg-primary-400" : "text-gray-600"
             }`}
-            onClick={() => setShow("inactive")}>
+            onClick={() => setShow("suspended")}>
             Suspended
           </div>
         </div>
