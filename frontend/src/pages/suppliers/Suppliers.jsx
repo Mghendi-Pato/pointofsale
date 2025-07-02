@@ -3,6 +3,7 @@ import {
   MdChevronRight,
   MdOutlineDelete,
   MdOutlineNavigateNext,
+  MdOutlineEdit,
 } from "react-icons/md";
 import { TfiStatsDown } from "react-icons/tfi";
 import { TfiStatsUp } from "react-icons/tfi";
@@ -10,7 +11,6 @@ import { IoIosStarOutline } from "react-icons/io";
 import { MdOutlineAttachMoney } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { setSidebar } from "../../redux/reducers/ sidebar";
-import NewSupplier from "../../components/NewSupplier";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import {
   deleteQuerySupplier,
@@ -18,8 +18,10 @@ import {
 } from "../../services/services";
 import { GrFormPrevious } from "react-icons/gr";
 import { toast } from "react-toastify";
-import DeleteConfirmationModal from "../../components/DeleteModal";
 import { useNavigate } from "react-router-dom";
+import NewSupplier from "../../components/NewSupplier";
+import EditSupplier from "../../components/EditSupplier";
+import DeleteConfirmationModal from "../../components/DeleteModal";
 
 // Skeleton components
 const SkeletonPulse = () => (
@@ -94,16 +96,22 @@ const Suppliers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteSupplier, setDeleteSupplier] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editSupplier, setEditSupplier] = useState(null);
+  const [showEditSupplier, setShowEditSupplier] = useState(false);
   const token = useSelector((state) => state.userSlice.user.token);
   const user = useSelector((state) => state.userSlice.user.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // Check if user is super admin
+  const isSuperAdmin = user?.role === "super admin";
+  const canViewPage = ["super admin", "admin"].includes(user?.role);
+
   useEffect(() => {
-    if (showAddSupplier) {
+    if (showAddSupplier || showEditSupplier) {
       dispatch(setSidebar(false));
     }
-  }, [showAddSupplier, dispatch]);
+  }, [showAddSupplier, showEditSupplier, dispatch]);
 
   const { data: suppliers, isLoading: isLoadingSuppliers } = useQuery(
     ["suppliers", { page: 1, limit: 100 }],
@@ -113,6 +121,8 @@ const Suppliers = () => {
       enabled: !!token,
     }
   );
+
+  console.log(suppliers);
 
   const itemsPerPage = 8;
   // Calculate pagination data
@@ -156,11 +166,26 @@ const Suppliers = () => {
 
   const deleteSupplierMutation = useDeleteSupplier();
 
-  const handleDeletSupplier = (region) => {
+  const handleDeletSupplier = (supplierId) => {
+    // Only allow super admin to delete
+    if (!isSuperAdmin) return;
+
     setShowDeleteModal(true);
-    setDeleteSupplier(region);
+    setDeleteSupplier(supplierId);
   };
+
+  const handleEditSupplier = (supplier) => {
+    // Only allow super admin to edit
+    if (!isSuperAdmin) return;
+
+    setEditSupplier(supplier);
+    setShowEditSupplier(true);
+  };
+
   const handleDelete = () => {
+    // Only allow super admin to delete
+    if (!isSuperAdmin) return;
+
     if (deleteSupplier) {
       deleteSupplierMutation.mutate({ supplierId: deleteSupplier, token });
     }
@@ -168,22 +193,36 @@ const Suppliers = () => {
   };
 
   useEffect(() => {
-    if (!["super admin", "admin"].includes(user?.role)) {
-      navigate("/404");
+    if (!canViewPage) {
+      navigate("/inventory");
     }
-  }, [user, navigate]);
+  }, [user, navigate, canViewPage]);
 
   return (
     <div className="p-5 ">
+      {/* Show permission notice for non-super admins */}
+      {!isSuperAdmin && canViewPage && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+          <p className="text-yellow-800 text-sm">
+            <strong>View Only:</strong> You can view supplier data, but only
+            Super Admins can add, edit, or delete suppliers.
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-row justify-end items-center shadow">
         <div
           className={`p-2 py-3 text-sm font-roboto font-bold ${
-            isLoadingSuppliers ? "bg-gray-400" : "bg-primary-400"
+            isLoadingSuppliers || !isSuperAdmin
+              ? "bg-gray-400"
+              : "bg-primary-700 text-white"
           } w-[33%] md:w-36 text-center ${
-            isLoadingSuppliers ? "cursor-not-allowed" : "cursor-pointer"
+            isLoadingSuppliers || !isSuperAdmin
+              ? "cursor-not-allowed"
+              : "cursor-pointer"
           }`}
           onClick={
-            isLoadingSuppliers
+            isLoadingSuppliers || !isSuperAdmin
               ? undefined
               : () => setShowAddSupplier(!showAddSupplier)
           }>
@@ -205,14 +244,28 @@ const Suppliers = () => {
               <div
                 className="p-6 bg-white rounded-sm shadow-sm border border-neutral-200 cursor-pointer transition-all duration-1000 ease-in-out relative"
                 key={index}>
-                <div
-                  className="absolute group top-5 right-5 flex flex-row space-x-2 justify-center items-center p-2 cursor-pointer hover:bg-neutral-100 rounded-full transition-all duration-300 ease-in-out"
-                  onClick={() => handleDeletSupplier(supplier?.id)}>
-                  <MdOutlineDelete
-                    size={20}
-                    className=" text-red-300 transition-all duration-300 ease-in-out group-hover:text-red-500"
-                  />
-                </div>
+                {/* Only show action buttons for super admins */}
+                {isSuperAdmin && (
+                  <div className="absolute top-5 right-5 flex flex-row space-x-2">
+                    <div
+                      className="group flex flex-row space-x-2 justify-center items-center p-2 cursor-pointer hover:bg-neutral-100 rounded-full transition-all duration-300 ease-in-out"
+                      onClick={() => handleEditSupplier(supplier)}>
+                      <MdOutlineEdit
+                        size={20}
+                        className="text-blue-300 transition-all duration-300 ease-in-out group-hover:text-blue-500"
+                      />
+                    </div>
+                    <div
+                      className="group flex flex-row space-x-2 justify-center items-center p-2 cursor-pointer hover:bg-neutral-100 rounded-full transition-all duration-300 ease-in-out"
+                      onClick={() => handleDeletSupplier(supplier?.id)}>
+                      <MdOutlineDelete
+                        size={20}
+                        className="text-red-300 transition-all duration-300 ease-in-out group-hover:text-red-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div
                   className={`p-2 ${
                     supplier?.percentageChange.startsWith("-")
@@ -291,33 +344,46 @@ const Suppliers = () => {
               onClick={handleBack}
               disabled={currentPage === 1}
               className={`${
-                currentPage !== 1 ? "bg-primary-300" : "bg-neutral-300"
+                currentPage !== 1 ? "bg-primary-700" : "bg-neutral-300"
               } p-1 rounded-full cursor-pointer`}>
-              <GrFormPrevious size={20} className="text-neutral-700" />
+              <GrFormPrevious size={20} className="text-white" />
             </div>
 
             <div
               onClick={handleNext}
               disabled={currentPage === totalPages}
               className={`${
-                currentPage !== totalPages ? "bg-primary-300" : "bg-neutral-300"
+                currentPage !== totalPages ? "bg-primary-700" : "bg-neutral-300"
               } p-1 rounded-full cursor-pointer`}>
-              <MdOutlineNavigateNext size={20} />
+              <MdOutlineNavigateNext size={20} className="text-white" />
             </div>
           </div>
         )}
       </div>
-      <NewSupplier
-        showAddSupplier={showAddSupplier}
-        setShowAddSupplier={setShowAddSupplier}
-      />
-      <DeleteConfirmationModal
-        showDeleteModal={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onDelete={handleDelete}
-        title={`Confirm Deletion!`}
-        message="Deleted supplier cannot be retrieved"
-      />
+
+      {/* Only render modals for super admins */}
+      {isSuperAdmin && (
+        <>
+          <NewSupplier
+            showAddSupplier={showAddSupplier}
+            setShowAddSupplier={setShowAddSupplier}
+          />
+
+          <EditSupplier
+            showEditSupplier={showEditSupplier}
+            setShowEditSupplier={setShowEditSupplier}
+            editSupplier={editSupplier}
+            setEditSupplier={setEditSupplier}
+          />
+          <DeleteConfirmationModal
+            showDeleteModal={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            onDelete={handleDelete}
+            title={`Confirm Deletion!`}
+            message="Deleted supplier cannot be retrieved"
+          />
+        </>
+      )}
     </div>
   );
 };

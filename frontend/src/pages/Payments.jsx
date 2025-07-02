@@ -187,6 +187,32 @@ const Payments = () => {
 
   const navigate = useNavigate();
 
+  // Helper function to determine user role and access
+  const getUserRole = () => {
+    if (!user) return { role: "unknown", canManagePools: false };
+
+    // Check if user is CFO/Admin who can manage pools
+    if (
+      user.designation === "cfo" ||
+      user.role === "admin" ||
+      user.role === "super admin"
+    ) {
+      return { role: "admin", canManagePools: true };
+    }
+    // Check manager type for managers
+    else if (user.role === "manager") {
+      if (user.managerType === "super manager") {
+        return { role: "super_manager", canManagePools: false };
+      } else if (user.managerType === "manager") {
+        return { role: "manager", canManagePools: false };
+      }
+    }
+
+    return { role: "unknown", canManagePools: false };
+  };
+
+  const userRole = getUserRole();
+
   const isQueryEnabled =
     company !== undefined &&
     startDate !== undefined &&
@@ -237,6 +263,62 @@ const Payments = () => {
 
   const isLoading = poolsLoading || salesLoading;
 
+  // Filter pools based on user role
+  const getFilteredPools = () => {
+    if (!poolsData?.pools) return [];
+
+    switch (userRole.role) {
+      case "admin":
+        // Admin/CFO can see all pools
+        return poolsData.pools;
+
+      case "super_manager":
+        // Super manager can only see pools where they are the super manager
+        return poolsData.pools.filter(
+          (pool) => pool.superManager?.id === user.id
+        );
+
+      case "manager":
+        // Regular manager can only see pools where they are a member
+        return poolsData.pools.filter(
+          (pool) =>
+            pool.poolMembers?.some((member) => member.id === user.id) ||
+            pool.superManager?.id === user.id
+        );
+
+      default:
+        return [];
+    }
+  };
+
+  // Filter individual manager data for regular managers
+  const getManagerSpecificData = (pool) => {
+    if (userRole.role !== "manager") return null;
+
+    // Check if user is the super manager
+    if (pool.superManager?.id === user.id) {
+      return {
+        type: "super_manager",
+        data: pool.superManager,
+        poolCommission: 0, // Super manager doesn't get pool commission deducted
+      };
+    }
+
+    // Check if user is a pool member
+    const memberData = pool.poolMembers?.find(
+      (member) => member.id === user.id
+    );
+    if (memberData) {
+      return {
+        type: "member",
+        data: memberData,
+        poolCommission: pool.poolCommission || 0,
+      };
+    }
+
+    return null;
+  };
+
   useEffect(() => {
     if (isQueryEnabled) {
       refetch();
@@ -249,7 +331,9 @@ const Payments = () => {
   };
 
   useEffect(() => {
-    if (user?.designation !== "cfo") {
+    // Allow access for CFO, admins, and managers (both types)
+    const allowedRoles = ["cfo", "admin", "super admin", "manager"];
+    if (!allowedRoles.includes(user?.role) && user?.designation !== "cfo") {
       navigate("/404");
     }
   }, [user, navigate]);
@@ -352,20 +436,123 @@ const Payments = () => {
     setShowEditPoolModal(true);
   };
 
+  const filteredPools = getFilteredPools();
+
+  // Render individual manager view
+  const renderManagerView = (pool) => {
+    const managerData = getManagerSpecificData(pool);
+    if (!managerData) return null;
+
+    const { salesCount, totalCommission } = calculateManagerData(
+      managerData.data.id,
+      managerData.data.commission || 0
+    );
+
+    const poolCommissionAmount =
+      managerData.type === "member"
+        ? salesCount * managerData.poolCommission
+        : 0;
+
+    const finalAmount =
+      managerData.type === "super_manager"
+        ? totalCommission +
+          (pool.poolMembers?.reduce((acc, member) => {
+            const memberSales = calculateManagerData(
+              member.id,
+              member.commission || 0
+            );
+            return acc + memberSales.salesCount * (pool.poolCommission || 0);
+          }, 0) || 0)
+        : totalCommission;
+
+    return (
+      <div key={pool.id} className="bg-white border shadow-sm overflow-hidden">
+        <div className="px-4 py-2 bg-gray-100 border-b">
+          <h3 className="text-lg font-bold">
+            Your Payment Details - {pool?.name || "Unnamed Pool"}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {managerData.type === "super_manager"
+              ? "Super Manager"
+              : "Pool Member"}
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Sales Count
+                </th>
+                <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Commission (KES)
+                </th>
+                <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {managerData.type === "super_manager"
+                    ? "Pool Earnings (KES)"
+                    : "Pool Commission (KES)"}
+                </th>
+                <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total (KES)
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              <tr className="bg-primary-100">
+                <td className="px-6 py-2 whitespace-nowrap font-medium capitalize">
+                  {managerData.data.firstName} {managerData.data.lastName}
+                  <span className="text-xs font-normal text-gray-500 block">
+                    (
+                    {managerData.type === "super_manager"
+                      ? "Super Manager"
+                      : "Pool Member"}
+                    )
+                  </span>
+                </td>
+                <td className="px-6 py-2 whitespace-nowrap">{salesCount}</td>
+                <td className="px-6 py-2 whitespace-nowrap">
+                  {totalCommission.toLocaleString()}
+                </td>
+                <td className="px-6 py-2 whitespace-nowrap">
+                  {managerData.type === "super_manager"
+                    ? (finalAmount - totalCommission).toLocaleString()
+                    : poolCommissionAmount.toLocaleString()}
+                </td>
+                <td className="px-6 py-2 whitespace-nowrap font-bold text-green-600">
+                  {finalAmount.toLocaleString()}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-5 flex flex-col h-full">
       <div className="flex-none">
         <div className="flex flex-row justify-between">
           <div className="space-y-2">
-            <p className="text-xl font-bold">Payments</p>
+            <p className="text-xl font-bold">
+              {userRole.role === "manager" ? "My Payments" : "Payments"}
+            </p>
           </div>
-          <div
-            onClick={isLoading ? undefined : () => setShowAddPool(!showAddPool)}
-            className={`p-2 py-3 text-sm font-roboto font-bold w-full md:w-36 text-center cursor-pointer ${
-              isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-primary-400"
-            }`}>
-            New Pool
-          </div>
+          {userRole.canManagePools && (
+            <div
+              onClick={
+                isLoading ? undefined : () => setShowAddPool(!showAddPool)
+              }
+              className={`p-2 py-3 text-sm font-roboto font-bold w-full md:w-36 text-center cursor-pointer ${
+                isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-primary-400"
+              }`}>
+              New Pool
+            </div>
+          )}
         </div>
 
         <div className="border">
@@ -419,11 +606,21 @@ const Payments = () => {
                 <div className="text-red-500 text-center py-5">
                   Error loading data. Please try again later.
                 </div>
-              ) : !poolsData?.pools || poolsData.pools.length === 0 ? (
-                <div className="text-center py-5">No pools found.</div>
+              ) : !filteredPools || filteredPools.length === 0 ? (
+                <div className="text-center py-5">
+                  {userRole.role === "manager"
+                    ? "You are not assigned to any pools."
+                    : "No pools found."}
+                </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
-                  {poolsData.pools.map((pool) => {
+                  {filteredPools.map((pool) => {
+                    // Show individual manager view for regular managers
+                    if (userRole.role === "manager") {
+                      return renderManagerView(pool);
+                    }
+
+                    // Show full pool view for admin and super managers
                     const {
                       totalSales,
                       totalCommission,
@@ -449,24 +646,26 @@ const Payments = () => {
                               {pool?.poolCommission || 0} per sale
                             </p>
                           </div>
-                          <div className="flex flex-row space-x-2">
-                            <div
-                              className="p-2 py-2 text-sm font-roboto font-bold rounded-full hover:bg-neutral-200 text-center cursor-pointer flex flex-row justify-center"
-                              onClick={() => onEditPool(pool)}>
-                              <AiOutlineEdit
-                                size={20}
-                                className="text-green-400"
-                              />
+                          {userRole.canManagePools && (
+                            <div className="flex flex-row space-x-2">
+                              <div
+                                className="p-2 py-2 text-sm font-roboto font-bold rounded-full hover:bg-neutral-200 text-center cursor-pointer flex flex-row justify-center"
+                                onClick={() => onEditPool(pool)}>
+                                <AiOutlineEdit
+                                  size={20}
+                                  className="text-green-400"
+                                />
+                              </div>
+                              <div
+                                className="p-2 py-2 text-sm font-roboto font-bold rounded-full hover:bg-neutral-200 text-center cursor-pointer flex flex-row justify-center"
+                                onClick={() => handleDeletePool(pool.id)}>
+                                <MdOutlineDelete
+                                  size={20}
+                                  className="text-rose-400"
+                                />
+                              </div>
                             </div>
-                            <div
-                              className="p-2 py-2 text-sm font-roboto font-bold rounded-full hover:bg-neutral-200 text-center cursor-pointer flex flex-row justify-center"
-                              onClick={() => handleDeletePool(pool.id)}>
-                              <MdOutlineDelete
-                                size={20}
-                                className="text-rose-400"
-                              />
-                            </div>
-                          </div>
+                          )}
                         </div>
 
                         <div className="overflow-x-auto">
@@ -603,20 +802,26 @@ const Payments = () => {
           </div>
         </div>
       </div>
-      <DeleteConfirmationModal
-        showDeleteModal={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onDelete={handleDelete}
-        title={`Confirm Deletion!`}
-        message="Deleted pool cannot be retrieved"
-      />
-      <EditPool
-        setEditPool={setEditpool}
-        pool={editPool}
-        showEditPoolModal={showEditPoolModal}
-        setShowEditPoolModal={setShowEditPoolModal}
-      />
-      <NewPool showAddPool={showAddPool} setShowAddPool={setShowAddPool} />
+
+      {/* Only show modals for users who can manage pools */}
+      {userRole.canManagePools && (
+        <>
+          <DeleteConfirmationModal
+            showDeleteModal={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            onDelete={handleDelete}
+            title={`Confirm Deletion!`}
+            message="Deleted pool cannot be retrieved"
+          />
+          <EditPool
+            setEditPool={setEditpool}
+            pool={editPool}
+            showEditPoolModal={showEditPoolModal}
+            setShowEditPoolModal={setShowEditPoolModal}
+          />
+          <NewPool showAddPool={showAddPool} setShowAddPool={setShowAddPool} />
+        </>
+      )}
     </div>
   );
 };

@@ -39,7 +39,11 @@ exports.getActiveManagers = async (req, res) => {
   try {
     const loggedInUser = req.user;
 
-    if (!["admin", "super admin", "shop keeper"].includes(loggedInUser.role)) {
+    if (
+      !["admin", "super admin", "shop keeper", "manager"].includes(
+        loggedInUser.role
+      )
+    ) {
       return res.status(403).send("Access Denied");
     }
 

@@ -729,3 +729,20 @@ export const editPool = async (poolId, poolData, token) => {
     throw new Error(error.response?.data?.message || error.message);
   }
 };
+//Edit supplier
+export const editSupplierService = async (supplierId, supplierData, token) => {
+  try {
+    const response = await axios.put(
+      `${url}/supplier/${supplierId}`,
+      supplierData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};

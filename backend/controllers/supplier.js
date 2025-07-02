@@ -128,7 +128,7 @@ exports.fetchSuppliers = async (req, res) => {
         return {
           id: supplier.id,
           name: supplier.name,
-          contact: supplier.contact,
+          contact: supplier.phone,
           email: supplier.email,
           totalPhonesThisMonth,
           totalBuyingPriceThisMonth,
@@ -184,6 +184,67 @@ exports.deleteSupplier = async (req, res) => {
     console.error(error);
     res.status(500).json({
       error: "An error occurred while deleting the supplier.",
+    });
+  }
+};
+exports.editSupplier = async (req, res) => {
+  try {
+    const loggedInUser = req.user; // Ensure this is populated by your authentication middleware
+
+    // Check if the user has the required role
+    if (!["admin", "super admin"].includes(loggedInUser.role)) {
+      return res.status(403).json({
+        message: "Access Denied",
+      });
+    }
+
+    const { id } = req.params;
+    const { name, phone } = req.body;
+
+    // Input validation
+    if (!name || !phone) {
+      return res.status(400).json({
+        message: "Name and phone are required.",
+      });
+    }
+
+    // Find the supplier by ID
+    const supplier = await Supplier.findByPk(id);
+
+    if (!supplier) {
+      return res.status(404).json({
+        message: "Supplier not found.",
+      });
+    }
+
+    // Check if another supplier with the same phone number already exists (excluding current supplier)
+    const existingSupplier = await Supplier.findOne({
+      where: {
+        phone,
+        id: { [Op.ne]: id }, // Exclude current supplier from the check
+      },
+    });
+
+    if (existingSupplier) {
+      return res.status(400).json({
+        message: "A supplier with this phone number already exists.",
+      });
+    }
+
+    // Update the supplier
+    await supplier.update({
+      name,
+      phone,
+    });
+
+    res.status(200).json({
+      message: "Supplier updated successfully.",
+      supplier: supplier,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "An error occurred while updating the supplier.",
     });
   }
 };

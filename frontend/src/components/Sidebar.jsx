@@ -298,7 +298,7 @@ const Sidebar = () => {
             <p className="font-roboto text-white">Profile</p>
           </div>
         </div>
-        {user.designation === "cfo" && (
+        {(user.designation === "cfo" || user.role === "manager") && (
           <div
             className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${
               pathname === "/payments"
