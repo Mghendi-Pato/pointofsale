@@ -187,25 +187,6 @@ const Payments = () => {
 
   const navigate = useNavigate();
 
-  // Helper function to determine user role and access
-  const getUserRole = () => {
-    if (!user) return { role: "unknown", canManagePools: false };
-
-    // Assuming you have role information in user object
-    // Adjust these conditions based on your actual user structure
-    if (user.designation === "cfo" || user.role === "admin") {
-      return { role: "admin", canManagePools: true };
-    } else if (user.role === "super_manager" || user.isSuperManager) {
-      return { role: "super_manager", canManagePools: false };
-    } else if (user.role === "manager" || user.designation === "manager") {
-      return { role: "manager", canManagePools: false };
-    }
-
-    return { role: "unknown", canManagePools: false };
-  };
-
-  const userRole = getUserRole();
-
   const isQueryEnabled =
     company !== undefined &&
     startDate !== undefined &&
@@ -256,48 +237,64 @@ const Payments = () => {
 
   const isLoading = poolsLoading || salesLoading;
 
-  console.log(user);
+  // Helper function to determine user role and access
+  const getUserRole = () => {
+    if (!user)
+      return { role: "unknown", canManagePools: false, isSuperManager: false };
+
+    const isSuperManager = poolsData?.pools?.some(
+      (pool) => pool.superManager?.id === user.id
+    );
+
+    if (user.role === "admin") {
+      return { role: "admin", canManagePools: true, isSuperManager: false };
+    }
+
+    if (user.role === "manager") {
+      return {
+        role: "manager",
+        isSuperManager,
+        canManagePools: false,
+      };
+    }
+
+    return { role: "unknown", canManagePools: false, isSuperManager: false };
+  };
+
+  const userRole = getUserRole();
 
   // Filter pools based on user role
   const getFilteredPools = () => {
     if (!poolsData?.pools) return [];
 
-    switch (userRole.role) {
-      case "super admin":
-        // Admin/CFO can see all pools
-        return poolsData.pools;
+    const isSuperManager = poolsData.pools.some(
+      (pool) => pool.superManager?.id === user.id
+    );
 
-      case "super_manager":
-        // Super manager can only see pools where they are the super manager
+    if (user.role?.toLowerCase().trim() === "manager") {
+      if (isSuperManager) {
+        // Super manager: only see pools they manage
         return poolsData.pools.filter(
           (pool) => pool.superManager?.id === user.id
         );
-
-      case "manager":
-        // Regular manager can only see pools where they are a member
+      } else {
+        // Regular manager: see pools they are a member of or manage
         return poolsData.pools.filter(
           (pool) =>
             pool.poolMembers?.some((member) => member.id === user.id) ||
             pool.superManager?.id === user.id
         );
-
-      default:
-        return [];
+      }
     }
+
+    // Default (e.g. admin): return all pools
+    return poolsData.pools;
   };
 
-  // Filter individual manager data for regular managers
+  // Filter individual manager data for regular managers (NOT super managers)
   const getManagerSpecificData = (pool) => {
-    if (userRole.role !== "manager") return null;
-
-    // Check if user is the super manager
-    if (pool.superManager?.id === user.id) {
-      return {
-        type: "super_manager",
-        data: pool.superManager,
-        poolCommission: 0, // Super manager doesn't get pool commission deducted
-      };
-    }
+    // Only show individual view for regular managers, not super managers
+    if (userRole.role !== "manager" || userRole.isSuperManager) return null;
 
     // Check if user is a pool member
     const memberData = pool.poolMembers?.find(
@@ -435,7 +432,7 @@ const Payments = () => {
 
   const filteredPools = getFilteredPools();
 
-  // Render individual manager view
+  // Render individual manager view (only for regular managers, not super managers)
   const renderManagerView = (pool) => {
     const managerData = getManagerSpecificData(pool);
     if (!managerData) return null;
@@ -445,22 +442,8 @@ const Payments = () => {
       managerData.data.commission || 0
     );
 
-    const poolCommissionAmount =
-      managerData.type === "member"
-        ? salesCount * managerData.poolCommission
-        : 0;
-
-    const finalAmount =
-      managerData.type === "super_manager"
-        ? totalCommission +
-          (pool.poolMembers?.reduce((acc, member) => {
-            const memberSales = calculateManagerData(
-              member.id,
-              member.commission || 0
-            );
-            return acc + memberSales.salesCount * (pool.poolCommission || 0);
-          }, 0) || 0)
-        : totalCommission;
+    const poolCommissionAmount = salesCount * managerData.poolCommission;
+    const finalAmount = totalCommission;
 
     return (
       <div key={pool.id} className="bg-white border shadow-sm overflow-hidden">
@@ -468,11 +451,7 @@ const Payments = () => {
           <h3 className="text-lg font-bold">
             Your Payment Details - {pool?.name || "Unnamed Pool"}
           </h3>
-          <p className="text-sm text-gray-600">
-            {managerData.type === "super_manager"
-              ? "Super Manager"
-              : "Pool Member"}
-          </p>
+          <p className="text-sm text-gray-600">Pool Member</p>
         </div>
 
         <div className="overflow-x-auto">
@@ -489,9 +468,7 @@ const Payments = () => {
                   Commission (KES)
                 </th>
                 <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {managerData.type === "super_manager"
-                    ? "Pool Earnings (KES)"
-                    : "Pool Commission (KES)"}
+                  Pool Commission (KES)
                 </th>
                 <th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total (KES)
@@ -503,11 +480,7 @@ const Payments = () => {
                 <td className="px-6 py-2 whitespace-nowrap font-medium capitalize">
                   {managerData.data.firstName} {managerData.data.lastName}
                   <span className="text-xs font-normal text-gray-500 block">
-                    (
-                    {managerData.type === "super_manager"
-                      ? "Super Manager"
-                      : "Pool Member"}
-                    )
+                    (Pool Member)
                   </span>
                 </td>
                 <td className="px-6 py-2 whitespace-nowrap">{salesCount}</td>
@@ -515,9 +488,7 @@ const Payments = () => {
                   {totalCommission.toLocaleString()}
                 </td>
                 <td className="px-6 py-2 whitespace-nowrap">
-                  {managerData.type === "super_manager"
-                    ? (finalAmount - totalCommission).toLocaleString()
-                    : poolCommissionAmount.toLocaleString()}
+                  {poolCommissionAmount.toLocaleString()}
                 </td>
                 <td className="px-6 py-2 whitespace-nowrap font-bold text-green-600">
                   {finalAmount.toLocaleString()}
@@ -536,7 +507,9 @@ const Payments = () => {
         <div className="flex flex-row justify-between">
           <div className="space-y-2">
             <p className="text-xl font-bold">
-              {userRole.role === "manager" ? "My Payments" : "Payments"}
+              {userRole.role === "manager" && !userRole.isSuperManager
+                ? "My Payments"
+                : "Payments"}
             </p>
           </div>
           {userRole.canManagePools && (
@@ -605,19 +578,22 @@ const Payments = () => {
                 </div>
               ) : !filteredPools || filteredPools.length === 0 ? (
                 <div className="text-center py-5">
-                  {userRole.role === "manager"
+                  {userRole.role === "manager" && !userRole.isSuperManager
                     ? "You are not assigned to any pools."
                     : "No pools found."}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
                   {filteredPools.map((pool) => {
-                    // Show individual manager view for regular managers
-                    if (userRole.role === "manager") {
+                    // Show individual manager view ONLY for regular managers (not super managers)
+                    if (
+                      userRole.role === "manager" &&
+                      !userRole.isSuperManager
+                    ) {
                       return renderManagerView(pool);
                     }
 
-                    // Show full pool view for admin and super managers
+                    // Show full pool view for admin, super managers, and others
                     const {
                       totalSales,
                       totalCommission,
@@ -722,7 +698,7 @@ const Payments = () => {
                                     ).totalCommission.toLocaleString()}
                                   </td>
                                   <td className="px-6 py-2 whitespace-nowrap">
-                                    N/A
+                                    {totalPoolCommission.toLocaleString()}
                                   </td>
                                   <td className="px-6 py-2 whitespace-nowrap font-medium">
                                     {(
