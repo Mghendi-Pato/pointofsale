@@ -191,21 +191,14 @@ const Payments = () => {
   const getUserRole = () => {
     if (!user) return { role: "unknown", canManagePools: false };
 
-    // Check if user is CFO/Admin who can manage pools
-    if (
-      user.designation === "cfo" ||
-      user.role === "admin" ||
-      user.role === "super admin"
-    ) {
+    // Assuming you have role information in user object
+    // Adjust these conditions based on your actual user structure
+    if (user.designation === "cfo" || user.role === "admin") {
       return { role: "admin", canManagePools: true };
-    }
-    // Check manager type for managers
-    else if (user.role === "manager") {
-      if (user.managerType === "super manager") {
-        return { role: "super_manager", canManagePools: false };
-      } else if (user.managerType === "manager") {
-        return { role: "manager", canManagePools: false };
-      }
+    } else if (user.role === "super_manager" || user.isSuperManager) {
+      return { role: "super_manager", canManagePools: false };
+    } else if (user.role === "manager" || user.designation === "manager") {
+      return { role: "manager", canManagePools: false };
     }
 
     return { role: "unknown", canManagePools: false };
@@ -263,12 +256,14 @@ const Payments = () => {
 
   const isLoading = poolsLoading || salesLoading;
 
+  console.log(user);
+
   // Filter pools based on user role
   const getFilteredPools = () => {
     if (!poolsData?.pools) return [];
 
     switch (userRole.role) {
-      case "admin":
+      case "super admin":
         // Admin/CFO can see all pools
         return poolsData.pools;
 
@@ -331,9 +326,11 @@ const Payments = () => {
   };
 
   useEffect(() => {
-    // Allow access for CFO, admins, and managers (both types)
-    const allowedRoles = ["cfo", "admin", "super admin", "manager"];
-    if (!allowedRoles.includes(user?.role) && user?.designation !== "cfo") {
+    const allowed =
+      user?.designation?.toLowerCase().trim() === "cfo" ||
+      ["super admin", "manager"].includes(user?.role?.toLowerCase().trim());
+
+    if (!allowed) {
       navigate("/404");
     }
   }, [user, navigate]);
