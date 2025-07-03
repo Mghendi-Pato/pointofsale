@@ -279,10 +279,16 @@ export const registerNewPhone = async (phoneData, token) => {
 };
 // Fetch active phones
 export const fetchActivePhones = async ({ queryKey, signal, token }) => {
-  const [, { page = 1, limit = 10 }] = queryKey;
+  const [, { page = 1, limit = 2000 }] = queryKey;
+
   try {
     const response = await axios.get(`${url}/phone/active`, {
-      params: { page, limit, status: "active" },
+      params: {
+        page,
+        limit,
+        status: "active",
+        // Remove server-side search - handled client-side now
+      },
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -303,6 +309,7 @@ export const fetchActivePhones = async ({ queryKey, signal, token }) => {
     throw error;
   }
 };
+
 //Fech suspended phones
 export const fetchSuspendedPhones = async ({ queryKey, signal, token }) => {
   const [, { page = 1, limit = 10 }] = queryKey;
@@ -331,10 +338,16 @@ export const fetchSuspendedPhones = async ({ queryKey, signal, token }) => {
 };
 // Fetch lost phones
 export const fetchLostPhones = async ({ queryKey, signal, token }) => {
-  const [, { page = 1, limit = 10 }] = queryKey;
+  const [, { page = 1, limit = 500 }] = queryKey;
+
   try {
     const response = await axios.get(`${url}/phone/lost`, {
-      params: { page, limit, status: "lost" },
+      params: {
+        page,
+        limit,
+        status: "lost",
+        // Remove server-side filtering - handled client-side now
+      },
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -352,6 +365,27 @@ export const fetchLostPhones = async ({ queryKey, signal, token }) => {
     } else {
       console.error("Error fetching lost phones:", error.message);
     }
+    throw error;
+  }
+};
+
+// Add bulk fetch for all active phones (optional for very large datasets)
+export const fetchAllActivePhones = async (token) => {
+  try {
+    const response = await axios.get(`${url}/phone/active/bulk`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Accept-Encoding": "gzip", // Request compressed response
+      },
+    });
+
+    if (!response.data || !response.data.phones) {
+      throw new Error("Invalid response structure from the server.");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all active phones:", error.message);
     throw error;
   }
 };

@@ -212,13 +212,20 @@ exports.editPhone = async (req, res) => {
     });
   }
 };
-//Fetch phones
-const fetchPhones = async (status, page, limit, user) => {
+const fetchPhones = async (status, page, limit, user, searchQuery = "") => {
   const whereClause = {
     ...(status && { status }),
     ...(user.role === "manager" && { managerId: user.id }),
   };
+
+  // Only do basic IMEI search on server if provided
+  if (searchQuery.trim()) {
+    whereClause.imei = { [Op.iLike]: `%${searchQuery.trim()}%` };
+  }
+
   const offset = (page - 1) * limit;
+
+  // Optimized query with minimal server-side processing
   const { count, rows: phones } = await Phone.findAndCountAll({
     where: whereClause,
     include: [
@@ -250,9 +257,16 @@ const fetchPhones = async (status, page, limit, user) => {
     ],
     offset,
     limit,
+    // Simple ordering for better performance
+    order: [["createdAt", "DESC"]],
+    // Use lean queries for better performance
+    raw: false,
+    nest: true,
   });
 
+  // Simplified mapping - let client handle complex calculations
   const phonesWithDetails = phones.map((phone) => {
+    const phoneData = phone.toJSON();
     const {
       id,
       imei,
@@ -268,30 +282,31 @@ const fetchPhones = async (status, page, limit, user) => {
       ram,
       sellingPrice,
       dateAssigned,
-    } = phone.toJSON();
+    } = phoneData;
 
-    const supplierName = supplier ? supplier.name : "No supplier assigned";
-    const supplierId = supplier ? supplier.id : "No supplier assigned";
-    const managerId = manager ? manager.id : "No manager assigned";
-    const regionId = manager ? manager.regionId : "No region assigned";
+    // Basic supplier info
+    const supplierName = supplier?.name || null;
+    const supplierId = supplier?.id || null;
+
+    // Manager information
+    const managerId = manager?.id || null;
+    const regionId = manager?.regionId || null;
     const managerName = manager
       ? `${manager.firstName} ${manager.lastName}`
-      : "No manager assigned";
-    const managerLocation = manager?.region
-      ? `${manager.region.location}`
-      : "No location assigned";
+      : null;
+    const managerLocation = manager?.region?.location || null;
 
-    const modelName = phoneModel ? phoneModel.model : "No model assigned";
-    const modelMake = phoneModel ? phoneModel.make : "No make assigned";
+    // Model information
+    const modelName = phoneModel?.model || null;
+    const modelMake = phoneModel?.make || null;
 
+    // Simplified commission calculation
     let managerCommission = null;
-    if (phoneModel && phoneModel.commissions) {
+    if (phoneModel?.commissions && regionId) {
       const commission = phoneModel.commissions.find(
         (comm) => String(comm.regionId) === String(regionId)
       );
-      if (commission) {
-        managerCommission = commission.amount;
-      }
+      managerCommission = commission?.amount || null;
     }
 
     return {
@@ -320,10 +335,12 @@ const fetchPhones = async (status, page, limit, user) => {
 
   return { count, phones: phonesWithDetails };
 };
-// Fetch active phones
+
+// ✅ Optimized active phones endpoint
 exports.getActivePhones = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 2000, searchQuery = "" } = req.query; // Increased default limit
+
     const parsedPage = parseInt(page);
     const parsedLimit = parseInt(limit);
 
@@ -336,23 +353,14 @@ exports.getActivePhones = async (req, res) => {
       return res.status(400).json({ message: "Invalid pagination parameters" });
     }
 
-    // Pass req.user to fetchPhones to handle role-based filtering
+    // Use optimized fetch function
     const { count, phones } = await fetchPhones(
       "active",
       parsedPage,
       parsedLimit,
-      req.user
+      req.user,
+      searchQuery
     );
-
-    if (phones.length === 0) {
-      return res.status(200).json({
-        message: "No active phones found.",
-        phones: [],
-        page: parsedPage,
-        limit: parsedLimit,
-        total: 0,
-      });
-    }
 
     res.status(200).json({
       message: "Active phones fetched successfully.",
@@ -362,9 +370,55 @@ exports.getActivePhones = async (req, res) => {
       total: count,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching active phones:", error);
+    res.status(500).json({
+      message: "An error occurred while fetching active phones.",
+      error: error.message,
+    });
   }
 };
+
+// ✅ Optimized lost phones endpoint
+exports.getLostPhones = async (req, res) => {
+  try {
+    const { page = 1, limit = 500, searchQuery = "" } = req.query; // Increased default limit
+
+    const parsedPage = parseInt(page);
+    const parsedLimit = parseInt(limit);
+
+    if (
+      isNaN(parsedPage) ||
+      isNaN(parsedLimit) ||
+      parsedPage <= 0 ||
+      parsedLimit <= 0
+    ) {
+      return res.status(400).json({ message: "Invalid pagination parameters" });
+    }
+
+    const { count, phones } = await fetchPhones(
+      "lost",
+      parsedPage,
+      parsedLimit,
+      req.user,
+      searchQuery
+    );
+
+    res.status(200).json({
+      message: "Lost phones fetched successfully.",
+      phones,
+      page: parsedPage,
+      limit: parsedLimit,
+      total: count,
+    });
+  } catch (error) {
+    console.error("Error fetching lost phones:", error);
+    res.status(500).json({
+      message: "An error occurred while fetching lost phones.",
+      error: error.message,
+    });
+  }
+};
+
 // Fetch suspended phones
 exports.getSuspendedPhones = async (req, res) => {
   try {
@@ -408,50 +462,7 @@ exports.getSuspendedPhones = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-// Fetch lost phones
-exports.getLostPhones = async (req, res) => {
-  try {
-    const { page = 1, limit = 20 } = req.query;
-    const parsedPage = parseInt(page);
-    const parsedLimit = parseInt(limit);
 
-    if (
-      isNaN(parsedPage) ||
-      isNaN(parsedLimit) ||
-      parsedPage <= 0 ||
-      parsedLimit <= 0
-    ) {
-      return res.status(400).json({ message: "Invalid pagination parameters" });
-    }
-
-    const { count, phones } = await fetchPhones(
-      "lost",
-      parsedPage,
-      parsedLimit,
-      req.user
-    );
-
-    if (phones.length === 0) {
-      return res.status(200).json({
-        message: "No lost phones found.",
-        phones: [],
-        page: parsedPage,
-        limit: parsedLimit,
-        total: 0,
-      });
-    }
-
-    res.status(200).json({
-      message: "Lost phones fetched successfully.",
-      phones,
-      page: parsedPage,
-      limit: parsedLimit,
-      total: count,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 //Declare lost
 exports.declareLost = async (req, res) => {
   try {

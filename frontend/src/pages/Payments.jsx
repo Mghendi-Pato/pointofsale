@@ -674,55 +674,52 @@ const Payments = () => {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                               {/* Super Manager Row */}
-                              {pool?.superManager && (
-                                <tr className="bg-primary-100">
-                                  <td className="px-6 py-2 whitespace-nowrap font-medium capitalize">
-                                    {pool.superManager.firstName}{" "}
-                                    {pool.superManager.lastName}{" "}
-                                    <span className="text-xs font-normal text-gray-500">
-                                      (Super Manager)
-                                    </span>
-                                  </td>
-                                  <td className="px-6 py-2 whitespace-nowrap">
-                                    {
-                                      calculateManagerData(
-                                        pool.superManager.id,
-                                        pool.superManager.commission || 0
-                                      ).salesCount
-                                    }
-                                  </td>
-                                  <td className="px-6 py-2 whitespace-nowrap">
-                                    {calculateManagerData(
-                                      pool.superManager.id,
-                                      pool.superManager.commission || 0
-                                    ).totalCommission.toLocaleString()}
-                                  </td>
-                                  <td className="px-6 py-2 whitespace-nowrap">
-                                    {totalPoolCommission.toLocaleString()}
-                                  </td>
-                                  <td className="px-6 py-2 whitespace-nowrap font-medium">
-                                    {(
-                                      calculateManagerData(
-                                        pool.superManager.id,
-                                        pool.superManager.commission || 0
-                                      ).totalCommission + totalPoolCommission
-                                    ).toLocaleString()}
-                                  </td>
-                                </tr>
-                              )}
+                              {pool?.superManager &&
+                                (() => {
+                                  const superManagerData = calculateManagerData(
+                                    pool.superManager.id,
+                                    pool.superManager.commission || 0
+                                  );
+                                  return (
+                                    <tr className="bg-primary-100">
+                                      <td className="px-6 py-2 whitespace-nowrap font-medium capitalize">
+                                        {pool.superManager.firstName}{" "}
+                                        {pool.superManager.lastName}{" "}
+                                        <span className="text-xs font-normal text-gray-500">
+                                          (Super Manager)
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap">
+                                        {superManagerData.salesCount}
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap">
+                                        {superManagerData.totalCommission.toLocaleString()}
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap">
+                                        {totalPoolCommission.toLocaleString()}
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap font-medium">
+                                        {(
+                                          superManagerData.totalCommission +
+                                          totalPoolCommission
+                                        ).toLocaleString()}
+                                      </td>
+                                    </tr>
+                                  );
+                                })()}
 
                               {/* Pool Members Rows */}
                               {Array.isArray(pool?.poolMembers) &&
                                 pool.poolMembers.map((member) => {
                                   if (!member) return null;
 
-                                  const { salesCount, totalCommission } =
-                                    calculateManagerData(
-                                      member.id,
-                                      member.commission || 0
-                                    );
+                                  const memberData = calculateManagerData(
+                                    member.id,
+                                    member.commission || 0
+                                  );
                                   const poolCommissionAmount =
-                                    salesCount * (pool?.poolCommission || 0);
+                                    memberData.salesCount *
+                                    (pool?.poolCommission || 0);
 
                                   return (
                                     <tr key={member.id}>
@@ -730,16 +727,16 @@ const Payments = () => {
                                         {member.firstName} {member.lastName}
                                       </td>
                                       <td className="px-6 py-2 whitespace-nowrap">
-                                        {salesCount}
+                                        {memberData.salesCount}
                                       </td>
                                       <td className="px-6 py-2 whitespace-nowrap">
-                                        {totalCommission.toLocaleString()}
+                                        {memberData.totalCommission.toLocaleString()}
                                       </td>
                                       <td className="px-6 py-2 whitespace-nowrap">
                                         {poolCommissionAmount.toLocaleString()}
                                       </td>
                                       <td className="px-6 py-2 whitespace-nowrap font-medium">
-                                        {totalCommission.toLocaleString()}
+                                        {memberData.totalCommission.toLocaleString()}
                                       </td>
                                     </tr>
                                   );

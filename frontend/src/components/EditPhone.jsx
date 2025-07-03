@@ -282,7 +282,7 @@ const EditPhone = ({
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
-          className="absolute bottom-0 md:top-0 right-0 w-full h-[85%] md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center p-2">
+          className="fixed bottom-0 md:top-0 right-0 w-full h-[85%] md:h-full z-50 md:min-w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col items-center p-2">
           <div className="relative w-full hidden md:flex">
             <MdOutlineCancel
               size={28}
