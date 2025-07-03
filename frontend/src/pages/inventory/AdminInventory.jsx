@@ -269,7 +269,7 @@ const AdminInventory = () => {
                       : "bg-primary-500 hover:scale-105"
                   } ${
                     user.role === "manager" ? "hidden" : "flex"
-                  } flex-row items-center justify-center h-12 w-[280px] md:w-32 transition-all duration-300 ease-in-out`}
+                  } flex-row items-center justify-center h-12 w-[280px] font-bold md:w-32 transition-all duration-300 ease-in-out`}
                   onClick={() => setShowAddPhone(!showAddPhone)}
                   disabled={currentData.isLoading}>
                   Add inventory
