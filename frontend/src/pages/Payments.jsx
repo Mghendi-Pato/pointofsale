@@ -246,7 +246,7 @@ const Payments = () => {
       (pool) => pool.superManager?.id === user.id
     );
 
-    if (user.role === "admin") {
+    if (user.role === "super admin") {
       return { role: "admin", canManagePools: true, isSuperManager: false };
     }
 
