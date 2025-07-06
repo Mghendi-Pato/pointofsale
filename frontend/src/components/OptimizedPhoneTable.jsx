@@ -534,7 +534,7 @@ const OptimizedPhoneTable = React.memo(
     usePagination = true,
   }) => {
     // Determine which rendering strategy to use based on data size
-    const shouldUseVirtualization = phones.length > 2000 || useVirtualization;
+    const shouldUseVirtualization = phones.length > 5000 || useVirtualization;
     const shouldUsePagination =
       phones.length > 100 && !shouldUseVirtualization && usePagination;
 

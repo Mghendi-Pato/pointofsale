@@ -279,7 +279,7 @@ export const registerNewPhone = async (phoneData, token) => {
 };
 // Fetch active phones
 export const fetchActivePhones = async ({ queryKey, signal, token }) => {
-  const [, { page = 1, limit = 2000 }] = queryKey;
+  const [, { page = 1, limit = 5000 }] = queryKey;
 
   try {
     const response = await axios.get(`${url}/phone/active`, {

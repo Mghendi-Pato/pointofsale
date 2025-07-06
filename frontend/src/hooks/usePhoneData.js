@@ -65,7 +65,7 @@ export const usePhoneData = (
   // Determine the appropriate service function and parameters
   const fetchFunction =
     status === "active" ? fetchActivePhones : fetchLostPhones;
-  const defaultLimit = status === "active" ? 2000 : 500; // Larger pages for better performance
+  const defaultLimit = status === "active" ? 5000 : 500; // Larger pages for better performance
 
   // Main data fetching with React Query
   const {
