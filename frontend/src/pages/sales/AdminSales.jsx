@@ -367,6 +367,8 @@ const AdminSales = () => {
     }
   );
 
+  console.log(phonesData);
+
   useEffect(() => {
     if (isQueryEnabled) {
       refetch();

@@ -65,6 +65,11 @@ module.exports = (sequelize, DataTypes) => {
       agentCommission: { type: DataTypes.FLOAT, allowNull: true },
       company: { type: DataTypes.STRING, allowNull: true },
       rcpNumber: { type: DataTypes.STRING, allowNull: true },
+      drsFullName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: "DRS Full Name - two names separated by space",
+      },
       customerId: {
         type: DataTypes.INTEGER,
         references: {

@@ -24,8 +24,6 @@ const Login = () => {
     if (user) {
       loginNotify();
 
-      console.log(user);
-
       const role = user?.user?.role;
 
       switch (role) {

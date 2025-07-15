@@ -38,6 +38,7 @@ const PhoneCheckout = ({
     ID: "",
     nkPhone: "",
     phone: "",
+    drsFullName: "",
   });
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -125,10 +126,12 @@ const PhoneCheckout = ({
       company: sellingCompany,
       agentCommission: phone.managerCommission,
       rcpNumber: receiptNumber,
+      drsFullName: customerDetails.drsFullName,
     };
+
+    console.log("Updated Customer Details:", updatedCustomerDetails);
     const { ...finalCustomerDetails } = updatedCustomerDetails;
 
-    console.log(finalCustomerDetails);
     sellPhoneMutation.mutate({
       customerDetails: finalCustomerDetails,
       token,
@@ -136,6 +139,13 @@ const PhoneCheckout = ({
   };
 
   const validationSchema = yup.object({
+    drsFullName: yup
+      .string("Enter the DRS full name")
+      .matches(
+        /^[a-zA-Z]+\s+[a-zA-Z]+$/,
+        "DRS full name must contain exactly two names separated by a space"
+      )
+      .required("DRS full name is required"),
     ID: yup
       .number("ID must be a number")
       .positive("ID must be a positive number")
@@ -247,6 +257,41 @@ const PhoneCheckout = ({
                   onSubmit={formik.handleSubmit}
                   className="space-y-5"
                   autoComplete="off">
+                  <TextField
+                    variant="outlined"
+                    fullWidth
+                    id="drsFullName"
+                    name="drsFullName"
+                    label="DRS Full Name"
+                    placeholder="Enter two names separated by space"
+                    value={formik.values.drsFullName}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={
+                      formik.touched.drsFullName &&
+                      Boolean(formik.errors.drsFullName)
+                    }
+                    helperText={
+                      formik.touched.drsFullName && formik.errors.drsFullName
+                    }
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": {
+                          borderColor: "#ccc",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#2FC3D2",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#2FC3D2",
+                        },
+                      },
+                      "& .MuiInputBase-input": { color: "#000" },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#2FC3D2",
+                      },
+                    }}
+                  />
                   <TextField
                     variant="outlined"
                     fullWidth
@@ -553,7 +598,7 @@ const PhoneCheckout = ({
                 <div className="flex flex-col justify-center items-center">
                   <div
                     ref={receiptRef}
-                    className="p-5 border border-gray-500 h-full w-80 bg-white">
+                    className="p-5 border border-gray-500 h-full w-96 bg-white">
                     <div className="flex flex-col items-center">
                       {sellingCompany === "shuhari" ? (
                         <img
@@ -611,9 +656,15 @@ const PhoneCheckout = ({
                         Time: {formattedTime}
                       </p>
                     </div>
-                    <p className="font-semibold text-sm text-neutral-700">
-                      Location: {phone?.managerLocation}
-                    </p>
+                    <div className="flex flex-row justify-between items-center">
+                      <p className="font-semibold text-sm text-neutral-700">
+                        Location: {phone?.managerLocation}
+                      </p>
+                      <p className="font-semibold text-sm text-neutral-700">
+                        DRS: {customerDetails?.drsFullName}
+                      </p>
+                    </div>
+
                     <hr className="my-2 w-full bg-black h-1" />
                     <p className="font-semibold text-sm text-neutral-700">
                       Name: {customerDetails?.firstName}{" "}

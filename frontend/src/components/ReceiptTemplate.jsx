@@ -94,13 +94,15 @@ const ReceiptTemplate = ({
     }
   };
 
+  console.log(phone);
+
   return (
     <AnimatePresence>
       {showDownLoadReceiptModal && (
         <motion.div
           {...animation}
           transition={{ duration: 0.5 }}
-          className="absolute bottom-0 md:top-0 right-0 w-full h-[90vh] md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col">
+          className="fixed bottom-0 md:top-0 right-0 w-full h-[90vh] md:h-full z-50 md:w-[40%] lg:w-[30%] bg-neutral-100 flex flex-col">
           {/* Fixed header section */}
           <div className="sticky top-0 bg-neutral-100 z-10 p-2">
             <div className="relative w-full hidden md:flex">
@@ -135,7 +137,7 @@ const ReceiptTemplate = ({
                 ref={receiptRef}
                 className="p-4 border border-gray-500 bg-white mx-auto"
                 style={{
-                  width: isSmallScreen ? "90%" : "320px",
+                  width: isSmallScreen ? "90%" : "350px",
                   maxWidth: isSmallScreen ? "none" : "320px",
                 }}>
                 <div className="flex flex-col items-center">
@@ -211,12 +213,14 @@ const ReceiptTemplate = ({
                     Time: {formattedTime}
                   </p>
                 </div>
-                <p
-                  className={`font-semibold ${
-                    isSmallScreen ? "text-sm" : "text-xs"
-                  } text-neutral-700`}>
-                  Location: {phone?.managerLocation}
-                </p>
+                <div className="flex flex-row justify-between items-center">
+                  <p className="font-semibold text-sm text-neutral-700">
+                    Location: {phone?.managerLocation}
+                  </p>
+                  <p className="font-semibold text-sm text-neutral-700">
+                    DRS: {phone.drsFullName}
+                  </p>
+                </div>
                 <hr className="my-2 w-full bg-black h-[1px]" />
                 <p
                   className={`font-semibold ${

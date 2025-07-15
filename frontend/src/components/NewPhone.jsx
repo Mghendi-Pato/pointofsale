@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { MdOutlineCancel } from "react-icons/md";
 import { CiSaveDown2 } from "react-icons/ci";
 import { useFormik } from "formik";
@@ -47,6 +47,8 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
     RAM: "",
     supplyDate: dayjs().format("YYYY-MM-DD"),
   });
+
+  const submitButtonRef = useRef(null);
 
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -246,13 +248,77 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
   };
 
   const addIMEI = () => {
-    imeiFormik.setFieldValue("imeis", [...imeiFormik.values.imeis, ""]);
+    const newImeis = [...imeiFormik.values.imeis, ""];
+    imeiFormik.setFieldValue("imeis", newImeis);
+
+    // Focus the new field after it's added
+    setTimeout(() => {
+      const newIndex = newImeis.length - 1;
+      const newInput = document.getElementById(`imei-${newIndex}`);
+      if (newInput) {
+        newInput.focus();
+      }
+    }, 200);
   };
 
   const removeIMEI = (index) => {
     const updatedImeis = imeiFormik.values.imeis.filter((_, i) => i !== index);
     imeiFormik.setFieldValue("imeis", updatedImeis);
   };
+
+  const handleIMEIChange = (index, e) => {
+    const inputValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+
+    if (inputValue.length <= 15) {
+      // Update the field value
+      imeiFormik.setFieldValue(`imeis[${index}]`, inputValue);
+
+      // Auto-advance logic
+      if (inputValue.length === 15) {
+        // Move to next field if available
+        if (index < imeiFormik.values.imeis.length - 1) {
+          setTimeout(() => {
+            const nextInput = document.getElementById(`imei-${index + 1}`);
+            if (nextInput) {
+              nextInput.focus();
+            }
+          }, 100);
+        } else {
+          // Focus submit button if this is the last field
+          setTimeout(() => {
+            submitButtonRef.current?.focus();
+          }, 100);
+        }
+      }
+    }
+  };
+
+  const handleIMEIKeyDown = (index, e) => {
+    // Handle backspace to move to previous field
+    if (
+      e.key === "Backspace" &&
+      imeiFormik.values.imeis[index] === "" &&
+      index > 0
+    ) {
+      setTimeout(() => {
+        const prevInput = document.getElementById(`imei-${index - 1}`);
+        if (prevInput) {
+          prevInput.focus();
+        }
+      }, 50);
+    }
+  };
+
+  useEffect(() => {
+    if (stepperLocation === 1) {
+      setTimeout(() => {
+        const firstInput = document.getElementById("imei-0");
+        if (firstInput) {
+          firstInput.focus();
+        }
+      }, 300);
+    }
+  }, [stepperLocation]);
 
   return (
     <AnimatePresence>
@@ -632,19 +698,8 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                           name={`imeis[${index}]`}
                           label={`IMEI ${index + 1}`}
                           value={imeiFormik.values.imeis[index]}
-                          onChange={(e) => {
-                            const inputValue = e.target.value.replace(
-                              /\D/g,
-                              ""
-                            ); // Remove non-numeric characters
-                            if (inputValue.length <= 15) {
-                              // Allow only 15 digits max
-                              imeiFormik.setFieldValue(
-                                `imeis[${index}]`,
-                                inputValue
-                              );
-                            }
-                          }}
+                          onChange={(e) => handleIMEIChange(index, e)}
+                          onKeyDown={(e) => handleIMEIKeyDown(index, e)}
                           onBlur={imeiFormik.handleBlur}
                           error={
                             imeiFormik.touched.imeis?.[index] &&
@@ -654,7 +709,10 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                             imeiFormik.touched.imeis?.[index] &&
                             imeiFormik.errors.imeis?.[index]
                           }
-                          inputProps={{ maxLength: 15 }} // Restrict input to 15 characters
+                          inputProps={{
+                            maxLength: 15,
+                            autoComplete: "off",
+                          }}
                           sx={{
                             "& .MuiOutlinedInput-root": {
                               "& fieldset": { borderColor: "#ccc" },
@@ -669,6 +727,7 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                             },
                           }}
                         />
+
                         {imeiFormik.values.imeis.length > 1 && (
                           <button
                             type="button"
@@ -696,6 +755,7 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                         Back
                       </button>
                       <button
+                        ref={submitButtonRef}
                         type="submit"
                         className="p-2 bg-primary-500 transition-all duration-500 ease-in-out flex flex-row items-center justify-center h-12 w-full space-x-2">
                         {registerPhoneLoading

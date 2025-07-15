@@ -504,6 +504,7 @@ export const sellPhone = async (customerDetails, token) => {
     agentCommission,
     middleName,
     rcpNumber,
+    drsFullName,
   } = customerDetails;
   try {
     const response = await axios.post(
@@ -522,6 +523,7 @@ export const sellPhone = async (customerDetails, token) => {
         agentCommission,
         middleName,
         rcpNumber,
+        drsFullName,
       },
       {
         headers: {

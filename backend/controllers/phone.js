@@ -514,9 +514,8 @@ exports.sellPhone = async (req, res) => {
       nkLastName,
       agentCommission,
       rcpNumber,
+      drsFullName,
     } = req.body;
-
-    console.log(req.body);
 
     // Step 1: Check if the phone exists and is active
     const phone = await Phone.findByPk(phoneId);
@@ -562,7 +561,10 @@ exports.sellPhone = async (req, res) => {
       saleDate: new Date(),
       agentCommission,
       rcpNumber,
+      drsFullName,
     });
+
+    console.log(phone);
 
     return res.status(200).json({
       message: "Phone sold successfully.",
@@ -662,6 +664,7 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       reconcileDate,
       rcpNumber,
       ram,
+      drsFullName,
     } = phone.toJSON();
 
     const supplierName = supplier ? supplier.name : "No supplier assigned";
@@ -717,6 +720,7 @@ const fetchSoldPhones = async (status, company, startDate, endDate, user) => {
       nkName,
       nkPhn,
       rcpNumber,
+      drsFullName,
     };
   });
 
