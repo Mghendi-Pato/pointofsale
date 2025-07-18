@@ -127,7 +127,7 @@ const PhoneDetails = () => {
                 <div className="flex-1">
                   <p className="text-neutral-400">Manager</p>
                   <p className=" font-medium capitalize">
-                    {phone?.manager.lastName} {phone?.manager.firstName}
+                    {phone?.manager?.firstName} {phone?.manager?.lastName}
                   </p>
                 </div>
               </div>
