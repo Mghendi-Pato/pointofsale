@@ -46,6 +46,7 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
     capacity: "",
     RAM: "",
     supplyDate: dayjs().format("YYYY-MM-DD"),
+    numberOfPhones: 1, // New field for number of phones
   });
 
   const submitButtonRef = useRef(null);
@@ -74,8 +75,8 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
 
   const filteredManagers = selectedRegion
     ? activeData?.managers?.filter(
-        (manager) => manager.regionId === selectedRegion
-      )
+      (manager) => manager.regionId === selectedRegion
+    )
     : [];
 
   const { data: suppliers } = useQuery(
@@ -184,11 +185,18 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
       .date("Enter the supply date")
       .max(new Date(), "Supply date cannot be later than today")
       .required("Supply date is required"),
+    numberOfPhones: yup
+      .number("Enter the number of phones")
+      .positive("Number of phones must be a positive number")
+      .integer("Number of phones must be a whole number")
+      .min(1, "At least 1 phone is required")
+      .max(500, "Maximum 500 phones allowed at once")
+      .required("Number of phones is required"),
   });
 
-  const imeiFormik = useFormik({
-    initialValues: { imeis: ["", "", "", "", ""] },
-    validationSchema: yup.object({
+  // Create dynamic IMEI validation based on numberOfPhones
+  const createImeiValidationSchema = (numberOfPhones) => {
+    return yup.object({
       imeis: yup
         .array()
         .of(
@@ -197,17 +205,95 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
             .matches(/^\d{15}$/, "IMEI must be exactly 15 digits")
             .required("IMEI is required")
         )
-        .min(1, "At least one IMEI is required"),
-    }),
+        .min(numberOfPhones, `At least ${numberOfPhones} IMEIs are required`)
+        .test('unique', 'All IMEIs must be unique', function (value) {
+          if (!value) return true;
+          const nonEmptyImeis = value.filter(imei => imei && imei.trim().length > 0);
+          const uniqueImeis = new Set(nonEmptyImeis);
+          return nonEmptyImeis.length === uniqueImeis.size;
+        }),
+    });
+  };
+
+  // Function to check for duplicate IMEIs and provide feedback
+  const checkForDuplicates = (imeis) => {
+    const nonEmptyImeis = imeis.filter(imei => imei && imei.trim().length > 0);
+    const duplicates = [];
+    const seen = new Set();
+
+    nonEmptyImeis.forEach((imei, index) => {
+      if (seen.has(imei)) {
+        duplicates.push({ imei, indices: [imeis.indexOf(imei), imeis.lastIndexOf(imei)] });
+      } else {
+        seen.add(imei);
+      }
+    });
+
+    return duplicates;
+  };
+
+  // Function to get validation status for each IMEI
+  const getImeiValidationStatus = (index, imei, allImeis) => {
+    if (!imei || imei.length === 0) return { isValid: true, message: '' };
+
+    if (imei.length > 0 && imei.length < 15) {
+      return { isValid: false, message: `${15 - imei.length} more digits needed` };
+    }
+
+    if (imei.length === 15) {
+      // Check for duplicates
+      const duplicateIndices = allImeis
+        .map((otherImei, otherIndex) => otherImei === imei ? otherIndex : -1)
+        .filter(idx => idx !== -1);
+
+      if (duplicateIndices.length > 1) {
+        return {
+          isValid: false,
+          message: `Duplicate IMEI (also in field${duplicateIndices.filter(idx => idx !== index).map(idx => ` ${idx + 1}`).join(',')})`
+        };
+      }
+
+      return { isValid: true, message: 'Valid IMEI' };
+    }
+
+    return { isValid: false, message: 'Invalid IMEI' };
+  };
+
+  const imeiFormik = useFormik({
+    initialValues: { imeis: [""] },
+    validationSchema: createImeiValidationSchema(formData.numberOfPhones),
+    enableReinitialize: true, // This allows the form to reinitialize when formData changes
     onSubmit: (values) => {
-      if (values.imeis.some((imei) => imei.trim().length !== 15)) {
+      // Check if we have the exact number of IMEIs required
+      if (values.imeis.length < formData.numberOfPhones) {
+        toast.error(`Please enter at least ${formData.numberOfPhones} IMEIs.`);
+        return;
+      }
+
+      // Filter out empty IMEIs and validate remaining ones
+      const validImeis = values.imeis.filter(imei => imei.trim().length > 0);
+
+      if (validImeis.length < formData.numberOfPhones) {
+        toast.error(`Please enter at least ${formData.numberOfPhones} valid IMEIs.`);
+        return;
+      }
+
+      if (validImeis.some((imei) => imei.trim().length !== 15)) {
         toast.error("Each IMEI must be exactly 15 digits.");
         return;
       }
-      // Combine the formData with the entire IMEIs array
+
+      // Check for duplicates
+      const duplicates = checkForDuplicates(validImeis);
+      if (duplicates.length > 0) {
+        toast.error(`Duplicate IMEIs found: ${duplicates.map(d => d.imei).join(', ')}. All IMEIs must be unique.`);
+        return;
+      }
+
+      // Combine the formData with the valid IMEIs array
       const phoneData = {
         ...formData,
-        imeis: values.imeis,
+        imeis: validImeis,
         make: "samsung",
       };
 
@@ -221,6 +307,9 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
     validationSchema,
     onSubmit: (values) => {
       setFormData(values);
+      // Initialize IMEI array based on numberOfPhones
+      const initialImeis = Array(parseInt(values.numberOfPhones)).fill("");
+      imeiFormik.setFieldValue("imeis", initialImeis);
       setStepperLocation(1);
     },
   });
@@ -409,6 +498,41 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                         </div>
                       )}
                     </FormControl>
+
+                    <TextField
+                      variant="outlined"
+                      type="number"
+                      fullWidth
+                      id="numberOfPhones"
+                      name="numberOfPhones"
+                      label="Number of Phones"
+                      value={formik.values.numberOfPhones}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={
+                        formik.touched.numberOfPhones &&
+                        Boolean(formik.errors.numberOfPhones)
+                      }
+                      helperText={
+                        formik.touched.numberOfPhones && formik.errors.numberOfPhones
+                      }
+                      inputProps={{
+                        min: 1,
+                        max: 500,
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": { borderColor: "#ccc" },
+                          "&:hover fieldset": { borderColor: "#2FC3D2" },
+                          "&.Mui-focused fieldset": { borderColor: "#2FC3D2" },
+                        },
+                        "& .MuiInputBase-input": { color: "#000" },
+                        "& .MuiInputLabel-root.Mui-focused": {
+                          color: "#2FC3D2",
+                        },
+                      }}
+                    />
+
                     <FormControl fullWidth variant="outlined">
                       <InputLabel id="supplier-label">Supplier</InputLabel>
                       <Select
@@ -689,62 +813,86 @@ const NewPhone = ({ showAddPhone, setShowAddPhone }) => {
                     onSubmit={imeiFormik.handleSubmit}
                     className="space-y-5 px-2 py-2 pb-10 md:mt-5 w-full"
                     autoComplete="off">
-                    {imeiFormik.values.imeis.map((imei, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <TextField
-                          variant="outlined"
-                          fullWidth
-                          id={`imei-${index}`}
-                          name={`imeis[${index}]`}
-                          label={`IMEI ${index + 1}`}
-                          value={imeiFormik.values.imeis[index]}
-                          onChange={(e) => handleIMEIChange(index, e)}
-                          onKeyDown={(e) => handleIMEIKeyDown(index, e)}
-                          onBlur={imeiFormik.handleBlur}
-                          error={
-                            imeiFormik.touched.imeis?.[index] &&
-                            Boolean(imeiFormik.errors.imeis?.[index])
-                          }
-                          helperText={
-                            imeiFormik.touched.imeis?.[index] &&
-                            imeiFormik.errors.imeis?.[index]
-                          }
-                          inputProps={{
-                            maxLength: 15,
-                            autoComplete: "off",
-                          }}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              "& fieldset": { borderColor: "#ccc" },
-                              "&:hover fieldset": { borderColor: "#2FC3D2" },
-                              "&.Mui-focused fieldset": {
-                                borderColor: "#2FC3D2",
-                              },
-                            },
-                            "& .MuiInputBase-input": { color: "#000" },
-                            "& .MuiInputLabel-root.Mui-focused": {
-                              color: "#2FC3D2",
-                            },
-                          }}
-                        />
+                    <div className="text-center text-sm text-gray-600 mb-4">
+                      Enter IMEIs for {formData.numberOfPhones} phone{formData.numberOfPhones > 1 ? 's' : ''}
+                    </div>
 
-                        {imeiFormik.values.imeis.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeIMEI(index)}
-                            className="p-2 bg-red-500 text-white rounded">
-                            {isSmallScreen ? <IoIosRemove /> : "Remove"}
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                    {imeiFormik.values.imeis.map((imei, index) => {
+                      const validationStatus = getImeiValidationStatus(index, imei, imeiFormik.values.imeis);
+                      const isDuplicate = !validationStatus.isValid && validationStatus.message.includes('Duplicate');
+                      const isIncomplete = !validationStatus.isValid && validationStatus.message.includes('more digits needed');
 
-                    <button
-                      type="button"
-                      onClick={addIMEI}
-                      className="p-2 bg-green-500 text-white rounded w-full">
-                      Add IMEI
-                    </button>
+                      return (
+                        <div key={index} className="flex items-center space-x-2">
+                          <div className="flex-1">
+                            <TextField
+                              variant="outlined"
+                              fullWidth
+                              id={`imei-${index}`}
+                              name={`imeis[${index}]`}
+                              label={`IMEI ${index + 1}`}
+                              value={imeiFormik.values.imeis[index]}
+                              onChange={(e) => handleIMEIChange(index, e)}
+                              onKeyDown={(e) => handleIMEIKeyDown(index, e)}
+                              onBlur={imeiFormik.handleBlur}
+                              error={
+                                (imeiFormik.touched.imeis?.[index] &&
+                                  Boolean(imeiFormik.errors.imeis?.[index])) ||
+                                (imei.length > 0 && !validationStatus.isValid)
+                              }
+                              helperText={
+                                imeiFormik.touched.imeis?.[index] && imeiFormik.errors.imeis?.[index]
+                                  ? imeiFormik.errors.imeis?.[index]
+                                  : imei.length > 0 ? validationStatus.message : ''
+                              }
+                              inputProps={{
+                                maxLength: 15,
+                                autoComplete: "off",
+                              }}
+                              sx={{
+                                "& .MuiOutlinedInput-root": {
+                                  "& fieldset": {
+                                    borderColor: isDuplicate ? "#f44336" : isIncomplete ? "#ff9800" : validationStatus.isValid && imei.length === 15 ? "#4caf50" : "#ccc"
+                                  },
+                                  "&:hover fieldset": {
+                                    borderColor: isDuplicate ? "#f44336" : "#2FC3D2"
+                                  },
+                                  "&.Mui-focused fieldset": {
+                                    borderColor: isDuplicate ? "#f44336" : "#2FC3D2",
+                                  },
+                                },
+                                "& .MuiInputBase-input": { color: "#000" },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                  color: isDuplicate ? "#f44336" : "#2FC3D2",
+                                },
+                                "& .MuiFormHelperText-root": {
+                                  color: isDuplicate ? "#f44336" : isIncomplete ? "#ff9800" : validationStatus.isValid && imei.length === 15 ? "#4caf50" : "#666",
+                                  fontSize: "0.75rem",
+                                },
+                              }}
+                            />
+                          </div>
+
+                          {imeiFormik.values.imeis.length > formData.numberOfPhones && (
+                            <button
+                              type="button"
+                              onClick={() => removeIMEI(index)}
+                              className="p-2 bg-red-500 text-white rounded shrink-0">
+                              {isSmallScreen ? <IoIosRemove /> : "Remove"}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {imeiFormik.values.imeis.length < 500 && (
+                      <button
+                        type="button"
+                        onClick={addIMEI}
+                        className="p-2 bg-green-500 text-white rounded w-full">
+                        Add Additional IMEI
+                      </button>
+                    )}
 
                     <div className="flex flex-row w-full justify-between items-center space-x-5">
                       <button
