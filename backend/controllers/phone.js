@@ -1151,7 +1151,9 @@ const fetchPhonesByPartialIMEI = async (imei) => {
               attributes: ["name", "location"],
             },
           ],
-          attributes: ["firstName", "lastName", "phone"],
+          attributes: ["firstName", "lastName", "phone", "deletedAt"], // Include deletedAt to identify soft-deleted managers
+          paranoid: false, // Include soft-deleted managers
+          required: false, // Use LEFT JOIN to include phones even without managers
         },
         {
           model: Customer,
@@ -1174,20 +1176,36 @@ const fetchPhonesByPartialIMEI = async (imei) => {
     throw new Error("Failed to fetch phones from the database.");
   }
 };
+
 exports.searchPhonesByIMEI = async (req, res) => {
   try {
     const { imei } = req.params;
     if (!imei) {
       return res.status(400).json({ error: "IMEI is required." });
     }
+
     // Fetch phones with IMEIs that partially match the search term
     const phones = await fetchPhonesByPartialIMEI(imei);
+
     if (phones.length === 0) {
       return res.status(404).json({ message: "No matching phones found." });
     }
+
+    // Transform the response to include manager deletion status
+    const transformedPhones = phones.map(phone => {
+      const phoneData = phone.toJSON();
+
+      // Add manager deletion status if manager exists
+      if (phoneData.manager) {
+        phoneData.manager.isDeleted = !!phoneData.manager.deletedAt;
+      }
+
+      return phoneData;
+    });
+
     res.status(200).json({
       message: "Phones fetched successfully.",
-      phones,
+      phones: transformedPhones,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1548,7 +1566,7 @@ exports.bulkSearchPhonesByIMEI = async (req, res) => {
             {
               model: User,
               as: "manager",
-              attributes: ["id", "firstName", "lastName", "regionId"],
+              attributes: ["id", "firstName", "lastName", "regionId", "deletedAt"], // Include deletedAt to identify soft-deleted users
               include: [
                 {
                   model: Location,
@@ -1556,7 +1574,8 @@ exports.bulkSearchPhonesByIMEI = async (req, res) => {
                   attributes: ["id", "location", "name"]
                 }
               ],
-              paranoid: false
+              paranoid: false, // This is the key fix - include soft-deleted users
+              required: false // Make it a LEFT JOIN so phones without managers are still included
             },
             {
               model: PhoneModel,
@@ -1622,13 +1641,15 @@ exports.bulkSearchPhonesByIMEI = async (req, res) => {
         dateAssigned
       } = phoneData;
 
-      // Build manager information
+      // Build manager information (including soft-deleted managers)
       const managerInfo = manager ? {
         id: manager.id,
         name: `${manager.firstName} ${manager.lastName}`.trim(),
         firstName: manager.firstName,
         lastName: manager.lastName,
         regionId: manager.regionId,
+        isDeleted: !!manager.deletedAt, // Flag to indicate if manager is soft-deleted
+        deletedAt: manager.deletedAt,
         region: manager.region ? {
           id: manager.region.id,
           location: manager.region.location,
