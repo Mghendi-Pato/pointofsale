@@ -7,7 +7,6 @@ import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import { bulkSearchPhonesByIMEI } from "../services/services";
 
-
 const IMEIQuery = () => {
     const [file, setFile] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -196,25 +195,68 @@ const IMEIQuery = () => {
                 });
             });
 
-            // Bulk query all valid IMEIs at once
-            if (validIMEIs.length > 0 && !isCancelled) {
+            // Split large datasets into smaller chunks for processing
+            const CHUNK_SIZE = 2000; // Process 2000 IMEIs at a time
+            const chunks = [];
+
+            for (let i = 0; i < validIMEIs.length; i += CHUNK_SIZE) {
+                chunks.push(validIMEIs.slice(i, i + CHUNK_SIZE));
+            }
+
+            let allResults = [];
+
+            // Process chunks if we have valid IMEIs
+            if (chunks.length > 0 && !isCancelled) {
                 try {
                     setProgress(30); // 30% - Starting bulk query
 
-                    const bulkResponse = await bulkSearchPhonesByIMEI({
-                        imeis: validIMEIs,
-                        token,
-                        signal: cancelTokenRef.current?.signal
-                    });
+                    for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+                        if (isCancelled) break;
 
-                    // Check if cancelled after API call
-                    if (isCancelled) {
-                        return;
+                        const chunk = chunks[chunkIndex];
+
+                        try {
+                            const bulkResponse = await bulkSearchPhonesByIMEI({
+                                imeis: chunk,
+                                token,
+                                signal: cancelTokenRef.current?.signal
+                            });
+
+                            // Check if cancelled after API call
+                            if (isCancelled) {
+                                return;
+                            }
+
+                            allResults = allResults.concat(bulkResponse.results || []);
+
+                            // Update progress based on chunks processed
+                            const chunkProgress = 30 + ((chunkIndex + 1) / chunks.length) * 50;
+                            setProgress(chunkProgress);
+
+                            // Small delay between chunks to prevent overwhelming
+                            if (chunkIndex < chunks.length - 1) {
+                                await new Promise(resolve => setTimeout(resolve, 200));
+                            }
+
+                        } catch (chunkError) {
+                            console.error(`Error processing chunk ${chunkIndex + 1}:`, chunkError);
+
+                            // Mark this chunk's IMEIs as failed
+                            chunk.forEach(imei => {
+                                const item = imeiData.find(i => i.imei === imei);
+                                if (item) {
+                                    failedIMEIs.push({
+                                        row: item.rowIndex + 2,
+                                        imei,
+                                        reason: `Chunk ${chunkIndex + 1} failed: ${chunkError.message}`
+                                    });
+                                }
+                            });
+                        }
                     }
 
-                    bulkResults = bulkResponse.results || [];
-
-                    setProgress(80); // 80% - Bulk query complete
+                    bulkResults = allResults;
+                    setProgress(80); // 80% - All chunks processed
 
                 } catch (error) {
                     // Check if error is due to cancellation
@@ -485,7 +527,7 @@ const IMEIQuery = () => {
                                     className="h-2 rounded"
                                 />
                                 <p className="text-xs text-gray-500 text-center">
-                                    Processing all IMEIs in bulk for faster performance
+                                    Processing IMEIs in optimized chunks for better performance
                                 </p>
                             </div>
                         )}
@@ -569,10 +611,12 @@ const IMEIQuery = () => {
                             <h3 className="font-semibold text-blue-800 mb-2">Instructions:</h3>
                             <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
                                 <li>Upload an Excel file containing IMEI numbers in any column with "IMEI" in the header</li>
-                                <li>The system will query the database for each IMEI to find the associated manager and region</li>
+                                <li>The system will process IMEIs in optimized chunks for better performance</li>
+                                <li>Large files are automatically split into smaller batches to prevent timeouts</li>
                                 <li>Manager Name and Region columns will be added/updated automatically</li>
                                 <li>Download the processed file with all the populated data</li>
                                 <li>Check the error report for any IMEIs that couldn't be processed</li>
+                                <li><strong>Tip:</strong> For files with 10,000+ IMEIs, processing may take several minutes</li>
                             </ol>
                         </div>
                     </div>

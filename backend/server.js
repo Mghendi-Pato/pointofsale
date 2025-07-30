@@ -18,13 +18,31 @@ const app = express();
 
 const PORT = process.env.PORT || 4000;
 
-app.use(express.json());
+app.use(bodyParser.json({
+  limit: '100mb',
+  extended: true,
+  parameterLimit: 50000
+}));
 
-// Register middleware
-app.use(bodyParser.json({ limit: "50mb" }));
-app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(bodyParser.urlencoded({
+  limit: '100mb',
+  extended: true,
+  parameterLimit: 50000
+}));
+
+// Also increase Express built-in limits
+app.use(express.json({
+  limit: '100mb',
+  parameterLimit: 50000
+}));
+
+app.use(express.urlencoded({
+  limit: '100mb',
+  extended: true,
+  parameterLimit: 50000
+}));
+
+// CORS configuration
 app.use(cors());
 
 // Initialize Sequelize
@@ -42,6 +60,7 @@ sequelize
   .authenticate()
   .then(() => console.log("Database connected..."))
   .catch((err) => console.error("Error connecting to the database:", err));
+
 app.get("/", (req, res) => {
   res.send("Hello, world!");
 });

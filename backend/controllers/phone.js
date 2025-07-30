@@ -1490,7 +1490,7 @@ exports.deletePhone = async (req, res) => {
 // Bulk IMEI search - optimized for large datasets
 exports.bulkSearchPhonesByIMEI = async (req, res) => {
   try {
-    const { imeis } = req.body;
+    const { imeis, chunkSize = 5000 } = req.body;
 
     // Validate input
     if (!imeis || !Array.isArray(imeis) || imeis.length === 0) {
@@ -1500,10 +1500,10 @@ exports.bulkSearchPhonesByIMEI = async (req, res) => {
       });
     }
 
-    // Limit batch size to prevent memory issues (adjust as needed)
-    if (imeis.length > 10000) {
+    // Limit maximum batch size to prevent memory issues
+    if (imeis.length > 50000) {
       return res.status(400).json({
-        message: "Maximum 10,000 IMEIs allowed per request.",
+        message: "Maximum 50,000 IMEIs allowed per request. Consider splitting into smaller batches.",
         phones: []
       });
     }
@@ -1520,54 +1520,86 @@ exports.bulkSearchPhonesByIMEI = async (req, res) => {
       });
     }
 
-    // Single optimized database query with all includes
-    const phones = await Phone.findAll({
-      where: {
-        imei: {
-          [Op.in]: cleanImeis
-        }
-      },
-      include: [
-        {
-          model: User,
-          as: "manager",
-          attributes: ["id", "firstName", "lastName", "regionId"],
+    console.log(`Processing ${cleanImeis.length} IMEIs in chunks of ${chunkSize}`);
+
+    // Process IMEIs in chunks to avoid memory issues
+    const chunks = [];
+    for (let i = 0; i < cleanImeis.length; i += chunkSize) {
+      chunks.push(cleanImeis.slice(i, i + chunkSize));
+    }
+
+    let allPhones = [];
+    let processedCount = 0;
+
+    // Process each chunk
+    for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+      const chunk = chunks[chunkIndex];
+      console.log(`Processing chunk ${chunkIndex + 1}/${chunks.length} with ${chunk.length} IMEIs`);
+
+      try {
+        // Query database for this chunk
+        const chunkPhones = await Phone.findAll({
+          where: {
+            imei: {
+              [Op.in]: chunk
+            }
+          },
           include: [
             {
-              model: Location,
-              as: "region",
-              attributes: ["id", "location", "name"]
+              model: User,
+              as: "manager",
+              attributes: ["id", "firstName", "lastName", "regionId"],
+              include: [
+                {
+                  model: Location,
+                  as: "region",
+                  attributes: ["id", "location", "name"]
+                }
+              ],
+              paranoid: false
+            },
+            {
+              model: PhoneModel,
+              as: "phoneModel",
+              attributes: ["id", "model", "make"],
+              paranoid: false
+            },
+            {
+              model: Supplier,
+              as: "supplier",
+              attributes: ["id", "name"],
+              paranoid: false
+            },
+            {
+              model: Customer,
+              as: "customer",
+              attributes: ["id", "firstName", "lastName", "middleName", "phoneNumber", "ID"],
+              required: false
             }
           ],
-          paranoid: false
-        },
-        {
-          model: PhoneModel,
-          as: "phoneModel",
-          attributes: ["id", "model", "make"],
-          paranoid: false
-        },
-        {
-          model: Supplier,
-          as: "supplier",
-          attributes: ["id", "name"],
-          paranoid: false
-        },
-        {
-          model: Customer,
-          as: "customer",
-          attributes: ["id", "firstName", "lastName", "middleName", "phoneNumber", "ID"],
-          required: false
+          order: [['imei', 'ASC']]
+        });
+
+        allPhones = allPhones.concat(chunkPhones);
+        processedCount += chunk.length;
+
+        // Small delay between chunks to prevent overwhelming the database
+        if (chunkIndex < chunks.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
-      ],
-      // Order by IMEI for consistent results
-      order: [['imei', 'ASC']]
-    });
+
+      } catch (chunkError) {
+        console.error(`Error processing chunk ${chunkIndex + 1}:`, chunkError);
+        // Continue with other chunks even if one fails
+      }
+    }
+
+    console.log(`Found ${allPhones.length} phones out of ${cleanImeis.length} IMEIs`);
 
     // Create a map for O(1) lookup performance
     const phoneMap = new Map();
 
-    phones.forEach(phone => {
+    allPhones.forEach(phone => {
       const phoneData = phone.toJSON();
       const {
         id,
@@ -1657,10 +1689,14 @@ exports.bulkSearchPhonesByIMEI = async (req, res) => {
     // Calculate statistics
     const stats = {
       total: cleanImeis.length,
-      found: phones.length,
-      notFound: cleanImeis.length - phones.length,
-      duplicateImeis: imeis.length - cleanImeis.length
+      found: allPhones.length,
+      notFound: cleanImeis.length - allPhones.length,
+      duplicateImeis: imeis.length - cleanImeis.length,
+      chunksProcessed: chunks.length,
+      chunkSize: chunkSize
     };
+
+    console.log('Bulk IMEI search completed:', stats);
 
     res.status(200).json({
       message: "Bulk IMEI search completed successfully.",
