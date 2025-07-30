@@ -20,6 +20,7 @@ import PhoneDetails from "./pages/PhoneDetails";
 import Customers from "./pages/customers/Customers";
 import Payments from "./pages/Payments";
 import NotFound from "./pages/NotFound";
+import IMEIQuery from "./pages/IMEIQuery";
 
 const App = () => {
   return (
@@ -36,10 +37,18 @@ const App = () => {
           }
         />
         <Route
-          path="/commissions"
+          path="/models"
           element={
             <ProtectedRoute>
               <Commissions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/imei-query"
+          element={
+            <ProtectedRoute>
+              <IMEIQuery />
             </ProtectedRoute>
           }
         />

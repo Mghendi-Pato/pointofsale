@@ -782,3 +782,33 @@ export const editSupplierService = async (supplierId, supplierData, token) => {
     throw new Error(error.response?.data?.message || error.message);
   }
 };
+
+export const bulkSearchPhonesByIMEI = async ({ imeis, token, signal }) => {
+  try {
+    const response = await axios.post(
+      `${url}/phone/bulk-search`,
+      { imeis },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        signal: signal // Support for abort signal
+      }
+    );
+
+    if (!response.data) {
+      throw new Error("Invalid response structure from the server.");
+    }
+
+    return response.data;
+  } catch (error) {
+    // Don't log cancellation errors
+    if (error.name === 'AbortError') {
+      throw error;
+    }
+
+    console.error("Error in bulk IMEI search:", error.message);
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};

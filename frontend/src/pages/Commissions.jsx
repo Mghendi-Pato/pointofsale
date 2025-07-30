@@ -247,9 +247,8 @@ const Commissions = () => {
           <button
             onClick={() => setShowAddModel(true)}
             disabled={isLoading}
-            className={`p-2 py-3 text-sm font-roboto font-bold ${
-              isLoading ? "bg-gray-400" : "bg-primary-500"
-            } md:w-36 text-center cursor-pointer`}>
+            className={`p-2 py-3 text-sm font-roboto font-bold ${isLoading ? "bg-gray-400" : "bg-primary-500"
+              } md:w-36 text-center cursor-pointer`}>
             Add Model
           </button>
         </div>
@@ -366,13 +365,12 @@ const Commissions = () => {
 
           <div className="my-5 flex flex-row justify-end">
             <button
-              className={`p-2 h-12 w-[300px] md:w-40 ${
-                isLoading
+              className={`p-2 h-12 w-[300px] md:w-40 ${isLoading
                   ? "bg-gray-400 text-gray-700"
                   : hasChanges
-                  ? "bg-primary-500 text-white"
-                  : "bg-gray-400 text-gray-700"
-              }`}
+                    ? "bg-primary-500 text-white"
+                    : "bg-gray-400 text-gray-700"
+                }`}
               onClick={handleSubmit}
               disabled={!hasChanges || isLoading}>
               {editCommissionLoading ? "Submitting..." : "Submit Changes"}
@@ -387,9 +385,8 @@ const Commissions = () => {
         onClose={() => setShowDeleteModal(false)}
         onDelete={handleDeleteModel}
         title="Confirm Action!"
-        message={`Are you sure you want to delete model "${
-          models?.models?.find((m) => m.id === modelToDelete)?.model || ""
-        }"?`}
+        message={`Are you sure you want to delete model "${models?.models?.find((m) => m.id === modelToDelete)?.model || ""
+          }"?`}
       />
     </div>
   );

@@ -1486,3 +1486,195 @@ exports.deletePhone = async (req, res) => {
       .json({ message: "An error occurred while deleting the phone." });
   }
 };
+
+// Bulk IMEI search - optimized for large datasets
+exports.bulkSearchPhonesByIMEI = async (req, res) => {
+  try {
+    const { imeis } = req.body;
+
+    // Validate input
+    if (!imeis || !Array.isArray(imeis) || imeis.length === 0) {
+      return res.status(400).json({
+        message: "IMEIs array is required and must not be empty.",
+        phones: []
+      });
+    }
+
+    // Limit batch size to prevent memory issues (adjust as needed)
+    if (imeis.length > 10000) {
+      return res.status(400).json({
+        message: "Maximum 10,000 IMEIs allowed per request.",
+        phones: []
+      });
+    }
+
+    // Clean and validate IMEIs
+    const cleanImeis = imeis
+      .map(imei => String(imei).trim())
+      .filter(imei => imei && imei.length > 0);
+
+    if (cleanImeis.length === 0) {
+      return res.status(400).json({
+        message: "No valid IMEIs provided.",
+        phones: []
+      });
+    }
+
+    // Single optimized database query with all includes
+    const phones = await Phone.findAll({
+      where: {
+        imei: {
+          [Op.in]: cleanImeis
+        }
+      },
+      include: [
+        {
+          model: User,
+          as: "manager",
+          attributes: ["id", "firstName", "lastName", "regionId"],
+          include: [
+            {
+              model: Location,
+              as: "region",
+              attributes: ["id", "location", "name"]
+            }
+          ],
+          paranoid: false
+        },
+        {
+          model: PhoneModel,
+          as: "phoneModel",
+          attributes: ["id", "model", "make"],
+          paranoid: false
+        },
+        {
+          model: Supplier,
+          as: "supplier",
+          attributes: ["id", "name"],
+          paranoid: false
+        },
+        {
+          model: Customer,
+          as: "customer",
+          attributes: ["id", "firstName", "lastName", "middleName", "phoneNumber", "ID"],
+          required: false
+        }
+      ],
+      // Order by IMEI for consistent results
+      order: [['imei', 'ASC']]
+    });
+
+    // Create a map for O(1) lookup performance
+    const phoneMap = new Map();
+
+    phones.forEach(phone => {
+      const phoneData = phone.toJSON();
+      const {
+        id,
+        imei,
+        modelId,
+        purchasePrice,
+        buyDate,
+        status,
+        supplier,
+        manager,
+        phoneModel,
+        customer,
+        createdAt,
+        capacity,
+        ram,
+        sellingPrice,
+        saleDate,
+        company,
+        agentCommission,
+        dateAssigned
+      } = phoneData;
+
+      // Build manager information
+      const managerInfo = manager ? {
+        id: manager.id,
+        name: `${manager.firstName} ${manager.lastName}`.trim(),
+        firstName: manager.firstName,
+        lastName: manager.lastName,
+        regionId: manager.regionId,
+        region: manager.region ? {
+          id: manager.region.id,
+          location: manager.region.location,
+          name: manager.region.name
+        } : null
+      } : null;
+
+      // Build customer information
+      const customerInfo = customer ? {
+        id: customer.id,
+        name: `${customer.firstName} ${customer.middleName || ''} ${customer.lastName}`.trim(),
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        middleName: customer.middleName,
+        phoneNumber: customer.phoneNumber,
+        ID: customer.ID
+      } : null;
+
+      phoneMap.set(imei, {
+        id,
+        imei,
+        modelId,
+        purchasePrice,
+        buyDate,
+        status,
+        createdAt,
+        capacity,
+        ram,
+        sellingPrice,
+        saleDate,
+        company,
+        agentCommission,
+        dateAssigned,
+        supplier: supplier ? {
+          id: supplier.id,
+          name: supplier.name
+        } : null,
+        phoneModel: phoneModel ? {
+          id: phoneModel.id,
+          model: phoneModel.model,
+          make: phoneModel.make
+        } : null,
+        manager: managerInfo,
+        customer: customerInfo
+      });
+    });
+
+    // Build response array maintaining input order
+    const results = cleanImeis.map(imei => {
+      const phone = phoneMap.get(imei);
+      return {
+        imei,
+        found: !!phone,
+        phone: phone || null
+      };
+    });
+
+    // Calculate statistics
+    const stats = {
+      total: cleanImeis.length,
+      found: phones.length,
+      notFound: cleanImeis.length - phones.length,
+      duplicateImeis: imeis.length - cleanImeis.length
+    };
+
+    res.status(200).json({
+      message: "Bulk IMEI search completed successfully.",
+      results,
+      stats,
+      processedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error("Error in bulk IMEI search:", error);
+    res.status(500).json({
+      message: "An error occurred while searching for IMEIs.",
+      error: error.message,
+      phones: []
+    });
+  }
+};

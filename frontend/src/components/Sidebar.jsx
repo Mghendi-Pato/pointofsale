@@ -13,10 +13,11 @@ import { setSidebar, toggleSidebar } from "../redux/reducers/ sidebar";
 import { BsPinMap } from "react-icons/bs";
 import { useEffect, useState } from "react";
 import LogoutUser from "./LogoutUser";
-import { MdAttachMoney } from "react-icons/md";
 import { GiReceiveMoney } from "react-icons/gi";
 import { LiaPeopleCarrySolid } from "react-icons/lia";
 import { FaMoneyCheck } from "react-icons/fa";
+import { IoPhonePortraitOutline } from "react-icons/io5";
+import { AiOutlineDatabase } from "react-icons/ai";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -63,10 +64,10 @@ const Sidebar = () => {
 
   const sideNavdAreas = [
     {
-      area: "Commissions",
-      Icon: <MdAttachMoney size={20} className="mx-4" />,
+      area: "Models",
+      Icon: <IoPhonePortraitOutline size={20} className="mx-4" />,
       privileges: ["super admin", "admin"],
-      route: "/commissions",
+      route: "/models",
     },
     {
       area: "Inventory",
@@ -85,6 +86,12 @@ const Sidebar = () => {
       Icon: <LiaPeopleCarrySolid size={20} className="mx-4" />,
       privileges: ["super admin", "admin", "collection officer"],
       route: "/customers",
+    },
+    {
+      area: "IMEI Query",
+      Icon: <AiOutlineDatabase size={20} className="mx-4" />,
+      privileges: ["super admin", "admin"],
+      route: "/imei-query",
     },
     {
       area: "Regions",
@@ -127,16 +134,13 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`${
-        pathname === "/" ? "bg-slate-50" : "bg-slate-50"
-      } shadow-md transition-all duration-300 ease-in-out flex flex-col justify-between flex-1 z-50 ${
-        showSideBar ? "w-52 md:w-64" : "w-0 md:w-16"
-      } h-full fixed left-0 top-0 z-50`}>
+      className={`${pathname === "/" ? "bg-slate-50" : "bg-slate-50"
+        } shadow-md transition-all duration-300 ease-in-out flex flex-col justify-between flex-1 z-50 ${showSideBar ? "w-52 md:w-64" : "w-0 md:w-16"
+        } h-full fixed left-0 top-0 z-50`}>
       <div className=" ">
         <div
-          className={`bg-slate-50 border-b h-16 flex flex-col justify-center items-center relative transition-all duration-300 ease-in-out ${
-            showSideBar ? "w-40 md:w-64" : "w-0"
-          }`}>
+          className={`bg-slate-50 border-b h-16 flex flex-col justify-center items-center relative transition-all duration-300 ease-in-out ${showSideBar ? "w-40 md:w-64" : "w-0"
+            }`}>
           <div
             className="absolute p-5 -right-16 top-0 h-16 flex flex-row items-center justify-center cursor-pointer"
             onClick={() => dispatch(toggleSidebar())}>
@@ -164,13 +168,11 @@ const Sidebar = () => {
         </div>
 
         <div
-          className={`relative ${
-            !["super admin", "admin"].includes(user?.role) ? "hidden" : "flex"
-          } flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${
-            pathname === "/"
+          className={`relative ${!["super admin", "admin"].includes(user?.role) ? "hidden" : "flex"
+            } flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${pathname === "/"
               ? "border-primary-500 border-r-4 bg-primary-300"
               : ""
-          }`}
+            }`}
           onClick={() => onHomeNavigate()}>
           <div className="hidden md:block">
             <AiOutlineDashboard size={20} className="mx-4" />
@@ -202,9 +204,8 @@ const Sidebar = () => {
             </AnimatePresence>
           </div>
           <div
-            className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${
-              !showSideBar && "md:group-hover:flex"
-            }`}>
+            className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${!showSideBar && "md:group-hover:flex"
+              }`}>
             <p className="font-roboto text-white">Dashboard</p>
           </div>
         </div>
@@ -212,11 +213,10 @@ const Sidebar = () => {
           .filter((area) => area.privileges.includes(role))
           .map((area, index) => (
             <div
-              className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${
-                pathname.startsWith(area.route)
-                  ? "border-primary-500 border-r-4 bg-primary-300"
-                  : ""
-              }`}
+              className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${pathname.startsWith(area.route)
+                ? "border-primary-500 border-r-4 bg-primary-300"
+                : ""
+                }`}
               key={index}
               onClick={() => onNavigate(area.route)}>
               <div className="hidden md:block">{area.Icon}</div>
@@ -247,20 +247,18 @@ const Sidebar = () => {
                 </AnimatePresence>
               </div>
               <div
-                className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${
-                  !showSideBar && "md:group-hover:flex"
-                }`}>
+                className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${!showSideBar && "md:group-hover:flex"
+                  }`}>
                 <p className="font-roboto text-white">{area.area}</p>
               </div>
             </div>
           ))}
 
         <div
-          className={`relative flex md:hidden flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${
-            pathname === "/profile"
-              ? "border-primary-500 border-r-4 bg-primary-300"
-              : ""
-          }`}
+          className={`relative flex md:hidden flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${pathname === "/profile"
+            ? "border-primary-500 border-r-4 bg-primary-300"
+            : ""
+            }`}
           onClick={() => onNavigate("/profile")}>
           <div className="hidden md:block">
             <CgProfile size={20} className="mx-4" />
@@ -292,19 +290,17 @@ const Sidebar = () => {
             </AnimatePresence>
           </div>
           <div
-            className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${
-              !showSideBar && "md:group-hover:flex"
-            }`}>
+            className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${!showSideBar && "md:group-hover:flex"
+              }`}>
             <p className="font-roboto text-white">Profile</p>
           </div>
         </div>
         {(user.designation === "cfo" || user.role === "manager") && (
           <div
-            className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${
-              pathname === "/payments"
-                ? "border-primary-500 border-r-4 bg-primary-300"
-                : ""
-            }`}
+            className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 ${pathname === "/payments"
+              ? "border-primary-500 border-r-4 bg-primary-300"
+              : ""
+              }`}
             onClick={() => onNavigate("/payments")}>
             <div className="hidden md:block">
               <FaMoneyCheck size={20} className="mx-4" />
@@ -336,9 +332,8 @@ const Sidebar = () => {
               </AnimatePresence>
             </div>
             <div
-              className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${
-                !showSideBar && "md:group-hover:flex"
-              }`}>
+              className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${!showSideBar && "md:group-hover:flex"
+                }`}>
               <p className="font-roboto text-white">Payments</p>
             </div>
           </div>
@@ -346,9 +341,8 @@ const Sidebar = () => {
       </div>
       <div className="py-4 border-t b-neutral-300 ">
         <div
-          className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 mb-10    ${
-            pathname === "/logout" ? " bg-primary-300" : ""
-          }`}
+          className={`relative flex flex-row py-4 items-center group cursor-pointer space-x-2 h-14 hover:bg-primary-200 mb-10    ${pathname === "/logout" ? " bg-primary-300" : ""
+            }`}
           onClick={() => setShowLogoutModal(true)}>
           <div className="hidden md:block">
             <CiLogout size={20} className="mx-4" />
@@ -380,9 +374,8 @@ const Sidebar = () => {
             </AnimatePresence>
           </div>
           <div
-            className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${
-              !showSideBar && "md:group-hover:flex"
-            }`}>
+            className={`absolute top-0 -right-32 h-14 p-2 bg-primary-500 justify-center items-center w-32 hidden ${!showSideBar && "md:group-hover:flex"
+              }`}>
             <p className="font-roboto text-white">Logout</p>
           </div>
         </div>
