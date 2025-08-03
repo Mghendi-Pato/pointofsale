@@ -262,8 +262,8 @@ const TableSkeleton = ({ userRole, show, company }) => {
                     ? 10
                     : 8
                   : show === "reconcile"
-                  ? 9
-                  : 7
+                    ? 9
+                    : 7
               }>
               <div className="h-4 w-16">
                 <SkeletonPulse />
@@ -452,8 +452,8 @@ const AdminSales = () => {
           "Agent Commission (Ksh)": parseFloat(phone.agentCommission) || 0,
           "Net Profit (Ksh)":
             parseFloat(phone.sellingPrice) -
-              parseFloat(phone.purchasePrice) -
-              (parseFloat(phone.agentCommission) || 0) || 0,
+            parseFloat(phone.purchasePrice) -
+            (parseFloat(phone.agentCommission) || 0) || 0,
           "Receipt Number": parseFloat(phone.rcpNumber) || 0,
         };
 
@@ -627,16 +627,14 @@ const AdminSales = () => {
           <p className="text-xl font-bold">Sales</p>
           <div className="flex flex-row items-center w-[66%]">
             <div
-              className={`p-2 py-3 text-sm font-roboto font-bold w-[50%] md:w-36 text-center cursor-pointer ${
-                show === "sold" ? "bg-primary-400" : "text-gray-600"
-              }`}
+              className={`p-2 py-3 text-sm font-roboto font-bold w-[50%] md:w-36 text-center cursor-pointer ${show === "sold" ? "bg-primary-400" : "text-gray-600"
+                }`}
               onClick={() => setShow("sold")}>
               Sold
             </div>
             <div
-              className={`p-2 py-3 text-sm font-roboto font-bold w-[50%] md:w-36 text-center cursor-pointer ${
-                show === "reconcile" ? "bg-primary-400" : "text-gray-600"
-              }`}
+              className={`p-2 py-3 text-sm font-roboto font-bold w-[50%] md:w-36 text-center cursor-pointer ${show === "reconcile" ? "bg-primary-400" : "text-gray-600"
+                }`}
               onClick={() => setShow("reconcile")}>
               Reconciled
             </div>
@@ -704,11 +702,10 @@ const AdminSales = () => {
               </FormControl>
               {user.role !== "manager" && (
                 <div
-                  className={`p-2 ${
-                    isLoading
+                  className={`p-2 ${isLoading
                       ? "text-gray-400"
                       : "hover:bg-neutral-200 cursor-pointer text-gray-500 hover:text-gray-700"
-                  } rounded-full transition-all duration-300 ease-in-out`}
+                    } rounded-full transition-all duration-300 ease-in-out`}
                   onClick={isLoading ? undefined : handleDownload}>
                   <HiOutlineDownload
                     size={25}
@@ -842,15 +839,15 @@ const AdminSales = () => {
                                 ? 9
                                 : 8
                               : show === "sold"
-                              ? 14
-                              : 16
+                                ? 14
+                                : 16
                             : user.role === "manager"
-                            ? show === "sold"
-                              ? 8
-                              : 7
-                            : show === "sold"
-                            ? 13
-                            : 15
+                              ? show === "sold"
+                                ? 8
+                                : 7
+                              : show === "sold"
+                                ? 13
+                                : 15
                         }
                         className="px-4 py-8 text-center"></td>
                       <td
@@ -861,15 +858,15 @@ const AdminSales = () => {
                                 ? 9
                                 : 8
                               : show === "sold"
-                              ? 14
-                              : 16
+                                ? 14
+                                : 16
                             : user.role === "manager"
-                            ? show === "sold"
-                              ? 8
-                              : 7
-                            : show === "sold"
-                            ? 13
-                            : 15
+                              ? show === "sold"
+                                ? 8
+                                : 7
+                              : show === "sold"
+                                ? 13
+                                : 15
                         }
                         className="px-4 py-8 text-center">
                         <p className="text-gray-500">
@@ -1052,9 +1049,7 @@ const AdminSales = () => {
                               <button
                                 onClick={() => handleRevertPhone(phone.id)}
                                 aria-label={`Revert ${phone?.name}`}
-                                className={`flex flex-row justify-center items-center w-28  gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300 ${
-                                  show === "reconcile" && "hidden"
-                                }`}>
+                                className={`flex flex-row justify-center items-center w-28  gap-2 p-1 rounded-xl border text-black border-amber-500 hover:bg-amber-300`}>
                                 <FaUndoAlt
                                   className="text-amber-500"
                                   size={10}
@@ -1064,16 +1059,15 @@ const AdminSales = () => {
                             )}
                             {(user.role === "admin" ||
                               user.role === "super admin") && (
-                              <button
-                                onClick={() => handleReconcilePhone(phone.id)}
-                                aria-label={`Reconcile ${phone?.name}`}
-                                className={`flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300 ${
-                                  show === "reconcile" && "hidden"
-                                }`}>
-                                <IoCheckmarkDone className="text-green-500" />
-                                Reconcile
-                              </button>
-                            )}
+                                <button
+                                  onClick={() => handleReconcilePhone(phone.id)}
+                                  aria-label={`Reconcile ${phone?.name}`}
+                                  className={`flex flex-row justify-center items-center w-28 text gap-2 p-1 rounded-xl border text-black border-green-500 hover:bg-green-300 ${show === "reconcile" && "hidden"
+                                    }`}>
+                                  <IoCheckmarkDone className="text-green-500" />
+                                  Reconcile
+                                </button>
+                              )}
                             <button
                               onClick={() => handleReceiptDownload(phone)}
                               aria-label={`Receipt for ${phone?.name}`}
@@ -1094,8 +1088,8 @@ const AdminSales = () => {
                               ? 10
                               : 8
                             : show === "reconcile"
-                            ? 9
-                            : 7
+                              ? 9
+                              : 7
                         }>
                         Totals
                       </td>

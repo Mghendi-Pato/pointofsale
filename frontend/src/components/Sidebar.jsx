@@ -18,6 +18,7 @@ import { LiaPeopleCarrySolid } from "react-icons/lia";
 import { FaMoneyCheck } from "react-icons/fa";
 import { IoPhonePortraitOutline } from "react-icons/io5";
 import { AiOutlineDatabase } from "react-icons/ai";
+import { RiCustomerService2Line } from "react-icons/ri";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -104,6 +105,12 @@ const Sidebar = () => {
       Icon: <GrUserManager size={20} className="mx-4" />,
       privileges: ["super admin", "admin"],
       route: "/managers",
+    },
+    {
+      area: "Agents",
+      Icon: <RiCustomerService2Line size={20} className="mx-4" />,
+      privileges: ["super admin", "admin", "manager"],
+      route: "/agents",
     },
     {
       area: "Suppliers",

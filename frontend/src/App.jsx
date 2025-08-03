@@ -21,6 +21,7 @@ import Customers from "./pages/customers/Customers";
 import Payments from "./pages/Payments";
 import NotFound from "./pages/NotFound";
 import IMEIQuery from "./pages/IMEIQuery";
+import Agents from "./pages/Agents";
 
 const App = () => {
   return (
@@ -41,6 +42,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Commissions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agents"
+          element={
+            <ProtectedRoute>
+              <Agents />
             </ProtectedRoute>
           }
         />

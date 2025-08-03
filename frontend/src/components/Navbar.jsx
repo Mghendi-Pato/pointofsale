@@ -66,19 +66,17 @@ const Navbar = () => {
 
   return (
     <div
-      className={`flex z-50 flex-row justify-between items-center md:p-2 md:px-20 transition-all duration-300 ease-in-out ${
-        showSideBar ? "md:pl-80" : "md:pl-20"
-      } shadow-sm w-full fixed top-0 left-0 bg-white h-16`}>
+      className={`flex z-50 flex-row justify-between items-center md:p-2 md:px-20 transition-all duration-300 ease-in-out ${showSideBar ? "md:pl-80" : "md:pl-20"
+        } shadow-sm w-full fixed top-0 left-0 bg-white h-16`}>
       <div className="mx-2 flex md:hidden">
         <RiMenuFold4Line size={20} />
       </div>
       <div className="relative" ref={dropdownRef}>
         <div
-          className={` ${
-            ["admin", "super admin", "collection officer"].includes(user.role)
+          className={` ${["admin", "super admin", "collection officer"].includes(user.role)
               ? "flex"
               : "hidden"
-          } items-center`}>
+            } items-center`}>
           <input
             ref={inputRef}
             type="text"
@@ -123,11 +121,10 @@ const Navbar = () => {
             <div>
               <RxAvatar
                 size={30}
-                className={`mx-4 ${
-                  showSideBar && pathname === "/profile"
+                className={`mx-4 ${showSideBar && pathname === "/profile"
                     ? "text-primary-500"
                     : ""
-                }`}
+                  }`}
               />
             </div>
             <div>
