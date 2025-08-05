@@ -1442,8 +1442,8 @@ exports.revertSale = async (req, res) => {
     if (!phone) {
       return res.status(404).json({ message: "Phone not found." });
     }
-    if (phone.status !== "sold") {
-      return res.status(400).json({ message: "Phone is not marked as sold." });
+    if (phone.status !== "sold" && phone.status !== "reconcile") {
+      return res.status(400).json({ message: "Phone must be marked as sold or reconcile." });
     }
 
     // Step 2: Update the phone status back to active and remove customer linkage
