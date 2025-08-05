@@ -91,7 +91,7 @@ const Sidebar = () => {
     {
       area: "IMEI Query",
       Icon: <AiOutlineDatabase size={20} className="mx-4" />,
-      privileges: ["super admin", "admin"],
+      privileges: ["super admin", "admin", "collection officer"],
       route: "/imei-query",
     },
     {
